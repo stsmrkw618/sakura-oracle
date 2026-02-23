@@ -2,7 +2,7 @@
 SAKURA ORACLE — Optunaハイパーパラメータ最適化
 
 Walk-Forward CVベースでLightGBMのパラメータを最適化する。
-目的関数は実利益（単勝ROI or 複勝ROI）。
+目的関数は実利益（単勝ROI）。
 
 使い方:
     PYTHONIOENCODING=utf-8 py ml/model/tune.py
@@ -24,17 +24,36 @@ from ml.scraper.config import DATA_DIR, BASE_DIR
 from ml.model.backtest_all_races import (
     build_race_order,
     _get_available_features,
-    _make_params_bin,
     FEATURE_COLS_ALL,
     FEATURE_COLS_NO_ODDS,
+    BLEND_WEIGHT_A,
+    BLEND_WEIGHT_B,
 )
 
 # 最適化設定
 N_TRIALS = 100
-OPTIMIZE_TARGET = "show_roi"  # "win_roi" or "show_roi"
+OPTIMIZE_TARGET = "win_roi"  # 単勝ROI最大化
 MIN_TRAIN_SIZE = 50
-BLEND_WEIGHT_A = 0.6
-BLEND_WEIGHT_B = 0.4
+
+
+def _train_model(
+    X_train: np.ndarray,
+    y_train: np.ndarray,
+    params: dict,
+) -> lgb.LGBMClassifier:
+    """早期停止付きLGBMClassifierを学習（backtest_all_races.pyと同じ）"""
+    model = lgb.LGBMClassifier(**params)
+    n = len(X_train)
+    if n >= 100:
+        split = int(n * 0.9)
+        model.fit(
+            X_train[:split], y_train[:split],
+            eval_set=[(X_train[split:], y_train[split:])],
+            callbacks=[lgb.early_stopping(50, verbose=False)],
+        )
+    else:
+        model.fit(X_train, y_train)
+    return model
 
 
 def _walk_forward_eval(
@@ -63,7 +82,6 @@ def _walk_forward_eval(
         if len(train_df) < MIN_TRAIN_SIZE:
             continue
 
-        # パラメータに scale_pos_weight を追加
         params_win = {**params, "scale_pos_weight": scale_pos_weight_win}
         params_show = {**params, "scale_pos_weight": scale_pos_weight_show}
 
@@ -76,27 +94,23 @@ def _walk_forward_eval(
         y_show = train_df["is_show"].values
 
         try:
-            # Model A（全特徴量）
-            model_a_win = lgb.LGBMClassifier(**params_win)
-            model_a_win.fit(X_train_all, y_win)
+            # Model A（全特徴量 — 市場連動型）
+            model_a_win = _train_model(X_train_all, y_win, params_win)
             pred_a_win = model_a_win.predict_proba(X_test_all)[:, 1]
 
-            model_a_show = lgb.LGBMClassifier(**params_show)
-            model_a_show.fit(X_train_all, y_show)
+            model_a_show = _train_model(X_train_all, y_show, params_show)
             pred_a_show = model_a_show.predict_proba(X_test_all)[:, 1]
 
-            # Model B（オッズなし）
-            model_b_win = lgb.LGBMClassifier(**params_win)
-            model_b_win.fit(X_train_no_odds, y_win)
+            # Model B（オッズなし — エッジ検出型）
+            model_b_win = _train_model(X_train_no_odds, y_win, params_win)
             pred_b_win = model_b_win.predict_proba(X_test_no_odds)[:, 1]
 
-            model_b_show = lgb.LGBMClassifier(**params_show)
-            model_b_show.fit(X_train_no_odds, y_show)
+            model_b_show = _train_model(X_train_no_odds, y_show, params_show)
             pred_b_show = model_b_show.predict_proba(X_test_no_odds)[:, 1]
         except Exception:
             continue
 
-        # ブレンド
+        # ブレンド（A20:B80）
         pred_win = BLEND_WEIGHT_A * pred_a_win + BLEND_WEIGHT_B * pred_b_win
         pred_show = BLEND_WEIGHT_A * pred_a_show + BLEND_WEIGHT_B * pred_b_show
 
@@ -169,6 +183,7 @@ def main() -> None:
     print("=" * 60)
     print("SAKURA ORACLE - Optunaハイパーパラメータ最適化")
     print(f"目的: {OPTIMIZE_TARGET} 最大化")
+    print(f"ブレンド: A={BLEND_WEIGHT_A} / B={BLEND_WEIGHT_B}")
     print(f"トライアル数: {N_TRIALS}")
     print("=" * 60)
 
@@ -180,11 +195,22 @@ def main() -> None:
     df = pd.read_csv(csv_path)
     print(f"入力: {len(df)}行 × {len(df.columns)}カラム\n")
 
+    # 特徴量は固定（backtest_all_races.pyと同一）
     feat_all = _get_available_features(df, FEATURE_COLS_ALL)
     feat_no_odds = _get_available_features(df, FEATURE_COLS_NO_ODDS)
 
-    print(f"Model A 特徴量: {len(feat_all)}個")
-    print(f"Model B 特徴量: {len(feat_no_odds)}個\n")
+    print(f"特徴量（固定）: Model A {len(feat_all)}個 / Model B {len(feat_no_odds)}個\n")
+
+    # まず現在のパラメータでベースラインを計測
+    from ml.model.backtest_all_races import _make_params_bin
+    print("--- ベースライン（現在のパラメータ） ---")
+    current_params = _make_params_bin()
+    # scale_pos_weightは別途渡すので除外
+    base_params = {k: v for k, v in current_params.items() if k != "scale_pos_weight"}
+    baseline = _walk_forward_eval(df, base_params, 8.128, 7.787, feat_all, feat_no_odds)
+    print(f"  win_roi: {baseline['win_roi']:.3f}")
+    print(f"  show_roi: {baseline['show_roi']:.3f}")
+    print(f"  評価レース数: {baseline['n_races']}\n")
 
     # Optuna Study
     study = optuna.create_study(
@@ -209,6 +235,11 @@ def main() -> None:
     print(f"  win_roi: {best.user_attrs.get('win_roi', '?'):.3f}")
     print(f"  show_roi: {best.user_attrs.get('show_roi', '?'):.3f}")
     print(f"  評価レース数: {best.user_attrs.get('n_races', '?')}")
+    print(f"\nベースライン比較:")
+    print(f"  現在 win_roi: {baseline['win_roi']:.3f} → 最適化 win_roi: {best.user_attrs.get('win_roi', 0):.3f}")
+    print(f"  現在 show_roi: {baseline['show_roi']:.3f} → 最適化 show_roi: {best.user_attrs.get('show_roi', 0):.3f}")
+    improvement = best.user_attrs.get("win_roi", 0) - baseline["win_roi"]
+    print(f"  改善幅: {improvement:+.3f} ({improvement/max(baseline['win_roi'],0.001)*100:+.1f}%)")
     print(f"\n最適パラメータ:")
     for key, val in best.params.items():
         print(f"  {key}: {val}")

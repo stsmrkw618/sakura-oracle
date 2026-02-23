@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 33% 5%;
+    --foreground: 0 0% 100%;
+    --card: 240 33% 8%;
+    --card-foreground: 0 0% 100%;
+    --popover: 240 33% 8%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 347 60% 72%;
+    --primary-foreground: 240 33% 5%;
+    --secondary: 240 33% 15%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 240 33% 15%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 51 100% 50%;
+    --accent-foreground: 240 33% 5%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 20% 20%;
+    --input: 240 20% 20%;
+    --ring: 347 60% 72%;
+    --chart-1: 347 60% 72%;
+    --chart-2: 51 100% 50%;
+    --chart-3: 30 100% 50%;
+    --chart-4: 220 14% 40%;
+    --chart-5: 217 33% 17%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #0F0F1A;
+}
+::-webkit-scrollbar-thumb {
+  background: #E8879C40;
+  border-radius: 2px;
+}
+
+/* Number font utility */
+.font-mono-num {
+  font-family: var(--font-jetbrains), monospace;
+  font-variant-numeric: tabular-nums;
+}

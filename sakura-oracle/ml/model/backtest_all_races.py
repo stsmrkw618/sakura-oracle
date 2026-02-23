@@ -20,51 +20,54 @@ import lightgbm as lgb
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from ml.scraper.config import DATA_DIR, BASE_DIR
 
-# 全特徴量（Model A: 市場連動型）
-FEATURE_COLS_ALL = [
+# 基本特徴量（固定: 重要度下位1%を事前除外済み）
+# 除外済み: last3_finish, win_rate, mile_win_rate, last2_finish, last1_position_gain
+_BASE_FEATURES = [
     "horse_number", "frame_number", "weight", "weight_diff",
     "distance_m", "grade_encoded",
-    "total_runs", "win_rate", "show_rate",
-    "last1_finish", "last2_finish", "last3_finish",
+    "total_runs", "show_rate",
+    "last1_finish",
     "last1_last3f", "last2_last3f", "last1_speed",
     "speed_index", "avg_last3f", "best_last3f",
-    "hanshin_runs", "mile_win_rate",
+    "hanshin_runs",
     "jockey_win_rate", "jockey_g1_wins",
     "trainer_win_rate",
-    "last1_start_pos", "last1_position_gain",
+    "last1_start_pos",
     "last1_margin",
     "field_strength",
-    "odds", "popularity",
 ]
 
-# オッズ除外特徴量（Model B: エッジ検出型）
+# Model A: 市場連動型（オッズ込み） — 24特徴量
+FEATURE_COLS_ALL = _BASE_FEATURES + ["odds", "popularity"]
+
+# Model B: エッジ検出型（オッズ・field_strength除外） — 21特徴量
 FEATURE_COLS_NO_ODDS = [
-    c for c in FEATURE_COLS_ALL if c not in ("odds", "popularity", "field_strength")
+    c for c in _BASE_FEATURES if c != "field_strength"
 ]
 
 # 後方互換性のため
 FEATURE_COLS = FEATURE_COLS_ALL
 
-BLEND_WEIGHT_A = 0.6  # Model A（市場連動型）のブレンド比率
-BLEND_WEIGHT_B = 0.4  # Model B（エッジ検出型）のブレンド比率
+BLEND_WEIGHT_A = 0.2  # Model A（市場連動型）— 少量のみ
+BLEND_WEIGHT_B = 0.8  # Model B（エッジ検出型）— 主力
 
 def _make_params_bin(scale_pos_weight: float = 1.0) -> dict:
-    """二値分類パラメータを生成（正則化・クラス不均衡対応済み）"""
+    """二値分類パラメータを生成（Optuna最適化済み — Trial#54, 固定特徴量）"""
     return {
         "objective": "binary",
         "metric": "binary_logloss",
-        "num_leaves": 31,
-        "learning_rate": 0.05,
-        "n_estimators": 500,  # 早期停止で制御するため大きめに設定
+        "num_leaves": 39,
+        "learning_rate": 0.134,
+        "n_estimators": 100,
         "verbose": -1,
         "random_state": 42,
         "scale_pos_weight": scale_pos_weight,
-        "min_child_samples": 10,
-        "reg_alpha": 0.1,     # L1正則化
-        "reg_lambda": 1.0,    # L2正則化
-        "colsample_bytree": 0.8,  # feature_fraction
-        "subsample": 0.8,     # bagging_fraction
-        "subsample_freq": 5,  # bagging_freq
+        "min_child_samples": 8,
+        "reg_alpha": 6.842,
+        "reg_lambda": 0.00467,
+        "colsample_bytree": 0.512,
+        "subsample": 0.652,
+        "subsample_freq": 1,
     }
 
 
@@ -174,17 +177,9 @@ def run_walk_forward(df: pd.DataFrame) -> list[dict]:
         if len(train_df) < min_train_size:
             continue
 
-        # クラス不均衡の比率を計算
-        n_pos_win = train_df["is_win"].sum()
-        n_neg_win = len(train_df) - n_pos_win
-        spw_win = n_neg_win / max(n_pos_win, 1)
-
-        n_pos_show = train_df["is_show"].sum()
-        n_neg_show = len(train_df) - n_pos_show
-        spw_show = n_neg_show / max(n_pos_show, 1)
-
-        params_win = _make_params_bin(scale_pos_weight=spw_win)
-        params_show = _make_params_bin(scale_pos_weight=spw_show)
+        # Optuna最適化済み scale_pos_weight（Trial#54）
+        params_win = _make_params_bin(scale_pos_weight=11.817)
+        params_show = _make_params_bin(scale_pos_weight=6.988)
 
         X_train_all = train_df[feat_all].values
         X_test_all = test_df[feat_all].values
@@ -518,22 +513,8 @@ def main() -> None:
     df = pd.read_csv(csv_path)
     print(f"入力: {len(df)}行 × {len(df.columns)}カラム\n")
 
-    # 特徴量重要度による選択
-    print("--- 特徴量選択（重要度下位1%除外） ---")
-    importance = get_feature_importance(df)
-    kept, dropped = select_features(importance, threshold_pct=1.0)
-
-    if dropped:
-        print(f"  除外: {dropped}")
-        # グローバルな特徴量リストを一時的に上書き
-        global FEATURE_COLS_ALL, FEATURE_COLS_NO_ODDS, FEATURE_COLS
-        FEATURE_COLS_ALL = [c for c in FEATURE_COLS_ALL if c not in dropped]
-        FEATURE_COLS_NO_ODDS = [c for c in FEATURE_COLS_NO_ODDS if c not in dropped]
-        FEATURE_COLS = FEATURE_COLS_ALL
-    else:
-        print("  除外対象なし")
-
-    print(f"  使用特徴量: {len(FEATURE_COLS_ALL)}個\n")
+    # 特徴量は _BASE_FEATURES に固定（重要度下位1%は事前除外済み）
+    print(f"特徴量（固定）: Model A {len(FEATURE_COLS_ALL)}個 / Model B {len(FEATURE_COLS_NO_ODDS)}個\n")
 
     # 本番バックテスト
     results = run_walk_forward(df)

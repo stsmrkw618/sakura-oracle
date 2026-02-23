@@ -84,16 +84,23 @@ export default function BetGuidePage() {
                   <span className="text-sm font-bold text-sakura-pink">
                     {bet.type}
                   </span>
-                  <span className="font-mono text-sm">
-                    {bet.ev >= 1.5 && "🔥 "}
-                    <span
-                      className={
-                        bet.ev >= 1.5 ? "text-gold font-bold" : "text-white"
-                      }
-                    >
-                      EV {bet.ev.toFixed(2)}
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[10px] text-muted-foreground">
+                      Kelly {((bet as Record<string, unknown>).kelly as number
+                        ? ((bet as Record<string, unknown>).kelly as number * 100).toFixed(1)
+                        : "—")}%
                     </span>
-                  </span>
+                    <span className="font-mono text-sm">
+                      {bet.ev >= 1.5 && "🔥 "}
+                      <span
+                        className={
+                          bet.ev >= 1.5 ? "text-gold font-bold" : "text-white"
+                        }
+                      >
+                        EV {bet.ev.toFixed(2)}
+                      </span>
+                    </span>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">
@@ -243,6 +250,12 @@ export default function BetGuidePage() {
             </h2>
 
             {[
+              {
+                key: "kelly",
+                title: "Kelly基準とは？",
+                content:
+                  "最適な賭け金の割合を数学的に決める手法。エッジ（優位性）が大きいほど多く、小さいほど少なく賭ける。当システムでは安全な1/4 Kellyを採用し、モデルの過信を防止。",
+              },
               {
                 key: "ev",
                 title: "期待値とは？",

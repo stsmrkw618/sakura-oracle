@@ -1,0 +1,720 @@
+{
+  "summary": {
+    "n_races": 50,
+    "win_hit_rate": 0.3,
+    "show_hit_rate": 0.46,
+    "win_roi": 2.904,
+    "show_roi": 1.261,
+    "fav_win_rate": 0.26,
+    "fav_show_rate": 0.48
+  },
+  "by_grade": {
+    "G1": {
+      "n": 15,
+      "win_rate": 0.267,
+      "show_rate": 0.533,
+      "win_roi": 1.48,
+      "show_roi": 1.207
+    },
+    "G2": {
+      "n": 13,
+      "win_rate": 0.231,
+      "show_rate": 0.385,
+      "win_roi": 1.2,
+      "show_roi": 0.948
+    },
+    "G3": {
+      "n": 22,
+      "win_rate": 0.364,
+      "show_rate": 0.455,
+      "win_roi": 4.882,
+      "show_roi": 1.484
+    }
+  },
+  "by_race": {
+    "アルテミスS": {
+      "n": 5,
+      "grade": "G3",
+      "win_rate": 0.2,
+      "show_rate": 0.533,
+      "win_roi": 0.78,
+      "show_roi": 1.802
+    },
+    "クイーンC": {
+      "n": 5,
+      "grade": "G3",
+      "win_rate": 0.6,
+      "show_rate": 0.4,
+      "win_roi": 2.28,
+      "show_roi": 0.512
+    },
+    "チューリップ賞": {
+      "n": 3,
+      "grade": "G2",
+      "win_rate": 0.333,
+      "show_rate": 0.333,
+      "win_roi": 2.667,
+      "show_roi": 0.557
+    },
+    "ファンタジーS": {
+      "n": 5,
+      "grade": "G3",
+      "win_rate": 0.2,
+      "show_rate": 0.2,
+      "win_roi": 14.14,
+      "show_roi": 1.578
+    },
+    "フィリーズレビュー": {
+      "n": 5,
+      "grade": "G2",
+      "win_rate": 0.0,
+      "show_rate": 0.4,
+      "win_roi": 0.0,
+      "show_roi": 0.654
+    },
+    "フェアリーS": {
+      "n": 3,
+      "grade": "G3",
+      "win_rate": 0.667,
+      "show_rate": 0.667,
+      "win_roi": 5.633,
+      "show_roi": 3.29
+    },
+    "ローズS": {
+      "n": 5,
+      "grade": "G2",
+      "win_rate": 0.4,
+      "show_rate": 0.4,
+      "win_roi": 1.52,
+      "show_roi": 1.476
+    },
+    "桜花賞": {
+      "n": 5,
+      "grade": "G1",
+      "win_rate": 0.2,
+      "show_rate": 0.533,
+      "win_roi": 1.0,
+      "show_roi": 1.152
+    },
+    "秋華賞": {
+      "n": 5,
+      "grade": "G1",
+      "win_rate": 0.2,
+      "show_rate": 0.6,
+      "win_roi": 0.22,
+      "show_roi": 1.156
+    },
+    "紫苑S": {
+      "n": 4,
+      "grade": "G3",
+      "win_rate": 0.25,
+      "show_rate": 0.583,
+      "win_roi": 1.125,
+      "show_roi": 0.828
+    },
+    "阪神JF": {
+      "n": 5,
+      "grade": "G1",
+      "win_rate": 0.4,
+      "show_rate": 0.467,
+      "win_roi": 3.22,
+      "show_roi": 1.314
+    }
+  },
+  "by_year": {
+    "2021": {
+      "n": 9,
+      "win_rate": 0.333,
+      "show_rate": 0.37,
+      "win_roi": 2.011,
+      "show_roi": 0.733
+    },
+    "2022": {
+      "n": 10,
+      "win_rate": 0.2,
+      "show_rate": 0.467,
+      "win_roi": 7.34,
+      "show_roi": 1.234
+    },
+    "2023": {
+      "n": 10,
+      "win_rate": 0.1,
+      "show_rate": 0.367,
+      "win_roi": 0.11,
+      "show_roi": 0.635
+    },
+    "2024": {
+      "n": 10,
+      "win_rate": 0.3,
+      "show_rate": 0.567,
+      "win_roi": 1.85,
+      "show_roi": 1.451
+    },
+    "2025": {
+      "n": 9,
+      "win_rate": 0.444,
+      "show_rate": 0.519,
+      "win_roi": 2.189,
+      "show_roi": 2.083
+    },
+    "2026": {
+      "n": 2,
+      "win_rate": 1.0,
+      "show_rate": 0.5,
+      "win_roi": 7.2,
+      "show_roi": 2.26
+    }
+  },
+  "races": [
+    {
+      "label": "アルテミスS2021(2022世代)",
+      "grade": "G3",
+      "year": 2021,
+      "ai_pick": "ミント",
+      "actual_winner": "サークルオブライフ",
+      "win_hit": 0,
+      "show_hits": 0,
+      "win_return": 0.0,
+      "show_return": 0.0
+    },
+    {
+      "label": "紫苑S2021",
+      "grade": "G3",
+      "year": 2021,
+      "ai_pick": "ファインルージュ",
+      "actual_winner": "ファインルージュ",
+      "win_hit": 1,
+      "show_hits": 1,
+      "win_return": 450.0,
+      "show_return": 135.0
+    },
+    {
+      "label": "ローズS2021",
+      "grade": "G2",
+      "year": 2021,
+      "ai_pick": "コーディアル",
+      "actual_winner": "アンドヴァラナウト",
+      "win_hit": 0,
+      "show_hits": 0,
+      "win_return": 0.0,
+      "show_return": 0.0
+    },
+    {
+      "label": "チューリップ賞2021",
+      "grade": "G2",
+      "year": 2021,
+      "ai_pick": "エリザベスタワー",
+      "actual_winner": "エリザベスタワー",
+      "win_hit": 1,
+      "show_hits": 1,
+      "win_return": 800.0,
+      "show_return": 240.0
+    },
+    {
+      "label": "フィリーズレビュー2021",
+      "grade": "G2",
+      "year": 2021,
+      "ai_pick": "ヨカヨカ",
+      "actual_winner": "シゲルピンクルビー",
+      "win_hit": 0,
+      "show_hits": 1,
+      "win_return": 0.0,
+      "show_return": 147.0
+    },
+    {
+      "label": "桜花賞2021",
+      "grade": "G1",
+      "year": 2021,
+      "ai_pick": "サトノレイナス",
+      "actual_winner": "ソダシ",
+      "win_hit": 0,
+      "show_hits": 1,
+      "win_return": 0.0,
+      "show_return": 459.0
+    },
+    {
+      "label": "秋華賞2021",
+      "grade": "G1",
+      "year": 2021,
+      "ai_pick": "ファインルージュ",
+      "actual_winner": "アカイトリノムスメ",
+      "win_hit": 0,
+      "show_hits": 2,
+      "win_return": 0.0,
+      "show_return": 387.0
+    },
+    {
+      "label": "ファンタジーS2021(2022世代)",
+      "grade": "G3",
+      "year": 2021,
+      "ai_pick": "ママコチャ",
+      "actual_winner": "ウォーターナビレラ",
+      "win_hit": 0,
+      "show_hits": 2,
+      "win_return": 0.0,
+      "show_return": 246.0
+    },
+    {
+      "label": "阪神JF2021(2022世代)",
+      "grade": "G1",
+      "year": 2021,
+      "ai_pick": "サークルオブライフ",
+      "actual_winner": "サークルオブライフ",
+      "win_hit": 1,
+      "show_hits": 2,
+      "win_return": 560.0,
+      "show_return": 366.0
+    },
+    {
+      "label": "クイーンC2022",
+      "grade": "G3",
+      "year": 2022,
+      "ai_pick": "スターズオンアース",
+      "actual_winner": "プレサージュリフト",
+      "win_hit": 0,
+      "show_hits": 0,
+      "win_return": 0.0,
+      "show_return": 0.0
+    },
+    {
+      "label": "アルテミスS2022(2023世代)",
+      "grade": "G3",
+      "year": 2022,
+      "ai_pick": "デインバランス",
+      "actual_winner": "ラヴェル",
+      "win_hit": 0,
+      "show_hits": 2,
+      "win_return": 0.0,
+      "show_return": 279.0
+    },
+    {
+      "label": "紫苑S2022",
+      "grade": "G3",
+      "year": 2022,
+      "ai_pick": "サークルオブライフ",
+      "actual_winner": "スタニングローズ",
+      "win_hit": 0,
+      "show_hits": 2,
+      "win_return": 0.0,
+      "show_return": 261.0
+    },
+    {
+      "label": "ローズS2022",
+      "grade": "G2",
+      "year": 2022,
+      "ai_pick": "アートハウス",
+      "actual_winner": "アートハウス",
+      "win_hit": 1,
+      "show_hits": 2,
+      "win_return": 270.0,
+      "show_return": 201.0
+    },
+    {
+      "label": "チューリップ賞2022",
+      "grade": "G2",
+      "year": 2022,
+      "ai_pick": "サークルオブライフ",
+      "actual_winner": "ナミュール",
+      "win_hit": 0,
+      "show_hits": 1,
+      "win_return": 0.0,
+      "show_return": 99.0
+    },
+    {
+      "label": "フィリーズレビュー2022",
+      "grade": "G2",
+      "year": 2022,
+      "ai_pick": "ナムラクレア",
+      "actual_winner": "サブライムアンセム",
+      "win_hit": 0,
+      "show_hits": 2,
+      "win_return": 0.0,
+      "show_return": 288.0
+    },
+    {
+      "label": "桜花賞2022",
+      "grade": "G1",
+      "year": 2022,
+      "ai_pick": "サークルオブライフ",
+      "actual_winner": "スターズオンアース",
+      "win_hit": 0,
+      "show_hits": 1,
+      "win_return": 0.0,
+      "show_return": 186.0
+    },
+    {
+      "label": "秋華賞2022",
+      "grade": "G1",
+      "year": 2022,
+      "ai_pick": "スターズオンアース",
+      "actual_winner": "スタニングローズ",
+      "win_hit": 0,
+      "show_hits": 2,
+      "win_return": 0.0,
+      "show_return": 189.0
+    },
+    {
+      "label": "ファンタジーS2022(2023世代)",
+      "grade": "G3",
+      "year": 2022,
+      "ai_pick": "リバーラ",
+      "actual_winner": "リバーラ",
+      "win_hit": 1,
+      "show_hits": 1,
+      "win_return": 7070.0,
+      "show_return": 2121.0
+    },
+    {
+      "label": "阪神JF2022(2023世代)",
+      "grade": "G1",
+      "year": 2022,
+      "ai_pick": "ドゥーラ",
+      "actual_winner": "リバティアイランド",
+      "win_hit": 0,
+      "show_hits": 1,
+      "win_return": 0.0,
+      "show_return": 78.0
+    },
+    {
+      "label": "クイーンC2023",
+      "grade": "G3",
+      "year": 2023,
+      "ai_pick": "モリアーナ",
+      "actual_winner": "ハーパー",
+      "win_hit": 0,
+      "show_hits": 1,
+      "win_return": 0.0,
+      "show_return": 141.0
+    },
+    {
+      "label": "アルテミスS2023(2024世代)",
+      "grade": "G3",
+      "year": 2023,
+      "ai_pick": "サフィラ",
+      "actual_winner": "チェルヴィニア",
+      "win_hit": 0,
+      "show_hits": 2,
+      "win_return": 0.0,
+      "show_return": 216.0
+    },
+    {
+      "label": "紫苑S2023",
+      "grade": "G3",
+      "year": 2023,
+      "ai_pick": "ダルエスサラーム",
+      "actual_winner": "モリアーナ",
+      "win_hit": 0,
+      "show_hits": 2,
+      "win_return": 0.0,
+      "show_return": 309.0
+    },
+    {
+      "label": "秋華賞2023",
+      "grade": "G1",
+      "year": 2023,
+      "ai_pick": "リバティアイランド",
+      "actual_winner": "リバティアイランド",
+      "win_hit": 1,
+      "show_hits": 2,
+      "win_return": 110.00000000000001,
+      "show_return": 423.0
+    },
+    {
+      "label": "ファンタジーS2023(2024世代)",
+      "grade": "G3",
+      "year": 2023,
+      "ai_pick": "ピューロマジック",
+      "actual_winner": "カルチャーデイ",
+      "win_hit": 0,
+      "show_hits": 0,
+      "win_return": 0.0,
+      "show_return": 0.0
+    },
+    {
+      "label": "チューリップ賞2023",
+      "grade": "G2",
+      "year": 2023,
+      "ai_pick": "ドゥーラ",
+      "actual_winner": "モズメイメイ",
+      "win_hit": 0,
+      "show_hits": 1,
+      "win_return": 0.0,
+      "show_return": 162.0
+    },
+    {
+      "label": "フィリーズレビュー2023",
+      "grade": "G2",
+      "year": 2023,
+      "ai_pick": "ポリーフォリア",
+      "actual_winner": "シングザットソング",
+      "win_hit": 0,
+      "show_hits": 0,
+      "win_return": 0.0,
+      "show_return": 0.0
+    },
+    {
+      "label": "桜花賞2023",
+      "grade": "G1",
+      "year": 2023,
+      "ai_pick": "ライトクオンタム",
+      "actual_winner": "リバティアイランド",
+      "win_hit": 0,
+      "show_hits": 1,
+      "win_return": 0.0,
+      "show_return": 48.0
+    },
+    {
+      "label": "ローズS2023",
+      "grade": "G2",
+      "year": 2023,
+      "ai_pick": "コンクシェル",
+      "actual_winner": "マスクトディーヴァ",
+      "win_hit": 0,
+      "show_hits": 1,
+      "win_return": 0.0,
+      "show_return": 462.0
+    },
+    {
+      "label": "阪神JF2023(2024世代)",
+      "grade": "G1",
+      "year": 2023,
+      "ai_pick": "コラソンビート",
+      "actual_winner": "アスコリピチェーノ",
+      "win_hit": 0,
+      "show_hits": 1,
+      "win_return": 0.0,
+      "show_return": 144.0
+    },
+    {
+      "label": "クイーンC2024",
+      "grade": "G3",
+      "year": 2024,
+      "ai_pick": "クイーンズウォーク",
+      "actual_winner": "クイーンズウォーク",
+      "win_hit": 1,
+      "show_hits": 3,
+      "win_return": 310.0,
+      "show_return": 378.0
+    },
+    {
+      "label": "アルテミスS2024(2025世代)",
+      "grade": "G3",
+      "year": 2024,
+      "ai_pick": "カムニャック",
+      "actual_winner": "ブラウンラチェット",
+      "win_hit": 0,
+      "show_hits": 2,
+      "win_return": 0.0,
+      "show_return": 264.0
+    },
+    {
+      "label": "フェアリーS2024",
+      "grade": "G3",
+      "year": 2024,
+      "ai_pick": "キャットファイト",
+      "actual_winner": "イフェイオン",
+      "win_hit": 0,
+      "show_hits": 2,
+      "win_return": 0.0,
+      "show_return": 696.0
+    },
+    {
+      "label": "紫苑S2024",
+      "grade": "G3",
+      "year": 2024,
+      "ai_pick": "エラトー",
+      "actual_winner": "クリスマスパレード",
+      "win_hit": 0,
+      "show_hits": 2,
+      "win_return": 0.0,
+      "show_return": 288.0
+    },
+    {
+      "label": "ローズS2024",
+      "grade": "G2",
+      "year": 2024,
+      "ai_pick": "クイーンズウォーク",
+      "actual_winner": "クイーンズウォーク",
+      "win_hit": 1,
+      "show_hits": 2,
+      "win_return": 490.00000000000006,
+      "show_return": 951.0
+    },
+    {
+      "label": "秋華賞2024",
+      "grade": "G1",
+      "year": 2024,
+      "ai_pick": "ステレンボッシュ",
+      "actual_winner": "チェルヴィニア",
+      "win_hit": 0,
+      "show_hits": 1,
+      "win_return": 0.0,
+      "show_return": 117.0
+    },
+    {
+      "label": "ファンタジーS2024(2025世代)",
+      "grade": "G3",
+      "year": 2024,
+      "ai_pick": "ゴージャス",
+      "actual_winner": "ダンツエラン",
+      "win_hit": 0,
+      "show_hits": 0,
+      "win_return": 0.0,
+      "show_return": 0.0
+    },
+    {
+      "label": "阪神JF2024(2025世代)",
+      "grade": "G1",
+      "year": 2024,
+      "ai_pick": "アルマヴェローチェ",
+      "actual_winner": "アルマヴェローチェ",
+      "win_hit": 1,
+      "show_hits": 2,
+      "win_return": 1050.0,
+      "show_return": 1038.0
+    },
+    {
+      "label": "フィリーズレビュー2024",
+      "grade": "G2",
+      "year": 2024,
+      "ai_pick": "バウンシーステップ",
+      "actual_winner": "エトヴプレ",
+      "win_hit": 0,
+      "show_hits": 1,
+      "win_return": 0.0,
+      "show_return": 54.0
+    },
+    {
+      "label": "桜花賞2024",
+      "grade": "G1",
+      "year": 2024,
+      "ai_pick": "クイーンズウォーク",
+      "actual_winner": "ステレンボッシュ",
+      "win_hit": 0,
+      "show_hits": 2,
+      "win_return": 0.0,
+      "show_return": 567.0
+    },
+    {
+      "label": "クイーンC2025",
+      "grade": "G3",
+      "year": 2025,
+      "ai_pick": "エンブロイダリー",
+      "actual_winner": "エンブロイダリー",
+      "win_hit": 1,
+      "show_hits": 1,
+      "win_return": 490.00000000000006,
+      "show_return": 147.0
+    },
+    {
+      "label": "アルテミスS2025(2026世代)",
+      "grade": "G3",
+      "year": 2025,
+      "ai_pick": "フィロステファニ",
+      "actual_winner": "フィロステファニ",
+      "win_hit": 1,
+      "show_hits": 2,
+      "win_return": 390.0,
+      "show_return": 1944.0
+    },
+    {
+      "label": "フェアリーS2025",
+      "grade": "G3",
+      "year": 2025,
+      "ai_pick": "エリカエクスプレス",
+      "actual_winner": "エリカエクスプレス",
+      "win_hit": 1,
+      "show_hits": 2,
+      "win_return": 590.0,
+      "show_return": 1011.0
+    },
+    {
+      "label": "秋華賞2025",
+      "grade": "G1",
+      "year": 2025,
+      "ai_pick": "カムニャック",
+      "actual_winner": "エンブロイダリー",
+      "win_hit": 0,
+      "show_hits": 2,
+      "win_return": 0.0,
+      "show_return": 618.0
+    },
+    {
+      "label": "ファンタジーS2025(2026世代)",
+      "grade": "G3",
+      "year": 2025,
+      "ai_pick": "ブラックチャリス",
+      "actual_winner": "フェスティバルヒル",
+      "win_hit": 0,
+      "show_hits": 0,
+      "win_return": 0.0,
+      "show_return": 0.0
+    },
+    {
+      "label": "フィリーズレビュー2025",
+      "grade": "G2",
+      "year": 2025,
+      "ai_pick": "ボンヌソワレ",
+      "actual_winner": "ショウナンザナドゥ",
+      "win_hit": 0,
+      "show_hits": 2,
+      "win_return": 0.0,
+      "show_return": 492.0
+    },
+    {
+      "label": "桜花賞2025",
+      "grade": "G1",
+      "year": 2025,
+      "ai_pick": "エンブロイダリー",
+      "actual_winner": "エンブロイダリー",
+      "win_hit": 1,
+      "show_hits": 3,
+      "win_return": 500.0,
+      "show_return": 468.0
+    },
+    {
+      "label": "ローズS2025",
+      "grade": "G2",
+      "year": 2025,
+      "ai_pick": "パラディレーヌ",
+      "actual_winner": "カムニャック",
+      "win_hit": 0,
+      "show_hits": 1,
+      "win_return": 0.0,
+      "show_return": 600.0
+    },
+    {
+      "label": "阪神JF2025(2026世代)",
+      "grade": "G1",
+      "year": 2025,
+      "ai_pick": "ギャラボーグ",
+      "actual_winner": "スターアニス",
+      "win_hit": 0,
+      "show_hits": 1,
+      "win_return": 0.0,
+      "show_return": 345.0
+    },
+    {
+      "label": "クイーンC2026",
+      "grade": "G3",
+      "year": 2026,
+      "ai_pick": "ドリームコア",
+      "actual_winner": "ドリームコア",
+      "win_hit": 1,
+      "show_hits": 1,
+      "win_return": 340.0,
+      "show_return": 102.0
+    },
+    {
+      "label": "フェアリーS2026",
+      "grade": "G3",
+      "year": 2026,
+      "ai_pick": "ブラックチャリス",
+      "actual_winner": "ブラックチャリス",
+      "win_hit": 1,
+      "show_hits": 2,
+      "win_return": 1100.0,
+      "show_return": 1254.0
+    }
+  ]
+}

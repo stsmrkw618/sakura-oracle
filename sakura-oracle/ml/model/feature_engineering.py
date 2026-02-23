@@ -317,6 +317,43 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     df["field_strength"] = df["_odds_inv"] / race_odds_sum
     df = df.drop(columns=["_odds_inv"])
 
+    # === 血統データマージ ===
+    pedigree_path = RAW_DIR / "horse_pedigree.csv"
+    if pedigree_path.exists():
+        print("  血統データ読み込み中...")
+        ped_df = pd.read_csv(pedigree_path)
+        # 馬名でマージ
+        ped_cols = ["horse_name", "sire", "sire_category", "sire_category_code"]
+        ped_merge = ped_df[[c for c in ped_cols if c in ped_df.columns]].copy()
+        ped_merge = ped_merge.rename(columns={"horse_name": "馬名"})
+        ped_merge = ped_merge.drop_duplicates(subset=["馬名"], keep="first")
+        df = df.merge(ped_merge, on="馬名", how="left")
+        df["sire_category_code"] = df["sire_category_code"].fillna(0).astype(int)
+
+        # 父馬の累積成績（父馬の産駒勝率 — ベイズ平均で平滑化）
+        if "sire" in df.columns:
+            prior_win_rate = df["is_win"].mean()  # 全体平均（約6%）
+            min_runs = 10  # 事前分布の重み
+            df = df.sort_values(["sire", "race_id"]).reset_index(drop=True)
+            sire_stats = []
+            for _, group in df.groupby("sire"):
+                g = group.copy()
+                g["sire_runs"] = range(len(g))
+                g["sire_wins"] = g["is_win"].cumsum().shift(1, fill_value=0)
+                # ベイズ平均: (実績勝利 + 事前勝率 * min_runs) / (実績出走 + min_runs)
+                g["sire_win_rate"] = (
+                    (g["sire_wins"] + prior_win_rate * min_runs)
+                    / (g["sire_runs"] + min_runs)
+                )
+                sire_stats.append(g)
+            df = pd.concat(sire_stats, ignore_index=True)
+
+        print(f"  血統マージ完了: sire_category分布 = {df['sire_category'].value_counts().to_dict()}")
+    else:
+        print("  ⚠️ horse_pedigree.csv 未検出 → 血統特徴量スキップ")
+        df["sire_category_code"] = 0
+        df["sire_win_rate"] = 0.0
+
     # === 出力カラム選択 ===
     feature_cols = [
         # ID
@@ -341,8 +378,10 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
         "last1_start_pos", "last1_position_gain",
         # 着差（新規）
         "last1_margin",
-        # フィールド強度（新規）
+        # フィールド強度
         "field_strength",
+        # 血統
+        "sire_category_code", "sire_win_rate",
         # オッズ
         "odds", "popularity",
         # ターゲット

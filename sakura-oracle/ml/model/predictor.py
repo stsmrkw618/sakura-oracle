@@ -22,33 +22,36 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from ml.scraper.config import DATA_DIR, BASE_DIR
 
 # === 設定 ===
-# 全特徴量（Model A: 市場連動型）
-FEATURE_COLS_ALL = [
+# 基本特徴量（固定: 重要度下位1%を事前除外済み）
+# 除外済み: last3_finish, win_rate, mile_win_rate, last2_finish, last1_position_gain
+_BASE_FEATURES = [
     "horse_number", "frame_number", "weight", "weight_diff",
     "distance_m", "grade_encoded",
-    "total_runs", "win_rate", "show_rate",
-    "last1_finish", "last2_finish", "last3_finish",
+    "total_runs", "show_rate",
+    "last1_finish",
     "last1_last3f", "last2_last3f", "last1_speed",
     "speed_index", "avg_last3f", "best_last3f",
-    "hanshin_runs", "mile_win_rate",
+    "hanshin_runs",
     "jockey_win_rate", "jockey_g1_wins",
     "trainer_win_rate",
-    "last1_start_pos", "last1_position_gain",
+    "last1_start_pos",
     "last1_margin",
     "field_strength",
-    "odds", "popularity",
 ]
 
-# オッズ除外特徴量（Model B: エッジ検出型）
+# Model A: 市場連動型（オッズ込み）
+FEATURE_COLS_ALL = _BASE_FEATURES + ["odds", "popularity"]
+
+# Model B: エッジ検出型（オッズ・field_strength除外）
 FEATURE_COLS_NO_ODDS = [
-    c for c in FEATURE_COLS_ALL if c not in ("odds", "popularity", "field_strength")
+    c for c in _BASE_FEATURES if c != "field_strength"
 ]
 
 # 後方互換性のため
 FEATURE_COLS = FEATURE_COLS_ALL
 
-BLEND_WEIGHT_A = 0.6
-BLEND_WEIGHT_B = 0.4
+BLEND_WEIGHT_A = 0.2  # Model A（市場連動型）— 少量のみ
+BLEND_WEIGHT_B = 0.8  # Model B（エッジ検出型）— 主力
 
 SAKURA_LABELS = [
     "桜花賞2025", "桜花賞2024", "桜花賞2023", "桜花賞2022", "桜花賞2021",
@@ -59,7 +62,7 @@ RADAR_FEATURES = {
     "speed": "speed_index",
     "stamina": "total_runs",
     "instant": "best_last3f",
-    "pedigree": "grade_encoded",
+    "pedigree": "sire_category_code",
     "jockey": "jockey_win_rate",
     "course_fit": "hanshin_runs",
 }
@@ -90,22 +93,22 @@ def _train_lgbm_cls(
 
 
 def _make_params_bin(scale_pos_weight: float = 1.0) -> dict:
-    """二値分類パラメータ（正則化 + クラス不均衡対応）"""
+    """二値分類パラメータ（Optuna最適化済み — Trial#54, 固定特徴量）"""
     return {
         "objective": "binary",
         "metric": "binary_logloss",
-        "num_leaves": 31,
-        "learning_rate": 0.05,
-        "n_estimators": 500,
+        "num_leaves": 39,
+        "learning_rate": 0.134,
+        "n_estimators": 100,
         "verbose": -1,
         "random_state": 42,
         "scale_pos_weight": scale_pos_weight,
-        "min_child_samples": 10,
-        "reg_alpha": 0.1,
-        "reg_lambda": 1.0,
-        "colsample_bytree": 0.8,
-        "subsample": 0.8,
-        "subsample_freq": 5,
+        "min_child_samples": 8,
+        "reg_alpha": 6.842,
+        "reg_lambda": 0.00467,
+        "colsample_bytree": 0.512,
+        "subsample": 0.652,
+        "subsample_freq": 1,
     }
 
 
@@ -265,23 +268,41 @@ def normalize_0_100(series: pd.Series) -> pd.Series:
     return ((s - mn) / (mx - mn) * 100).round(0).clip(0, 100).astype(int)
 
 
-def get_mark(row: pd.Series, df: pd.DataFrame) -> str:
-    """印を付与"""
-    # 勝率1位 & 期待値1.3以上 → ◎
-    win_rank = df["pred_win"].rank(ascending=False)
-    ev_rank = df["ev_win"].rank(ascending=False)
+def calc_kelly(prob: float, odds: float, fraction: float = 0.25) -> float:
+    """fractional Kelly基準で最適賭け比率を計算
 
+    Args:
+        prob: モデル予測勝率
+        odds: 単勝オッズ（日本式: 賭け金込みの払い戻し倍率）
+        fraction: Kelly fraction（0.25 = 1/4 Kelly、モデル過信防止）
+
+    Returns:
+        0以上の賭け比率（資金に対する割合）。エッジなしなら0。
+    """
+    if odds <= 1.0 or prob <= 0 or prob >= 1:
+        return 0.0
+    b = odds - 1  # net odds（利益部分）
+    # Kelly: f = (p*b - q) / b  where q = 1 - p
+    f = (prob * b - (1 - prob)) / b
+    return max(0.0, f * fraction)
+
+
+def get_mark(row: pd.Series, df: pd.DataFrame) -> str:
+    """Kelly基準に基づく印付与（1/4 Kelly値域に対応）"""
+    kelly = row.get("kelly_win", 0)
+    kelly_rank = df["kelly_win"].rank(ascending=False)
     idx = row.name
-    if win_rank[idx] == 1 and row["ev_win"] >= 1.3:
-        return "◎"
-    elif win_rank[idx] <= 2 or ev_rank[idx] <= 2:
-        return "○"
-    elif row["ev_win"] >= 1.5:
-        return "▲"
-    elif row["pred_show"] >= 0.3:
-        return "△"
+
+    if kelly_rank[idx] == 1 and kelly > 0.01:
+        return "◎"  # Kelly最大 & 十分なエッジ
+    elif kelly_rank[idx] <= 3 and kelly > 0.005:
+        return "○"  # 上位3位 & エッジあり
+    elif kelly > 0.002:
+        return "▲"  # Kelly正だが控えめ
+    elif row["pred_show"] >= 0.2 and kelly > 0:
+        return "△"  # 複勝候補（Kelly微小だが複勝圏）
     else:
-        return "×"
+        return "×"  # エッジなし
 
 
 def generate_comment(row: pd.Series) -> str:
@@ -339,6 +360,13 @@ def generate_predictions_json(
         print("⚠️ 桜花賞2025のデータがありません")
         return
 
+    # 血統データ読み込み（sire表示用）
+    pedigree_path = DATA_DIR / "raw" / "horse_pedigree.csv"
+    sire_lookup: dict[str, str] = {}
+    if pedigree_path.exists():
+        ped_df = pd.read_csv(pedigree_path)
+        sire_lookup = dict(zip(ped_df["horse_name"], ped_df["sire"]))
+
     feat_all = models.get("feat_all", _get_available_features(df, FEATURE_COLS_ALL))
     feat_no_odds = models.get("feat_no_odds", _get_available_features(df, FEATURE_COLS_NO_ODDS))
 
@@ -363,7 +391,15 @@ def generate_predictions_json(
     race_df["ev_win"] = race_df["pred_win"] * race_df["odds"]
     race_df["ev_show"] = race_df["pred_show"] * (race_df["odds"] * 0.3)  # 複勝は概算
 
-    # 印
+    # Kelly fraction（1/4 Kelly）
+    race_df["kelly_win"] = race_df.apply(
+        lambda row: calc_kelly(row["pred_win"], row["odds"]), axis=1
+    )
+    race_df["kelly_show"] = race_df.apply(
+        lambda row: calc_kelly(row["pred_show"], row["odds"] * 0.3), axis=1
+    )
+
+    # 印（Kelly基準）
     race_df["mark"] = race_df.apply(lambda row: get_mark(row, race_df), axis=1)
 
     # レーダーチャート（0-100正規化）
@@ -400,6 +436,8 @@ def generate_predictions_json(
             "show_prob": round(float(row["pred_show"]), 4),
             "ev_win": round(float(row["ev_win"]), 2),
             "ev_show": round(float(row["ev_show"]), 2),
+            "kelly_win": round(float(row["kelly_win"]), 4),
+            "kelly_show": round(float(row["kelly_show"]), 4),
             "speed_index": round(float(row["speed_index"]), 1) if pd.notna(row["speed_index"]) else 50.0,
             "radar": radar,
             "comment": generate_comment(row),
@@ -409,7 +447,7 @@ def generate_predictions_json(
                 "win": round(float(row["odds"]), 1) if pd.notna(row["odds"]) else 10.0,
                 "show": round(float(row["odds"]) * 0.3, 1) if pd.notna(row["odds"]) else 3.0,
             },
-            "sire": "不明",  # 血統データは別途取得が必要
+            "sire": sire_lookup.get(str(row["馬名"]), "不明"),
             "jockey": str(row["騎手"]),
             "frame_number": int(row["frame_number"]),
         })
@@ -418,47 +456,65 @@ def generate_predictions_json(
     mark_order = {"◎": 0, "○": 1, "▲": 2, "△": 3, "×": 4}
     predictions.sort(key=lambda x: (mark_order.get(x["mark"], 99), -x["win_prob"]))
 
-    # 推奨買い目生成
+    # === Kelly基準ベースの推奨買い目生成 ===
+    BUDGET = 3000  # デフォルト予算
+    kelly_horses = [p for p in predictions if p["kelly_win"] > 0]
     top_horses = [p for p in predictions if p["mark"] in ("◎", "○", "▲")]
-    honmei = predictions[0] if predictions else None
 
     bets = []
-    if honmei and honmei["ev_win"] >= 1.0:
+
+    # 単勝: Kelly fraction > 0 の馬に比例配分
+    for h in kelly_horses:
+        amount = max(100, round(BUDGET * h["kelly_win"] / 100) * 100)
         bets.append({
             "type": "単勝",
-            "targets": f"{honmei['horse_number']}番",
-            "amount": 500,
-            "ev": honmei["ev_win"],
-            "odds": honmei["odds"]["win"],
+            "targets": f"{h['horse_number']}番 {h['horse_name']}",
+            "amount": amount,
+            "ev": h["ev_win"],
+            "odds": h["odds"]["win"],
+            "kelly": h["kelly_win"],
         })
+
+    # 組み合わせ馬券: 上位馬が2頭以上いれば追加
     if len(top_horses) >= 2:
         targets = "-".join(str(h["horse_number"]) for h in top_horses[:3])
         avg_ev = sum(h["ev_win"] for h in top_horses[:3]) / len(top_horses[:3])
+        avg_kelly = sum(h["kelly_win"] for h in top_horses[:3]) / len(top_horses[:3])
+        amount = max(100, round(BUDGET * avg_kelly / 100) * 100)
         bets.append({
             "type": "馬連BOX",
             "targets": targets,
-            "amount": 600,
+            "amount": amount,
             "ev": round(avg_ev, 2),
             "odds": None,
+            "kelly": round(avg_kelly, 4),
         })
     if len(top_horses) >= 3:
-        top5 = predictions[:5]
-        targets = "-".join(str(h["horse_number"]) for h in top5)
-        avg_ev = sum(h["ev_win"] for h in top5) / len(top5)
-        bets.append({
-            "type": "三連複BOX",
-            "targets": targets,
-            "amount": 1200,
-            "ev": round(avg_ev, 2),
-            "odds": None,
-        })
+        top5 = [p for p in predictions if p["mark"] in ("◎", "○", "▲", "△")][:5]
+        if len(top5) >= 3:
+            targets = "-".join(str(h["horse_number"]) for h in top5)
+            avg_ev = sum(h["ev_win"] for h in top5) / len(top5)
+            avg_kelly = sum(h["kelly_win"] for h in top5) / len(top5)
+            amount = max(100, round(BUDGET * avg_kelly * 0.5 / 100) * 100)
+            bets.append({
+                "type": "三連複BOX",
+                "targets": targets,
+                "amount": amount,
+                "ev": round(avg_ev, 2),
+                "odds": None,
+                "kelly": round(avg_kelly, 4),
+            })
     if len(top_horses) >= 2:
+        h1, h2 = top_horses[0], top_horses[1]
+        avg_kelly = (h1["kelly_win"] + h2["kelly_win"]) / 2
+        amount = max(100, round(BUDGET * avg_kelly / 100) * 100)
         bets.append({
             "type": "ワイド",
-            "targets": f"{top_horses[0]['horse_number']}-{top_horses[1]['horse_number']}",
-            "amount": 700,
-            "ev": round((top_horses[0]["ev_win"] + top_horses[1]["ev_win"]) / 2, 2),
+            "targets": f"{h1['horse_number']}-{h2['horse_number']}",
+            "amount": amount,
+            "ev": round((h1["ev_win"] + h2["ev_win"]) / 2, 2),
             "odds": None,
+            "kelly": round(avg_kelly, 4),
         })
 
     total_inv = sum(b["amount"] for b in bets)

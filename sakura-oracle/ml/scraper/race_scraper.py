@@ -16,6 +16,7 @@ import random
 import pickle
 import re
 import sys
+from datetime import datetime, timedelta
 from io import StringIO
 from pathlib import Path
 
@@ -78,24 +79,44 @@ def safe_request(url: str, max_retries: int = MAX_RETRIES) -> bytes | None:
     return None
 
 
-def find_race_id_from_date(date: str, keyword: str) -> str | None:
-    """開催日ページからキーワードに一致するレースのrace_idを特定"""
-    url = f"https://db.netkeiba.com/race/list/{date}/"
-    content = safe_request(url)
-    if content is None:
-        return None
+# 手動フォールバック: 日付検索で見つからないレースのrace_id
+MANUAL_RACE_IDS: dict[str, str] = {
+    # 必要に応じて "label": "race_id" で追加
+    # 例: "フェアリーS2025": "202506010511",
+}
 
-    soup = BeautifulSoup(content, "lxml")
-    links = soup.select("a[href*='/race/']")
 
-    for link in links:
-        href = link.get("href", "")
-        text = link.get_text(strip=True)
-        match = re.search(r"/race/(\d{12})/", href)
-        if match and keyword in text:
-            return match.group(1)
+def find_race_id_from_date(date: str, keyword: str, label: str = "") -> str | None:
+    """開催日ページからキーワードに一致するレースのrace_idを特定（±1日シフト対応）"""
+    # 0. 手動フォールバック辞書をチェック
+    if label and label in MANUAL_RACE_IDS:
+        return MANUAL_RACE_IDS[label]
 
-    # 日付ズレの可能性（前後1日も確認）
+    # 1. 当日 → 前日 → 翌日 の順に検索
+    for day_offset in [0, -1, 1]:
+        try:
+            dt = datetime.strptime(date, "%Y%m%d") + timedelta(days=day_offset)
+        except ValueError:
+            continue
+        shifted = dt.strftime("%Y%m%d")
+
+        url = f"https://db.netkeiba.com/race/list/{shifted}/"
+        content = safe_request(url)
+        if content is None:
+            continue
+
+        soup = BeautifulSoup(content, "lxml")
+        links = soup.select("a[href*='/race/']")
+
+        for link in links:
+            href = link.get("href", "")
+            text = link.get_text(strip=True)
+            match = re.search(r"/race/(\d{12})/", href)
+            if match and keyword in text:
+                if day_offset != 0:
+                    print(f"  📅 日付シフト: {date} → {shifted} で発見")
+                return match.group(1)
+
     return None
 
 
@@ -278,7 +299,7 @@ def main() -> None:
         pbar.set_description(label)
 
         # Phase 1: race_id 特定
-        race_id = find_race_id_from_date(race["date"], race["keyword"])
+        race_id = find_race_id_from_date(race["date"], race["keyword"], label=label)
         if race_id is None:
             print(f"  ⚠️ {label}: race_id未特定 (日付: {race['date']})")
             failed.append(label)
