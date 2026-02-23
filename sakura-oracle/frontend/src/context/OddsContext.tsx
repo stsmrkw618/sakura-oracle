@@ -56,7 +56,7 @@ interface Bet {
   evReliable: boolean; // true=実オッズでEV計算済み
   odds: number | null;
   kelly: number;
-  /** BT実績回収率（三連複=8.50, 馬連=5.07, ワイド=4.23, 単勝=2.45） */
+  /** BT実績回収率（馬連=5.50, 三連複=4.74, ワイド=4.65, 単勝=2.65） */
   backtestRoi: number;
   /** 的中時リターン (単勝: amount × odds) */
   winReturn?: number;
@@ -156,10 +156,10 @@ function generateBets(
 
   // BT実績ROI定数
   const BT_ROI: Record<string, number> = {
-    "三連複": 8.50,
-    "馬連": 5.07,
-    "ワイド": 4.23,
-    "単勝": 2.45,
+    "馬連": 5.50,
+    "三連複": 4.74,
+    "ワイド": 4.65,
+    "単勝": 2.65,
   };
 
   // 単勝: ◎○▲の馬のみ（最大3頭）— Kelly > 0 かつ EV > 1.0

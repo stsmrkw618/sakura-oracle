@@ -445,8 +445,8 @@ def _compute_bankroll_history(
     if not results:
         return {}
 
-    # BT ROI重み（v9実績ベース）
-    weights = {"trio": 8.50, "quinella": 5.07, "wide": 4.23, "win": 2.45}
+    # BT ROI重み（v10実績ベース）
+    weights = {"trio": 4.74, "quinella": 5.50, "wide": 4.65, "win": 2.65}
     total_weight = sum(weights.values())
 
     bankroll_win = float(initial)

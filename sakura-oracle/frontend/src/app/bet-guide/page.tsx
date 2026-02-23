@@ -243,10 +243,10 @@ export default function BetGuidePage() {
             </h2>
             <div className="space-y-2">
               {[
-                { label: "三連複BOX(5)", roi: 850, hit: 34, color: "bg-gold" },
-                { label: "馬連BOX(3)", roi: 507, hit: 32, color: "bg-sakura-pink" },
-                { label: "ワイド(◎-○)", roi: 423, hit: 30, color: "bg-orange-400" },
-                { label: "単勝", roi: 245, hit: null, color: "bg-blue-400" },
+                { label: "馬連BOX(3)", roi: 550, hit: 32, color: "bg-sakura-pink" },
+                { label: "三連複BOX(5)", roi: 474, hit: 34, color: "bg-gold" },
+                { label: "ワイド(◎-○)", roi: 465, hit: 30, color: "bg-orange-400" },
+                { label: "単勝", roi: 265, hit: 46, color: "bg-blue-400" },
               ].map((item) => (
                 <div key={item.label}>
                   <div className="flex items-center justify-between text-xs mb-1">
@@ -348,7 +348,7 @@ export default function BetGuidePage() {
               三連複BOX(5)（{trioBets.length}通り）
             </h2>
             <p className="text-[10px] text-muted-foreground mb-3">
-              BT実績: 的中34% / 回収850% — AI上位5頭から全10通り
+              BT実績: 的中34% / 回収474% — AI上位5頭から全10通り
             </p>
             <div className="space-y-3">
               {trioBets.map((bet, i) => (
@@ -370,7 +370,7 @@ export default function BetGuidePage() {
               馬連BOX(3)（{quinellaBets.length}通り）
             </h2>
             <p className="text-[10px] text-muted-foreground mb-3">
-              BT実績: 的中32% / 回収507%
+              BT実績: 的中32% / 回収550%
             </p>
             <div className="space-y-3">
               {quinellaBets.map((bet, i) => (
@@ -392,7 +392,7 @@ export default function BetGuidePage() {
               ワイド(◎-○)（{wideBets.length}点）
             </h2>
             <p className="text-[10px] text-muted-foreground mb-3">
-              BT実績: 的中30% / 回収423%
+              BT実績: 的中30% / 回収465%
             </p>
             <div className="space-y-3">
               {wideBets.map((bet, i) => (
