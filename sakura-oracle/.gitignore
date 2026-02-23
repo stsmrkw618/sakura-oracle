@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Data (large files, regenerable)
+data/raw/*.csv
+data/features.csv
+ml/scraper/cache/
+ml/output/
+
+# Node
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# Generated JSON (regenerable from model)
+frontend/src/data/*.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Env
+.env
+*.env
