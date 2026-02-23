@@ -335,13 +335,18 @@ def generate_comment(row: pd.Series) -> str:
     return "。".join(parts) + "。" if parts else "データ不足のため分析困難。"
 
 
-def generate_risk(row: pd.Series) -> str:
-    """リスク要因を生成"""
+def generate_risk(row: pd.Series, venue: str = "阪神") -> str:
+    """リスク要因を生成
+
+    Args:
+        row: 馬データの行
+        venue: レース開催会場名（デフォルト: 阪神）
+    """
     risks = []
     if row.get("total_runs", 0) < 3:
         risks.append("キャリアが浅い")
     if row.get("hanshin_runs", 0) == 0:
-        risks.append("阪神未経験")
+        risks.append(f"{venue}未経験")
     if row.get("last1_finish", 99) > 5:
         risks.append("前走着順が振るわない")
     if row.get("weight_diff", 0) > 10:

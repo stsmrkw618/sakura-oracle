@@ -3,6 +3,9 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import SakuraParticles from "@/components/SakuraParticles";
+import predictions from "@/data/predictions.json";
+
+const raceInfo = predictions.race_info;
 
 export default function Home() {
   return (
@@ -34,7 +37,7 @@ export default function Home() {
           transition={{ duration: 0.6, delay: 0.6 }}
           className="text-xl text-white font-medium mb-2"
         >
-          第86回 桜花賞 AI予測
+          {raceInfo.name} AI予測
         </motion.p>
 
         <motion.p
@@ -43,7 +46,7 @@ export default function Home() {
           transition={{ duration: 0.6, delay: 0.8 }}
           className="text-sm text-muted-foreground mb-12"
         >
-          2026.4.12 阪神競馬場 芝1600m
+          {raceInfo.date} {raceInfo.course}
         </motion.p>
 
         <motion.div

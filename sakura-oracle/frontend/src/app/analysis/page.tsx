@@ -98,7 +98,7 @@ export default function AnalysisPage() {
       >
         <h1 className="text-lg font-bold">📈 分析</h1>
         <p className="text-xs text-muted-foreground">
-          AIモデルの実力と桜花賞の傾向
+          AIモデルの実力と3歳牝馬重賞の傾向
         </p>
       </motion.header>
 
@@ -299,15 +299,14 @@ export default function AnalysisPage() {
             </h2>
             <div className="bg-navy/50 rounded-lg p-4 border-l-4 border-sakura-pink">
               <p className="text-sm leading-relaxed text-gray-300">
-                今年の桜花賞は<span className="text-white font-bold">前走上がり3Fが最重要指標</span>。
-                高速馬場が予想されるため、瞬発力勝負になる可能性が高い。
-                内枠有利の傾向は過去5年のデータでも顕著で、
-                1〜3枠の3着内率は外枠の約1.8倍。
+                3歳牝馬重賞では<span className="text-white font-bold">前走上がり3Fが最重要指標</span>。
+                瞬発力のある馬が好走しやすく、
+                内枠有利の傾向は過去のデータでも顕著。
               </p>
               <p className="text-sm leading-relaxed text-gray-300 mt-2">
-                血統的には<span className="text-white font-bold">ディープインパクト系</span>が桜花賞で圧倒的な成績。
-                ロードカナロア系もスピード寄りの産駒が好走傾向。
-                チューリップ賞組の信頼度は高く、特に上がり最速馬の桜花賞好走率は70%超。
+                Model B（オッズ除外）をメインに据えることで、
+                <span className="text-white font-bold">市場が見落とす穴馬</span>を検出。
+                デュアルモデルブレンド（A20+B80）で安定性とエッジを両立。
               </p>
             </div>
           </div>
