@@ -94,22 +94,22 @@ def _train_lgbm_cls(
 
 
 def _make_params_bin(scale_pos_weight: float = 1.0) -> dict:
-    """二値分類パラメータ（Optuna最適化済み — Trial#54, 固定特徴量）"""
+    """二値分類パラメータ（Nested CV最適化済み — Trial#87, 2025年以降除外）"""
     return {
         "objective": "binary",
         "metric": "binary_logloss",
-        "num_leaves": 39,
-        "learning_rate": 0.134,
+        "num_leaves": 40,
+        "learning_rate": 0.149,
         "n_estimators": 100,
         "verbose": -1,
         "random_state": 42,
         "scale_pos_weight": scale_pos_weight,
-        "min_child_samples": 8,
-        "reg_alpha": 6.842,
-        "reg_lambda": 0.00467,
-        "colsample_bytree": 0.512,
-        "subsample": 0.652,
-        "subsample_freq": 1,
+        "min_child_samples": 23,
+        "reg_alpha": 1.059,
+        "reg_lambda": 3.483,
+        "colsample_bytree": 0.884,
+        "subsample": 0.601,
+        "subsample_freq": 6,
     }
 
 
@@ -129,14 +129,9 @@ def train_models(df: pd.DataFrame) -> dict:
     X_train_no_odds = train_df[feat_no_odds].values
     X_test_no_odds = test_df[feat_no_odds].values
 
-    # クラス不均衡の比率
-    n_pos_win = train_df["is_win"].sum()
-    spw_win = (len(train_df) - n_pos_win) / max(n_pos_win, 1)
-    n_pos_show = train_df["is_show"].sum()
-    spw_show = (len(train_df) - n_pos_show) / max(n_pos_show, 1)
-
-    params_win = _make_params_bin(spw_win)
-    params_show = _make_params_bin(spw_show)
+    # Nested CV最適化済み scale_pos_weight（Trial#87）
+    params_win = _make_params_bin(scale_pos_weight=16.851)
+    params_show = _make_params_bin(scale_pos_weight=5.020)
 
     models = {}
 

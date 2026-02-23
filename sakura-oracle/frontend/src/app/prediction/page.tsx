@@ -137,6 +137,52 @@ export default function PredictionPage() {
         ))}
       </main>
 
+      {/* Glossary */}
+      <section className="px-4 pb-4">
+        <div className="bg-card rounded-xl p-4 border border-white/5">
+          <h3 className="text-xs font-bold text-muted-foreground mb-3">用語解説</h3>
+          <dl className="space-y-2 text-xs">
+            <div>
+              <dt className="text-white font-bold inline">◎ 本命</dt>
+              <dd className="text-muted-foreground inline ml-1">— AIが最も勝つ可能性が高いと判断した馬</dd>
+            </div>
+            <div>
+              <dt className="text-white font-bold inline">○ 対抗</dt>
+              <dd className="text-muted-foreground inline ml-1">— 本命に次ぐ有力馬。本命を負かす可能性あり</dd>
+            </div>
+            <div>
+              <dt className="text-white font-bold inline">▲ 単穴</dt>
+              <dd className="text-muted-foreground inline ml-1">— 人気薄だが一発あり得る穴馬。単勝で狙う価値あり</dd>
+            </div>
+            <div>
+              <dt className="text-white font-bold inline">△ 連下</dt>
+              <dd className="text-muted-foreground inline ml-1">— 1着は厳しいが2〜3着に来る可能性がある馬</dd>
+            </div>
+            <div>
+              <dt className="text-white font-bold inline">× 消し</dt>
+              <dd className="text-muted-foreground inline ml-1">— 好走の可能性が低いとAIが判断した馬</dd>
+            </div>
+            <hr className="border-white/5 my-2" />
+            <div>
+              <dt className="text-white font-bold inline">勝率</dt>
+              <dd className="text-muted-foreground inline ml-1">— AIが算出した1着になる確率</dd>
+            </div>
+            <div>
+              <dt className="text-white font-bold inline">複勝</dt>
+              <dd className="text-muted-foreground inline ml-1">— AIが算出した3着以内に入る確率</dd>
+            </div>
+            <div>
+              <dt className="text-white font-bold inline">EV（期待値）</dt>
+              <dd className="text-muted-foreground inline ml-1">— 100円賭けた時の期待リターン。1.0超で割安、1.5超はお買い得</dd>
+            </div>
+            <div>
+              <dt className="text-white font-bold inline">SI（スピード指数）</dt>
+              <dd className="text-muted-foreground inline ml-1">— 過去レースの走破タイムを距離・馬場で補正した能力指標</dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
       <Navbar />
     </div>
   );

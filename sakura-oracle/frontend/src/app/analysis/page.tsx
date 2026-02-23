@@ -16,6 +16,7 @@ import {
   Area,
   ReferenceLine,
   Tooltip,
+  LabelList,
 } from "recharts";
 import Navbar from "@/components/Navbar";
 import backtestAll from "@/data/backtest_all.json";
@@ -127,6 +128,30 @@ const calibration = (backtestAll as Record<string, unknown>).calibration as
   | {
       win: { bin_center: number; predicted: number; observed: number; count: number }[];
       show: { bin_center: number; predicted: number; observed: number; count: number }[];
+    }
+  | undefined;
+
+// Holdout validation data (may not exist in older JSON)
+const holdout = (backtestAll as Record<string, unknown>).holdout as
+  | {
+      cutoff_year: number;
+      train: { n_races: number; win_hit_rate: number; win_roi: number; show_hit_rate: number; show_roi: number };
+      test: { n_races: number; win_hit_rate: number; win_roi: number; show_hit_rate: number; show_roi: number };
+      degradation: { win_roi_ratio: number };
+    }
+  | undefined;
+
+// Jackknife sensitivity data (may not exist in older JSON)
+const jackknife = (backtestAll as Record<string, unknown>).jackknife as
+  | {
+      n_races: number;
+      base_win_roi: number;
+      races: { label: string; win_roi_without: number; impact: number; win_return: number }[];
+      roi_without_top1: number;
+      roi_without_top3: number;
+      roi_without_top5: number;
+      min_roi: number;
+      max_roi: number;
     }
   | undefined;
 
@@ -255,6 +280,174 @@ export default function AnalysisPage() {
             </div>
           </div>
         </motion.section>
+
+        {/* Holdout Validation */}
+        {holdout && holdout.train.n_races > 0 && holdout.test.n_races > 0 && (
+          <motion.section {...fadeIn} transition={{ delay: 0.11 }}>
+            <div className="bg-card rounded-xl p-4 border border-white/5">
+              <h2 className="text-sm font-bold mb-3">🔬 ホールドアウト検証</h2>
+              <p className="text-xs text-muted-foreground mb-3">
+                {holdout.cutoff_year}年以降を「未知データ」として分離検証
+              </p>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="text-left py-2 pr-2"></th>
+                      <th className="text-center py-2 px-2">開発期間<br /><span className="text-[9px] text-muted-foreground">2021–{holdout.cutoff_year - 1}</span></th>
+                      <th className="text-center py-2 px-2">検証期間<br /><span className="text-[9px] text-muted-foreground">{holdout.cutoff_year}–</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { label: "レース数", train: `${holdout.train.n_races}`, test: `${holdout.test.n_races}` },
+                      { label: "1着的中率", train: `${(holdout.train.win_hit_rate * 100).toFixed(0)}%`, test: `${(holdout.test.win_hit_rate * 100).toFixed(0)}%` },
+                      { label: "単勝回収率", train: `${(holdout.train.win_roi * 100).toFixed(0)}%`, test: `${(holdout.test.win_roi * 100).toFixed(0)}%` },
+                      { label: "複勝的中率", train: `${(holdout.train.show_hit_rate * 100).toFixed(0)}%`, test: `${(holdout.test.show_hit_rate * 100).toFixed(0)}%` },
+                      { label: "複勝回収率", train: `${(holdout.train.show_roi * 100).toFixed(0)}%`, test: `${(holdout.test.show_roi * 100).toFixed(0)}%` },
+                    ].map((row) => (
+                      <tr key={row.label} className="border-b border-white/5">
+                        <td className="py-2 pr-2 text-muted-foreground">{row.label}</td>
+                        <td className="py-2 px-2 text-center font-mono">{row.train}</td>
+                        <td className="py-2 px-2 text-center font-mono">{row.test}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mt-3 bg-navy/50 rounded-lg p-3">
+                <p className="text-[10px] text-muted-foreground mb-1">劣化率（検証 / 開発）</p>
+                <p className={`font-mono text-lg font-bold ${
+                  holdout.degradation.win_roi_ratio >= 0.8 ? "text-green-400" :
+                  holdout.degradation.win_roi_ratio >= 0.5 ? "text-yellow-400" :
+                  "text-red-400"
+                }`}>
+                  {holdout.degradation.win_roi_ratio.toFixed(2)}
+                  <span className="text-xs ml-2">
+                    {holdout.degradation.win_roi_ratio >= 0.8 ? "頑健" :
+                     holdout.degradation.win_roi_ratio >= 0.5 ? "注意" :
+                     "過学習疑い"}
+                  </span>
+                </p>
+                <p className="text-[9px] text-muted-foreground mt-1">
+                  1.0に近いほど頑健（0.8以上=緑、0.5–0.8=黄、0.5未満=赤）
+                </p>
+              </div>
+            </div>
+          </motion.section>
+        )}
+
+        {/* Jackknife Sensitivity */}
+        {jackknife && jackknife.races.length > 0 && (() => {
+          // 横棒グラフ用データ: impactでソート済み（最も貢献=最も負のimpact → 先頭）
+          // 表示は上位10件 + 下位5件
+          const sorted = [...jackknife.races].sort((a, b) => a.impact - b.impact);
+          const chartData = sorted.map((r) => ({
+            label: r.label.replace(/\(.*\)/, "").trim(),
+            fullLabel: r.label,
+            impact: Math.round(r.impact * 100),  // %表示
+            fill: r.impact < 0 ? "#EF4444" : "#22C55E",
+          }));
+
+          return (
+            <motion.section {...fadeIn} transition={{ delay: 0.115 }}>
+              <div className="bg-card rounded-xl p-4 border border-white/5">
+                <h2 className="text-sm font-bold mb-3">🔍 感度分析（ジャックナイフ）</h2>
+                <p className="text-xs text-muted-foreground mb-3">
+                  各レースを1件ずつ除外した時のROI変動（赤=ROI貢献、緑=ROI低下要因）
+                </p>
+
+                {/* KPIs */}
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  <div className="bg-navy/50 rounded-lg p-2 text-center">
+                    <p className="text-[9px] text-muted-foreground">Top1除外</p>
+                    <p className={`font-mono text-sm font-bold ${jackknife.roi_without_top1 >= 1 ? "text-green-400" : "text-red-400"}`}>
+                      {(jackknife.roi_without_top1 * 100).toFixed(0)}%
+                    </p>
+                  </div>
+                  <div className="bg-navy/50 rounded-lg p-2 text-center">
+                    <p className="text-[9px] text-muted-foreground">Top3除外</p>
+                    <p className={`font-mono text-sm font-bold ${jackknife.roi_without_top3 >= 1 ? "text-green-400" : "text-red-400"}`}>
+                      {(jackknife.roi_without_top3 * 100).toFixed(0)}%
+                    </p>
+                  </div>
+                  <div className="bg-navy/50 rounded-lg p-2 text-center">
+                    <p className="text-[9px] text-muted-foreground">Top5除外</p>
+                    <p className={`font-mono text-sm font-bold ${jackknife.roi_without_top5 >= 1 ? "text-green-400" : "text-red-400"}`}>
+                      {(jackknife.roi_without_top5 * 100).toFixed(0)}%
+                    </p>
+                  </div>
+                </div>
+
+                {/* Bar Chart */}
+                <ResponsiveContainer width="100%" height={Math.min(chartData.length * 22, 600)}>
+                  <BarChart
+                    data={chartData}
+                    layout="vertical"
+                    margin={{ left: 10, right: 30, top: 5, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1A1A2E" />
+                    <XAxis
+                      type="number"
+                      tick={{ fill: "#A0A0B0", fontSize: 9 }}
+                      tickFormatter={(v: number) => `${v > 0 ? "+" : ""}${v}%`}
+                    />
+                    <YAxis
+                      dataKey="label"
+                      type="category"
+                      width={100}
+                      tick={{ fill: "#A0A0B0", fontSize: 8 }}
+                    />
+                    <Tooltip
+                      content={({ payload }) => {
+                        if (!payload || payload.length === 0) return null;
+                        const d = payload[0].payload as { fullLabel: string; impact: number };
+                        return (
+                          <div className="bg-navy border border-white/10 rounded p-2 text-xs">
+                            <p>{d.fullLabel}</p>
+                            <p>ROI変動: {d.impact > 0 ? "+" : ""}{d.impact}%pt</p>
+                          </div>
+                        );
+                      }}
+                    />
+                    <ReferenceLine x={0} stroke="#666" />
+                    <Bar dataKey="impact" radius={[0, 4, 4, 0]} animationDuration={1200}>
+                      {chartData.map((d, i) => (
+                        <Cell key={i} fill={d.fill} />
+                      ))}
+                      <LabelList
+                        dataKey="impact"
+                        position="right"
+                        formatter={((v: unknown) => {
+                          const n = Number(v);
+                          return isNaN(n) ? "" : `${n > 0 ? "+" : ""}${n}%`;
+                        }) as (value: unknown) => string}
+                        style={{ fill: "#A0A0B0", fontSize: 8 }}
+                      />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+
+                {/* Conclusion */}
+                <div className="mt-3 bg-navy/50 rounded-lg p-3">
+                  <p className="text-xs">
+                    {jackknife.roi_without_top3 >= 1.0 ? (
+                      <span className="text-green-400">
+                        上位3レース除外でもROI {(jackknife.roi_without_top3 * 100).toFixed(0)}% → プラス収支を維持。少数レースへの依存リスクは限定的。
+                      </span>
+                    ) : (
+                      <span className="text-yellow-400">
+                        上位3レース除外でROI {(jackknife.roi_without_top3 * 100).toFixed(0)}% → 特定レースに依存している可能性あり。注意が必要。
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+            </motion.section>
+          );
+        })()}
 
         {/* Calibration Curve */}
         {calibration && calibration.win.length > 0 && (

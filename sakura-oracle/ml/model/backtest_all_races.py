@@ -54,22 +54,22 @@ BLEND_WEIGHT_A = 0.2  # Model A（市場連動型）— 少量のみ
 BLEND_WEIGHT_B = 0.8  # Model B（エッジ検出型）— 主力
 
 def _make_params_bin(scale_pos_weight: float = 1.0) -> dict:
-    """二値分類パラメータを生成（Optuna最適化済み — Trial#54, 固定特徴量）"""
+    """二値分類パラメータを生成（Nested CV最適化済み — Trial#87, 2025年以降除外）"""
     return {
         "objective": "binary",
         "metric": "binary_logloss",
-        "num_leaves": 39,
-        "learning_rate": 0.134,
+        "num_leaves": 40,
+        "learning_rate": 0.149,
         "n_estimators": 100,
         "verbose": -1,
         "random_state": 42,
         "scale_pos_weight": scale_pos_weight,
-        "min_child_samples": 8,
-        "reg_alpha": 6.842,
-        "reg_lambda": 0.00467,
-        "colsample_bytree": 0.512,
-        "subsample": 0.652,
-        "subsample_freq": 1,
+        "min_child_samples": 23,
+        "reg_alpha": 1.059,
+        "reg_lambda": 3.483,
+        "colsample_bytree": 0.884,
+        "subsample": 0.601,
+        "subsample_freq": 6,
     }
 
 
@@ -274,6 +274,104 @@ def _bootstrap_confidence(results: list[dict], n_iter: int = 10000) -> dict:
     }
 
 
+def _compute_subset_metrics(subset: list[dict]) -> dict:
+    """resultsのサブセットに対して基本指標（ROI・的中率）を計算"""
+    n = len(subset)
+    if n == 0:
+        return {"n_races": 0, "win_hit_rate": 0, "win_roi": 0, "show_hit_rate": 0, "show_roi": 0}
+
+    win_hits = sum(r["win_hit"] for r in subset)
+    show_hits = sum(r["show_hits"] for r in subset)
+    total_win_return = sum(r["win_return"] for r in subset)
+    total_show_return = sum(r["show_return"] for r in subset)
+
+    return {
+        "n_races": n,
+        "win_hit_rate": round(win_hits / n, 3),
+        "win_roi": round(total_win_return / (n * 100), 3),
+        "show_hit_rate": round(show_hits / (n * 3), 3),
+        "show_roi": round(total_show_return / (n * 300), 3),
+    }
+
+
+def _holdout_validation(results: list[dict], holdout_year: int = 2025) -> dict:
+    """ホールドアウト検証: holdout_year以降を検証セットとして分離し指標を比較"""
+    train_results = [r for r in results if r["year"] < holdout_year]
+    test_results = [r for r in results if r["year"] >= holdout_year]
+
+    train_metrics = _compute_subset_metrics(train_results)
+    test_metrics = _compute_subset_metrics(test_results)
+
+    # 劣化率
+    train_roi = train_metrics["win_roi"]
+    test_roi = test_metrics["win_roi"]
+    degradation_ratio = round(test_roi / train_roi, 3) if train_roi > 0 else 0.0
+
+    return {
+        "cutoff_year": holdout_year,
+        "train": train_metrics,
+        "test": test_metrics,
+        "degradation": {
+            "win_roi_ratio": degradation_ratio,
+        },
+    }
+
+
+def _jackknife_sensitivity(results: list[dict]) -> dict:
+    """ジャックナイフ感度分析: 各レースを1つずつ除外してROIを再計算"""
+    n = len(results)
+    if n == 0:
+        return {}
+
+    total_win_return = sum(r["win_return"] for r in results)
+    base_win_roi = total_win_return / (n * 100)
+
+    races_impact = []
+    for i, r in enumerate(results):
+        # i番目を除外した残りN-1レースでROI計算
+        remaining_return = total_win_return - r["win_return"]
+        roi_without = remaining_return / ((n - 1) * 100)
+        impact = roi_without - base_win_roi
+
+        races_impact.append({
+            "label": r["label"],
+            "win_roi_without": round(roi_without, 3),
+            "impact": round(impact, 3),
+            "win_return": r["win_return"],
+        })
+
+    # impactの降順（最もROIを押し上げたレース = 除外するとROIが最も下がる = impact最小）
+    races_impact.sort(key=lambda x: x["impact"])
+
+    # 上位N件除外時のROI
+    # 上位貢献レース = 除外するとROIが最も下がるレース = impactが最も負のレース
+    top_contributors = races_impact[:5]  # impact最小 = 最も貢献
+    top_returns = sorted(results, key=lambda r: r["win_return"], reverse=True)
+
+    def roi_without_topn(topn: int) -> float:
+        excluded_return = sum(r["win_return"] for r in top_returns[:topn])
+        remaining = total_win_return - excluded_return
+        return round(remaining / ((n - topn) * 100), 3)
+
+    roi_without_top1 = roi_without_topn(1)
+    roi_without_top3 = roi_without_topn(3)
+    roi_without_top5 = roi_without_topn(min(5, n))
+
+    # 全レースのmin/max ROI (1件除外時)
+    all_rois = [r["win_roi_without"] for r in races_impact]
+
+    return {
+        "n_races": n,
+        "base_win_roi": round(base_win_roi, 3),
+        "races": races_impact,
+        "roi_without_top1": roi_without_top1,
+        "roi_without_top3": roi_without_top3,
+        "roi_without_top5": roi_without_top5,
+        "min_roi": round(min(all_rois), 3),
+        "max_roi": round(max(all_rois), 3),
+    }
+
+
 def _simulate_bankroll(
     results: list[dict], n_sim: int = 1000, initial: int = 10000,
 ) -> dict:
@@ -374,9 +472,9 @@ def run_walk_forward(df: pd.DataFrame) -> tuple[list[dict], dict]:
         if len(train_df) < min_train_size:
             continue
 
-        # Optuna最適化済み scale_pos_weight（Trial#54）
-        params_win = _make_params_bin(scale_pos_weight=11.817)
-        params_show = _make_params_bin(scale_pos_weight=6.988)
+        # Nested CV最適化済み scale_pos_weight（Trial#87）
+        params_win = _make_params_bin(scale_pos_weight=16.851)
+        params_show = _make_params_bin(scale_pos_weight=5.020)
 
         X_train_all = train_df[feat_all].values
         X_test_all = test_df[feat_all].values
@@ -716,6 +814,40 @@ def print_summary(
         print(f"  複勝回収率: [{ci['show_roi_ci'][0]:.0%} – {ci['show_roi_ci'][1]:.0%}]")
         print(f"  単勝ROI > 100% p値: {ci['win_roi_pvalue']:.4f}")
 
+    # --- ホールドアウト検証 ---
+    holdout = _holdout_validation(results, holdout_year=2025)
+    if holdout["train"]["n_races"] > 0 and holdout["test"]["n_races"] > 0:
+        print(f"\n{'='*65}")
+        print(f"ホールドアウト検証 (カットオフ: {holdout['cutoff_year']}年)")
+        print(f"{'='*65}")
+        tr = holdout["train"]
+        te = holdout["test"]
+        print(f"  {'':>16} {'開発期間':>10} {'検証期間':>10}")
+        print(f"  {'-'*40}")
+        print(f"  {'レース数':>16} {tr['n_races']:>10} {te['n_races']:>10}")
+        print(f"  {'1着的中率':>16} {tr['win_hit_rate']:>9.0%} {te['win_hit_rate']:>9.0%}")
+        print(f"  {'単勝回収率':>16} {tr['win_roi']:>9.0%} {te['win_roi']:>9.0%}")
+        print(f"  {'複勝的中率':>16} {tr['show_hit_rate']:>9.0%} {te['show_hit_rate']:>9.0%}")
+        print(f"  {'複勝回収率':>16} {tr['show_roi']:>9.0%} {te['show_roi']:>9.0%}")
+        deg = holdout["degradation"]["win_roi_ratio"]
+        label = "頑健" if deg >= 0.8 else ("注意" if deg >= 0.5 else "過学習疑い")
+        print(f"\n  劣化率 (検証/開発): {deg:.2f} → {label}")
+
+    # --- ジャックナイフ感度分析 ---
+    jackknife = _jackknife_sensitivity(results)
+    if jackknife:
+        print(f"\n{'='*65}")
+        print("ジャックナイフ感度分析 (Leave-One-Out)")
+        print(f"{'='*65}")
+        print(f"  ベースROI: {jackknife['base_win_roi']:.0%}")
+        print(f"  上位1件除外時ROI: {jackknife['roi_without_top1']:.0%}")
+        print(f"  上位3件除外時ROI: {jackknife['roi_without_top3']:.0%}")
+        print(f"  上位5件除外時ROI: {jackknife['roi_without_top5']:.0%}")
+        print(f"\n  Top5 貢献レース（除外するとROI低下）:")
+        for r in jackknife["races"][:5]:
+            print(f"    {r['label']:>20}  除外時ROI:{r['win_roi_without']:.0%}  "
+                  f"払戻:{r['win_return']:,.0f}円")
+
     # --- バンクロールシミュレーション ---
     simulation = _simulate_bankroll(results)
     if simulation:
@@ -906,6 +1038,12 @@ def print_summary(
                 ]
         except Exception as e:
             print(f"  ⚠️ 特徴量重要度取得失敗: {e}")
+
+    # ホールドアウト検証・ジャックナイフ感度分析データ追加
+    if holdout["train"]["n_races"] > 0 and holdout["test"]["n_races"] > 0:
+        output["holdout"] = holdout
+    if jackknife:
+        output["jackknife"] = jackknife
 
     # キャリブレーション・シミュレーションデータ追加
     if calib_data:

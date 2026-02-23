@@ -6,10 +6,12 @@ Walk-Forward CVベースでLightGBMのパラメータを最適化する。
 
 使い方:
     PYTHONIOENCODING=utf-8 py ml/model/tune.py
+    PYTHONIOENCODING=utf-8 py ml/model/tune.py --holdout-year 2025  # Nested CV
 
 依存: optuna 4.7.0+
 """
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -63,8 +65,13 @@ def _walk_forward_eval(
     scale_pos_weight_show: float,
     feat_all: list[str],
     feat_no_odds: list[str],
+    max_year: int | None = None,
 ) -> dict[str, float]:
-    """Walk-Forwardで全レースを評価し、ROI等を返す"""
+    """Walk-Forwardで全レースを評価し、ROI等を返す
+
+    Args:
+        max_year: 指定時、year >= max_year のレースをスキップ（Nested CV用）
+    """
     races = build_race_order(df)
     n_evaluated = 0
     total_win_return = 0.0
@@ -72,6 +79,9 @@ def _walk_forward_eval(
     win_hits = 0
 
     for race in races:
+        # Nested CVモード: ホールドアウト年以降をスキップ
+        if max_year is not None and race["year"] >= max_year:
+            continue
         label = race["label"]
         test_df = df[df["label"] == label].copy()
         if test_df.empty:
@@ -147,7 +157,13 @@ def _walk_forward_eval(
     }
 
 
-def objective(trial: optuna.Trial, df: pd.DataFrame, feat_all: list[str], feat_no_odds: list[str]) -> float:
+def objective(
+    trial: optuna.Trial,
+    df: pd.DataFrame,
+    feat_all: list[str],
+    feat_no_odds: list[str],
+    max_year: int | None = None,
+) -> float:
     """Optuna目的関数: Walk-Forward ROIを最大化"""
     params = {
         "objective": "binary",
@@ -169,7 +185,7 @@ def objective(trial: optuna.Trial, df: pd.DataFrame, feat_all: list[str], feat_n
     spw_win = trial.suggest_float("scale_pos_weight_win", 5.0, 20.0)
     spw_show = trial.suggest_float("scale_pos_weight_show", 1.5, 8.0)
 
-    result = _walk_forward_eval(df, params, spw_win, spw_show, feat_all, feat_no_odds)
+    result = _walk_forward_eval(df, params, spw_win, spw_show, feat_all, feat_no_odds, max_year=max_year)
 
     # 中間報告
     trial.set_user_attr("win_roi", result["win_roi"])
@@ -180,8 +196,22 @@ def objective(trial: optuna.Trial, df: pd.DataFrame, feat_all: list[str], feat_n
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="SAKURA ORACLE Optunaハイパーパラメータ最適化")
+    parser.add_argument(
+        "--holdout-year", type=int, default=None,
+        help="ホールドアウト年（例: 2025）。指定時、その年以降のレースを最適化から除外（Nested CV）",
+    )
+    args = parser.parse_args()
+
+    max_year: int | None = args.holdout_year
+    nested_mode = max_year is not None
+
     print("=" * 60)
-    print("SAKURA ORACLE - Optunaハイパーパラメータ最適化")
+    if nested_mode:
+        print("SAKURA ORACLE - Nested CV モード")
+        print(f"ホールドアウト: {max_year}年以降を最適化から除外")
+    else:
+        print("SAKURA ORACLE - Optunaハイパーパラメータ最適化")
     print(f"目的: {OPTIMIZE_TARGET} 最大化")
     print(f"ブレンド: A={BLEND_WEIGHT_A} / B={BLEND_WEIGHT_B}")
     print(f"トライアル数: {N_TRIALS}")
@@ -207,19 +237,20 @@ def main() -> None:
     current_params = _make_params_bin()
     # scale_pos_weightは別途渡すので除外
     base_params = {k: v for k, v in current_params.items() if k != "scale_pos_weight"}
-    baseline = _walk_forward_eval(df, base_params, 8.128, 7.787, feat_all, feat_no_odds)
+    baseline = _walk_forward_eval(df, base_params, 16.851, 5.020, feat_all, feat_no_odds, max_year=max_year)
     print(f"  win_roi: {baseline['win_roi']:.3f}")
     print(f"  show_roi: {baseline['show_roi']:.3f}")
     print(f"  評価レース数: {baseline['n_races']}\n")
 
     # Optuna Study
+    study_name = "sakura_oracle_nested_cv" if nested_mode else "sakura_oracle_tuning"
     study = optuna.create_study(
         direction="maximize",
-        study_name="sakura_oracle_tuning",
+        study_name=study_name,
     )
 
     study.optimize(
-        lambda trial: objective(trial, df, feat_all, feat_no_odds),
+        lambda trial: objective(trial, df, feat_all, feat_no_odds, max_year=max_year),
         n_trials=N_TRIALS,
         show_progress_bar=True,
     )
@@ -227,6 +258,8 @@ def main() -> None:
     # 結果出力
     print("\n" + "=" * 60)
     print("最適化結果")
+    if nested_mode:
+        print(f"（Nested CV: {max_year}年以降除外）")
     print("=" * 60)
 
     best = study.best_trial
@@ -248,6 +281,8 @@ def main() -> None:
     output = {
         "best_value": best.value,
         "optimize_target": OPTIMIZE_TARGET,
+        "nested_cv": nested_mode,
+        "holdout_year": max_year,
         "best_params": best.params,
         "best_attrs": {
             "win_roi": best.user_attrs.get("win_roi"),
@@ -268,7 +303,11 @@ def main() -> None:
         ],
     }
 
-    json_path = BASE_DIR / "ml" / "output" / "optuna_results.json"
+    # Nested CVモードでは別ファイルに保存（既存結果を上書きしない）
+    if nested_mode:
+        json_path = BASE_DIR / "ml" / "output" / "optuna_results_nested.json"
+    else:
+        json_path = BASE_DIR / "ml" / "output" / "optuna_results.json"
     json_path.parent.mkdir(parents=True, exist_ok=True)
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
