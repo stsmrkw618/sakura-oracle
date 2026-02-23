@@ -139,6 +139,14 @@ def _build_prediction_features(
     rows = []
     missing_horses: list[str] = []
 
+    # 日付ルックアップ構築（出走間隔計算用）
+    race_info_path = DATA_DIR / "raw" / "race_info.csv"
+    date_lookup: dict[str, str] = {}
+    if race_info_path.exists():
+        ri = pd.read_csv(race_info_path, dtype={"race_id": str, "date": str})
+        date_lookup = dict(zip(ri["race_id"], ri["date"]))
+    target_date = pd.to_datetime(date_lookup.get(race_id), format="%Y%m%d") if date_lookup.get(race_id) else None
+
     # features.csv の馬名ベースで最新行を取得
     # race_id < 対象レース のデータのみ使用（リーケージ防止）
     hist_df = features_df[features_df["race_id"].astype(str) < race_id].copy()
@@ -212,6 +220,14 @@ def _build_prediction_features(
                     row["weight_diff"] = wd
                 elif old_weight and old_weight > 0:
                     row["weight_diff"] = w - old_weight
+
+        # 出走間隔（前回重賞→今回レースの週数）
+        if hist is not None and target_date is not None:
+            last_race_id = str(hist.get("race_id", ""))
+            last_date_str = date_lookup.get(last_race_id)
+            if last_date_str:
+                last_date = pd.to_datetime(last_date_str, format="%Y%m%d")
+                row["rest_weeks"] = (target_date - last_date).days / 7.0
 
         # 騎手情報
         jockey_name = str(entry.get("騎手", ""))

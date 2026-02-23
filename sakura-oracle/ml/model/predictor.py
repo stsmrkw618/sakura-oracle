@@ -39,6 +39,8 @@ _BASE_FEATURES = [
     "field_strength",
     # ペース（新規）
     "pace_deviation", "last1_pace_deviation", "n_front_runners_est",
+    # 出走間隔
+    "rest_weeks",
 ]
 
 # Model A: 市場連動型（オッズ込み）

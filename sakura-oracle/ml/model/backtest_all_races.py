@@ -39,6 +39,8 @@ _BASE_FEATURES = [
     "field_strength",
     # ペース（新規）
     "pace_deviation", "last1_pace_deviation", "n_front_runners_est",
+    # 出走間隔
+    "rest_weeks",
 ]
 
 # Model A: 市場連動型（オッズ込み） — 24特徴量
@@ -1134,6 +1136,7 @@ def print_summary(
                     "pace_deviation": "ペース偏差値",
                     "last1_pace_deviation": "前走ペース偏差値",
                     "n_front_runners_est": "推定先行頭数",
+                    "rest_weeks": "出走間隔(週)",
                 }
                 sorted_imp = sorted(importance.items(), key=lambda x: -x[1])[:10]
                 output["feature_importance"] = [

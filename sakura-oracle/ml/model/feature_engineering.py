@@ -349,6 +349,22 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     df["n_front_runners_est"] = df.groupby("race_id")["_is_front_est"].transform("sum")
     df = df.drop(columns=["_is_front_est"])
 
+    # === 出走間隔（rest_weeks）===
+    # 同一馬の前回出走からの経過週数（重賞間のローテーション間隔）
+    if "date" in df.columns:
+        df["_race_date"] = pd.to_datetime(df["date"], format="%Y%m%d", errors="coerce")
+        df = df.sort_values(["馬名", "race_id"]).reset_index(drop=True)
+        rest_parts = []
+        for _, group in df.groupby("馬名"):
+            g = group.copy()
+            g["rest_weeks"] = (g["_race_date"] - g["_race_date"].shift(1)).dt.days / 7.0
+            rest_parts.append(g)
+        df = pd.concat(rest_parts, ignore_index=True)
+        df = df.drop(columns=["_race_date"])
+        print(f"  rest_weeks計算完了: 中央値={df['rest_weeks'].median():.1f}週")
+    else:
+        df["rest_weeks"] = np.nan
+
     # === 血統データマージ ===
     pedigree_path = RAW_DIR / "horse_pedigree.csv"
     if pedigree_path.exists():
@@ -416,6 +432,8 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
         "field_strength",
         # ペース（新規）
         "pace_deviation", "last1_pace_deviation", "n_front_runners_est",
+        # 出走間隔
+        "rest_weeks",
         # 血統
         "sire_category_code", "sire_win_rate",
         # オッズ
@@ -447,6 +465,14 @@ def main() -> None:
 
     df = pd.read_csv(csv_path)
     print(f"入力: {len(df)}行")
+
+    # race_info.csv から開催日をマージ（出走間隔計算用）
+    race_info_path = RAW_DIR / "race_info.csv"
+    if race_info_path.exists():
+        race_info = pd.read_csv(race_info_path, dtype={"race_id": str, "date": str})
+        df["race_id"] = df["race_id"].astype(str)
+        df = df.merge(race_info[["race_id", "date"]], on="race_id", how="left")
+        print(f"  race_info.csv マージ完了 (date列追加)")
 
     features = build_features(df)
     output_path = DATA_DIR / "features.csv"
