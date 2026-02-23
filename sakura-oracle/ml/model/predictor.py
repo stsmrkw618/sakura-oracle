@@ -9,7 +9,6 @@ SAKURA ORACLE — LightGBM予測モデル＆predictions.json生成
 """
 
 import json
-import pickle
 import sys
 from pathlib import Path
 
@@ -295,8 +294,8 @@ def get_mark(row: pd.Series, df: pd.DataFrame) -> str:
         return "◎"  # Kelly最大 & 十分なエッジ
     elif kelly_rank[idx] <= 3 and kelly > 0.005:
         return "○"  # 上位3位 & エッジあり
-    elif kelly > 0.002:
-        return "▲"  # Kelly正だが控えめ
+    elif kelly_rank[idx] <= 8 and kelly > 0.002:
+        return "▲"  # 上位8位以内 & Kelly正だが控えめ
     elif row["pred_show"] >= 0.2 and kelly > 0:
         return "△"  # 複勝候補（Kelly微小だが複勝圏）
     else:
@@ -385,17 +384,16 @@ def generate_predictions_json(
     pred_b_show = models["show_b"].predict_proba(X_no_odds)[:, 1]
     race_df["pred_show"] = BLEND_WEIGHT_A * pred_a_show + BLEND_WEIGHT_B * pred_b_show
 
-    # キャリブレーション適用
-    cal_dir = Path(__file__).resolve().parent
-    for target, col in [("win", "pred_win"), ("show", "pred_show")]:
-        cal_path = cal_dir / f"calibrator_{target}.pkl"
-        if cal_path.exists():
-            with open(cal_path, "rb") as f:
-                calibrator = pickle.load(f)
-            race_df[col] = calibrator.predict(race_df[col].values)
-            print(f"  ✅ {target}キャリブレーター適用済み")
-        else:
-            print(f"  ⚠️ calibrator_{target}.pkl なし — 未校正確率を使用")
+    # Isotonic Regressionキャリブレーターは小データで階段関数化し分解能が低下するため使用しない
+    # 代わりにレース内正規化で絶対値を補正（馬ごとの相対差は完全に保存される）
+    win_sum = race_df["pred_win"].sum()
+    show_sum = race_df["pred_show"].sum()
+    n_horses = len(race_df)
+    if win_sum > 0:
+        race_df["pred_win"] = race_df["pred_win"] / win_sum  # 合計→1.0
+    if show_sum > 0:
+        race_df["pred_show"] = race_df["pred_show"] * (3.0 / show_sum)  # 合計→3.0（3着以内）
+    print(f"  ℹ️ レース内正規化適用 — pred_win合計: {win_sum:.2f}→1.00, pred_show合計: {show_sum:.2f}→3.00")
 
     race_df["pred_finish"] = models["finish"].predict(X_all)
 

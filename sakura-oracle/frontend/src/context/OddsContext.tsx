@@ -56,6 +56,8 @@ interface Bet {
   evReliable: boolean; // true=実オッズでEV計算済み
   odds: number | null;
   kelly: number;
+  /** BT実績回収率（三連複=8.50, 馬連=5.07, ワイド=4.23, 単勝=2.45） */
+  backtestRoi: number;
   /** 的中時リターン (単勝: amount × odds) */
   winReturn?: number;
   /** Harville的中確率 (組合せ馬券) */
@@ -152,6 +154,14 @@ function generateBets(
     return result;
   };
 
+  // BT実績ROI定数
+  const BT_ROI: Record<string, number> = {
+    "三連複": 8.50,
+    "馬連": 5.07,
+    "ワイド": 4.23,
+    "単勝": 2.45,
+  };
+
   // 単勝: ◎○▲の馬のみ（最大3頭）— Kelly > 0 かつ EV > 1.0
   const winTargets = topHorses.filter((h) => h.kelly_win > 0 && h.ev_win >= 1.0).slice(0, 3);
   for (const h of winTargets) {
@@ -165,6 +175,7 @@ function generateBets(
       evReliable: true,
       odds: h.odds_win,
       kelly: h.kelly_win,
+      backtestRoi: BT_ROI["単勝"],
       winReturn: Math.round(amount * h.odds_win),
     });
   }
@@ -197,6 +208,7 @@ function generateBets(
           evReliable: comboOdds !== null,
           odds: comboOdds,
           kelly,
+          backtestRoi: BT_ROI["馬連"],
           comboProb: prob,
           comboKey,
         });
@@ -224,13 +236,14 @@ function generateBets(
       evReliable: comboOdds !== null,
       odds: comboOdds,
       kelly,
+      backtestRoi: BT_ROI["ワイド"],
       comboProb: prob,
       comboKey,
     });
   }
 
   // 三連複BOX(5): 常に上位5頭から全10通りを展開
-  // バックテスト実績: 的中30%, 回収691% (BOX(3)の81%を大幅に上回る)
+  // バックテスト実績: 的中32%, 回収272% (BOX(3)の93%を大幅に上回る)
   {
     const top5 = sorted
       .filter((h) => h.win_prob > 0)
@@ -262,6 +275,7 @@ function generateBets(
               evReliable: comboOdds !== null,
               odds: comboOdds,
               kelly,
+              backtestRoi: BT_ROI["三連複"],
               comboProb: prob,
               comboKey,
             });
@@ -270,6 +284,9 @@ function generateBets(
       }
     }
   }
+
+  // ROI降順でソート（三連複→馬連→ワイド→単勝）
+  bets.sort((a, b) => b.backtestRoi - a.backtestRoi);
 
   return bets;
 }

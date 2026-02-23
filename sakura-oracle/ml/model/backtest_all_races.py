@@ -433,6 +433,92 @@ def _simulate_bankroll(
     }
 
 
+def _compute_bankroll_history(
+    results: list[dict], initial: int = 10000,
+) -> dict:
+    """確定的バンクロール推移: 単勝のみ vs 全戦略（組合せ馬券込み）
+
+    全戦略は同じ kelly_bet をBT ROI比率で4種に分配し、実配当で計算。
+    """
+    if not results:
+        return {}
+
+    # BT ROI重み（v9実績ベース）
+    weights = {"trio": 8.50, "quinella": 5.07, "wide": 4.23, "win": 2.45}
+    total_weight = sum(weights.values())
+
+    bankroll_win = float(initial)
+    bankroll_combo = float(initial)
+    history = []
+
+    # 最大ドローダウン追跡
+    peak_win = bankroll_win
+    peak_combo = bankroll_combo
+    max_dd_win = 0.0
+    max_dd_combo = 0.0
+
+    for r in results:
+        kb = r["kelly_bet"]
+
+        # --- 単勝のみ ---
+        bankroll_win *= (1 + r["kelly_return"])
+        bankroll_win = max(bankroll_win, 0)
+
+        # --- 全戦略（combo） ---
+        alloc_trio = kb * weights["trio"] / total_weight
+        alloc_quin = kb * weights["quinella"] / total_weight
+        alloc_wide = kb * weights["wide"] / total_weight
+        alloc_win = kb * weights["win"] / total_weight
+
+        # trio_box5_roi: 配当/投資額 (0=不的中, >0=的中)
+        ret_trio = alloc_trio * (r["trio_box5_roi"] - 1)
+        ret_quin = alloc_quin * (r["quinella_box3_roi"] - 1)
+        ret_wide = alloc_wide * (r["wide_top2_roi"] - 1)
+        # 単勝: 的中なら (odds-1), 不的中なら -1
+        if r["win_hit"] and alloc_win > 0:
+            ret_win = alloc_win * (r["ai_odds"] - 1)
+        else:
+            ret_win = -alloc_win
+
+        combo_return = ret_trio + ret_quin + ret_wide + ret_win
+        bankroll_combo *= (1 + combo_return)
+        bankroll_combo = max(bankroll_combo, 0)
+
+        # ドローダウン更新
+        if bankroll_win > peak_win:
+            peak_win = bankroll_win
+        dd_win = (peak_win - bankroll_win) / peak_win if peak_win > 0 else 0
+        max_dd_win = max(max_dd_win, dd_win)
+
+        if bankroll_combo > peak_combo:
+            peak_combo = bankroll_combo
+        dd_combo = (peak_combo - bankroll_combo) / peak_combo if peak_combo > 0 else 0
+        max_dd_combo = max(max_dd_combo, dd_combo)
+
+        history.append({
+            "label": r["label"],
+            "win_only": round(bankroll_win),
+            "combo": round(bankroll_combo),
+        })
+
+    return {
+        "initial": initial,
+        "history": history,
+        "final": {
+            "win_only": round(bankroll_win),
+            "combo": round(bankroll_combo),
+        },
+        "max_dd": {
+            "win_only": round(max_dd_win, 3),
+            "combo": round(max_dd_combo, 3),
+        },
+        "profit_multiple": {
+            "win_only": round(bankroll_win / initial, 2),
+            "combo": round(bankroll_combo / initial, 2),
+        },
+    }
+
+
 def run_walk_forward(df: pd.DataFrame) -> tuple[list[dict], dict]:
     """Walk-Forwardバックテスト（デュアルモデル + 正則化 + 早期停止）"""
     print("=" * 60)
@@ -863,6 +949,21 @@ def print_summary(
         print(f"  最終資金 5%tile: ¥{fb['p5']:,}  95%tile: ¥{fb['p95']:,}")
         print(f"  最大DD 中央値: {mdd['median']:.1%}  95%tile: {mdd['p95']:.1%}")
 
+    # --- バンクロール推移（確定的・実績ベース） ---
+    bankroll_history = _compute_bankroll_history(results)
+    if bankroll_history:
+        bh = bankroll_history
+        print(f"\n{'='*65}")
+        print("バンクロール推移（実績ベース）")
+        print(f"{'='*65}")
+        print(f"  初期資金: ¥{bh['initial']:,}")
+        print(f"  最終資金 単勝のみ: ¥{bh['final']['win_only']:,}  "
+              f"(×{bh['profit_multiple']['win_only']:.1f})")
+        print(f"  最終資金 全戦略:   ¥{bh['final']['combo']:,}  "
+              f"(×{bh['profit_multiple']['combo']:.1f})")
+        print(f"  最大DD 単勝: {bh['max_dd']['win_only']:.1%}  "
+              f"全戦略: {bh['max_dd']['combo']:.1%}")
+
     # --- JSON保存 ---
     output = {
         "summary": {
@@ -1057,6 +1158,8 @@ def print_summary(
         output["calibration"] = calib_data
     if simulation:
         output["simulation"] = simulation
+    if bankroll_history:
+        output["bankroll_history"] = bankroll_history
 
     json_path = BASE_DIR / "frontend" / "src" / "data" / "backtest_all.json"
     with open(json_path, "w", encoding="utf-8") as f:

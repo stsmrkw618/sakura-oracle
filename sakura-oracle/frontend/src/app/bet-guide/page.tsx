@@ -67,10 +67,16 @@ export default function BetGuidePage() {
   const scaledBets = useMemo(() => {
     if (liveBets.length === 0) return [];
 
-    // --- Kelly重み配分: EV確定 & kelly > 0 の馬券のみ予算配分 ---
-    const weights = liveBets.map((b) =>
-      b.evReliable && b.kelly > 0 ? b.kelly : 0,
-    );
+    // --- Kelly重み配分: BT事前重みでオッズ未入力時も推定配分 ---
+    const weights = liveBets.map((b) => {
+      if (b.kelly <= 0) return 0;
+      // EV確定 & EV < 1.0 → 見送り（予算を他に再配分）
+      if (b.evReliable && b.ev < 1.0) return 0;
+      // evReliable=true（オッズ入力済み）→ Kelly そのまま
+      // evReliable=false（未入力）→ Kelly × BT事前重み（backtestRoi/10）
+      const backtestPrior = b.backtestRoi / 10;
+      return b.evReliable ? b.kelly : b.kelly * backtestPrior;
+    });
     const totalWeight = weights.reduce((s, w) => s + w, 0);
 
     if (totalWeight === 0) {
@@ -221,6 +227,46 @@ export default function BetGuidePage() {
           </div>
         </motion.section>
 
+        {/* 戦略サマリー — BT実績ROI */}
+        <motion.section {...fadeIn} transition={{ delay: 0.12 }}>
+          <div className="bg-card rounded-xl p-4 border border-white/5">
+            <h2 className="text-sm font-bold text-muted-foreground mb-3">
+              BT実績に基づく推奨配分
+            </h2>
+            <div className="space-y-2">
+              {[
+                { label: "三連複BOX(5)", roi: 850, hit: 34, color: "bg-gold" },
+                { label: "馬連BOX(3)", roi: 507, hit: 32, color: "bg-sakura-pink" },
+                { label: "ワイド(◎-○)", roi: 423, hit: 30, color: "bg-orange-400" },
+                { label: "単勝", roi: 245, hit: null, color: "bg-blue-400" },
+              ].map((item) => (
+                <div key={item.label}>
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="text-muted-foreground">{item.label}</span>
+                    <span className="font-mono font-bold text-gold">
+                      {item.roi}%
+                      {item.hit != null && (
+                        <span className="text-muted-foreground font-normal ml-1">
+                          (的中{item.hit}%)
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${item.color}`}
+                      style={{ width: `${Math.min(100, item.roi / 10)}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-3">
+              ※ 50レースのバックテスト実績（v9）。オッズ入力で配分が自動最適化されます
+            </p>
+          </div>
+        </motion.section>
+
         {/* 購入リスト */}
         {scaledBets.some((b) => b.scaledAmount > 0) && (
           <motion.section {...fadeIn} transition={{ delay: 0.15 }}>
@@ -246,6 +292,15 @@ export default function BetGuidePage() {
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <span
+                          className={`text-[10px] px-1 py-0.5 rounded font-bold ${
+                            bet.evReliable
+                              ? "bg-green-500/20 text-green-400"
+                              : "bg-white/10 text-muted-foreground"
+                          }`}
+                        >
+                          {bet.evReliable ? "確定" : "推定"}
+                        </span>
+                        <span
                           className={`text-[10px] font-mono ${
                             bet.ev >= 1.5
                               ? "text-gold"
@@ -254,7 +309,7 @@ export default function BetGuidePage() {
                                 : "text-muted-foreground"
                           }`}
                         >
-                          EV {bet.ev.toFixed(2)}
+                          {bet.evReliable ? `EV ${bet.ev.toFixed(2)}` : ""}
                         </span>
                         <span className="font-mono text-gold font-bold w-16 text-right">
                           ¥{bet.scaledAmount.toLocaleString()}
@@ -269,18 +324,84 @@ export default function BetGuidePage() {
                   ¥{totalInvestment.toLocaleString()}
                 </span>
               </div>
-              {scaledBets.some((b) => b.scaledAmount === 0 && b.comboKey) && (
+              {scaledBets.some((b) => !b.evReliable && b.scaledAmount > 0) && (
                 <p className="text-[10px] text-muted-foreground mt-2">
-                  ※ 組合せ馬券はJRAオッズ入力後に配分額が計算されます
+                  ※「推定」はBT実績ベースの事前配分。JRAオッズ入力で「確定」に切替わります
                 </p>
               )}
             </div>
           </motion.section>
         )}
 
-        {/* Recommended Bets — 単勝 */}
-        {winBets.length > 0 && (
+        {/* 三連複BOX(5) — BT ROI最高 */}
+        {trioBets.length > 0 && (
           <motion.section {...fadeIn} transition={{ delay: 0.2 }}>
+            <h2 className="text-sm font-bold text-muted-foreground mb-2">
+              三連複BOX(5)（{trioBets.length}通り）
+            </h2>
+            <p className="text-[10px] text-muted-foreground mb-3">
+              BT実績: 的中34% / 回収850% — AI上位5頭から全10通り
+            </p>
+            <div className="space-y-3">
+              {trioBets.map((bet, i) => (
+                <ComboBetCard
+                  key={`trio-${i}`}
+                  bet={bet}
+                  comboOddsMap={comboOddsMap}
+                  updateComboOdds={updateComboOdds}
+                />
+              ))}
+            </div>
+          </motion.section>
+        )}
+
+        {/* 馬連BOX(3) */}
+        {quinellaBets.length > 0 && (
+          <motion.section {...fadeIn} transition={{ delay: 0.25 }}>
+            <h2 className="text-sm font-bold text-muted-foreground mb-2">
+              馬連BOX(3)（{quinellaBets.length}通り）
+            </h2>
+            <p className="text-[10px] text-muted-foreground mb-3">
+              BT実績: 的中32% / 回収507%
+            </p>
+            <div className="space-y-3">
+              {quinellaBets.map((bet, i) => (
+                <ComboBetCard
+                  key={`quinella-${i}`}
+                  bet={bet}
+                  comboOddsMap={comboOddsMap}
+                  updateComboOdds={updateComboOdds}
+                />
+              ))}
+            </div>
+          </motion.section>
+        )}
+
+        {/* ワイド(◎-○) */}
+        {wideBets.length > 0 && (
+          <motion.section {...fadeIn} transition={{ delay: 0.3 }}>
+            <h2 className="text-sm font-bold text-muted-foreground mb-2">
+              ワイド(◎-○)（{wideBets.length}点）
+            </h2>
+            <p className="text-[10px] text-muted-foreground mb-3">
+              BT実績: 的中30% / 回収423%
+            </p>
+            <div className="space-y-3">
+              {wideBets.map((bet, i) => (
+                <ComboBetCard
+                  key={`wide-${i}`}
+                  bet={bet}
+                  comboOddsMap={comboOddsMap}
+                  updateComboOdds={updateComboOdds}
+                />
+              ))}
+            </div>
+          </motion.section>
+        )}
+
+        {/* 単勝 */}
+        {winBets.length > 0 && (
+          <motion.section {...fadeIn} transition={{ delay: 0.35 }}>
             <h2 className="text-sm font-bold text-muted-foreground mb-3">
               単勝（{winBets.length}点）
             </h2>
@@ -327,66 +448,6 @@ export default function BetGuidePage() {
                     </span>
                   </div>
                 </div>
-              ))}
-            </div>
-          </motion.section>
-        )}
-
-        {/* 組合せ馬券セクション — 馬連 */}
-        {quinellaBets.length > 0 && (
-          <motion.section {...fadeIn} transition={{ delay: 0.25 }}>
-            <h2 className="text-sm font-bold text-muted-foreground mb-3">
-              馬連（{quinellaBets.length}通り）
-            </h2>
-            <div className="space-y-3">
-              {quinellaBets.map((bet, i) => (
-                <ComboBetCard
-                  key={`quinella-${i}`}
-                  bet={bet}
-                  comboOddsMap={comboOddsMap}
-                  updateComboOdds={updateComboOdds}
-                />
-              ))}
-            </div>
-          </motion.section>
-        )}
-
-        {/* ワイド */}
-        {wideBets.length > 0 && (
-          <motion.section {...fadeIn} transition={{ delay: 0.3 }}>
-            <h2 className="text-sm font-bold text-muted-foreground mb-3">
-              ワイド（{wideBets.length}点）
-            </h2>
-            <div className="space-y-3">
-              {wideBets.map((bet, i) => (
-                <ComboBetCard
-                  key={`wide-${i}`}
-                  bet={bet}
-                  comboOddsMap={comboOddsMap}
-                  updateComboOdds={updateComboOdds}
-                />
-              ))}
-            </div>
-          </motion.section>
-        )}
-
-        {/* 三連複BOX(5) */}
-        {trioBets.length > 0 && (
-          <motion.section {...fadeIn} transition={{ delay: 0.35 }}>
-            <h2 className="text-sm font-bold text-muted-foreground mb-2">
-              三連複BOX(5)（{trioBets.length}通り）
-            </h2>
-            <p className="text-[10px] text-muted-foreground mb-3">
-              BT実績: 的中30% / 回収691% — AI上位5頭から全10通り
-            </p>
-            <div className="space-y-3">
-              {trioBets.map((bet, i) => (
-                <ComboBetCard
-                  key={`trio-${i}`}
-                  bet={bet}
-                  comboOddsMap={comboOddsMap}
-                  updateComboOdds={updateComboOdds}
-                />
               ))}
             </div>
           </motion.section>
@@ -556,6 +617,7 @@ function ComboBetCard({
     evReliable: boolean;
     odds: number | null;
     kelly: number;
+    backtestRoi: number;
     comboProb?: number;
     comboKey?: string;
   };

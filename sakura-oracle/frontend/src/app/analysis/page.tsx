@@ -14,6 +14,8 @@ import {
   ZAxis,
   AreaChart,
   Area,
+  LineChart,
+  Line,
   ReferenceLine,
   Tooltip,
   LabelList,
@@ -26,27 +28,60 @@ const fadeIn = {
   animate: { opacity: 1, y: 0 },
 };
 
-// Feature importance — JSON動的データ優先、なければフォールバック
+// 特徴量重要度 — JSON動的データ優先、なければフォールバック
 const featureImportanceFromJson = (backtestAll as Record<string, unknown>).feature_importance as
   | { name: string; key: string; value: number }[]
   | undefined;
 
+// 特徴量の解説マップ（key → 説明）
+const featureDescriptions: Record<string, string> = {
+  pace_deviation: "レース前半のペースを距離帯別に偏差値化。50が平均、高いほどハイペース",
+  speed_index: "タイム・距離・馬場を補正した独自指数。50が基準、高いほど速い",
+  horse_number: "馬番（ゲート番号）。内枠/外枠の有利不利を反映",
+  frame_number: "枠番（1〜8枠）。同枠の馬は同色の帽子",
+  weight: "レース当日の馬体重（kg）。成長度合いやコンディションの指標",
+  weight_diff: "前走からの馬体重増減（kg）。大幅増減は調子の変化を示唆",
+  distance_m: "レースの距離（m）。1400〜2400mまで対応",
+  grade_encoded: "レースのグレード。G1=5, G2=3, G3=3（格付け）",
+  total_runs: "その馬の通算出走回数。キャリアの豊富さ",
+  show_rate: "過去の複勝率（3着以内率）。安定感の指標",
+  last1_finish: "前走の着順。直近の調子を反映",
+  last1_last3f: "前走の上がり3F（ラスト600m）タイム。瞬発力の指標",
+  last2_last3f: "2走前の上がり3Fタイム",
+  last1_speed: "前走のスピード指数",
+  avg_last3f: "過去走の上がり3F平均。持続的な瞬発力",
+  best_last3f: "過去走の上がり3F最速値。ポテンシャルの上限",
+  hanshin_runs: "阪神競馬場での出走回数。コース適性",
+  jockey_win_rate: "騎手の累積勝率。腕前の指標",
+  jockey_g1_wins: "騎手のG1累積勝利数。大舞台での実績",
+  trainer_win_rate: "調教師の累積勝率。厩舎力",
+  last1_start_pos: "前走の第1コーナー通過順位。脚質（逃げ/差し）を反映",
+  last1_margin: "前走の着差（馬身）。勝ち方/負け方の程度",
+  field_strength: "出走馬全体のオッズから算出した市場占有率。相手関係の強さ",
+  odds: "単勝オッズ。市場の評価",
+  popularity: "人気順（1〜18番人気）",
+  last1_pace_deviation: "前走のペース偏差値。前走でどんなペースを経験したか",
+  n_front_runners_est: "そのレースの推定逃げ・先行頭数。展開予想の指標",
+  running_style_avg: "過去走の脚質コード平均（0=逃げ〜3=追込）",
+  last1_running_style: "前走の脚質コード",
+};
+
 const featureImportance = featureImportanceFromJson
-  ? featureImportanceFromJson.map((f) => ({ name: f.name, value: f.value }))
+  ? featureImportanceFromJson.map((f) => ({ name: f.name, key: f.key, value: f.value, desc: featureDescriptions[f.key] || "" }))
   : [
-      { name: "スピード指数", value: 0.12 },
-      { name: "馬体重", value: 0.12 },
-      { name: "場の強さ", value: 0.12 },
-      { name: "オッズ", value: 0.11 },
-      { name: "馬番", value: 0.09 },
-      { name: "枠番", value: 0.06 },
-      { name: "馬体重増減", value: 0.06 },
-      { name: "騎手勝率", value: 0.05 },
-      { name: "人気", value: 0.04 },
-      { name: "前走スタート位置", value: 0.03 },
+      { name: "スピード指数", key: "speed_index", value: 0.12, desc: featureDescriptions["speed_index"] },
+      { name: "馬体重", key: "weight", value: 0.12, desc: featureDescriptions["weight"] },
+      { name: "場の強さ", key: "field_strength", value: 0.12, desc: featureDescriptions["field_strength"] },
+      { name: "オッズ", key: "odds", value: 0.11, desc: featureDescriptions["odds"] },
+      { name: "馬番", key: "horse_number", value: 0.09, desc: featureDescriptions["horse_number"] },
+      { name: "枠番", key: "frame_number", value: 0.06, desc: featureDescriptions["frame_number"] },
+      { name: "馬体重増減", key: "weight_diff", value: 0.06, desc: featureDescriptions["weight_diff"] },
+      { name: "騎手勝率", key: "jockey_win_rate", value: 0.05, desc: featureDescriptions["jockey_win_rate"] },
+      { name: "人気", key: "popularity", value: 0.04, desc: featureDescriptions["popularity"] },
+      { name: "前走スタート位置", key: "last1_start_pos", value: 0.03, desc: featureDescriptions["last1_start_pos"] },
     ];
 
-// Frame win rate — JSON動的データ優先
+// 枠順別勝率 — JSON動的データ優先
 const frameWinRateFromJson = (backtestAll as Record<string, unknown>).frame_win_rate as
   | { frame: string; rate: number; n: number }[]
   | undefined;
@@ -61,7 +96,7 @@ const frameWinRate = frameWinRateFromJson ?? [
   { frame: "8枠", rate: 3.8 },
 ];
 
-// Popularity hit rate — JSON動的データ優先
+// 人気別3着内率 — JSON動的データ優先
 const popularityRateFromJson = (backtestAll as Record<string, unknown>).popularity_show_rate as
   | { pop: string; rate: number; n: number }[]
   | undefined;
@@ -78,7 +113,7 @@ const popularityRate = popularityRateFromJson ?? [
   { pop: "10人気", rate: 11.1 },
 ];
 
-// Bloodline win rate — JSON動的データ優先
+// 血統カテゴリ別勝率 — JSON動的データ優先
 const bloodlineFromJson = (backtestAll as Record<string, unknown>).bloodline_win_rate as
   | { name: string; rate: number; n: number }[]
   | undefined;
@@ -91,7 +126,7 @@ const bloodlineData = bloodlineFromJson ?? [
   { name: "No Nay Never系", rate: 3.3 },
 ];
 
-// Backtest data from JSON
+// バックテストデータ（JSONから取得）
 const summary = backtestAll.summary;
 const byYear = backtestAll.by_year as Record<string, { n: number; win_rate: number; show_rate: number }>;
 const backtestYears = Object.entries(byYear)
@@ -104,7 +139,7 @@ const backtestYears = Object.entries(byYear)
     showRate: data.show_rate,
   }));
 
-// Combo hit rates from backtest (may not exist in older JSON)
+// 組合せ馬券的中率（旧JSONには存在しない場合あり）
 const comboHitRates = (backtestAll as Record<string, unknown>).combo_hit_rates as
   | {
       quinella_box3: number; wide_top2: number; trio_box3: number; trio_box5: number;
@@ -112,7 +147,7 @@ const comboHitRates = (backtestAll as Record<string, unknown>).combo_hit_rates a
     }
   | undefined;
 
-// Confidence intervals (may not exist in older JSON)
+// 信頼区間（旧JSONには存在しない場合あり）
 const confidence = (summary as Record<string, unknown>).confidence as
   | {
       win_hit_rate_ci: [number, number];
@@ -123,7 +158,7 @@ const confidence = (summary as Record<string, unknown>).confidence as
     }
   | undefined;
 
-// Calibration data (may not exist in older JSON)
+// キャリブレーションデータ（旧JSONには存在しない場合あり）
 const calibration = (backtestAll as Record<string, unknown>).calibration as
   | {
       win: { bin_center: number; predicted: number; observed: number; count: number }[];
@@ -131,7 +166,7 @@ const calibration = (backtestAll as Record<string, unknown>).calibration as
     }
   | undefined;
 
-// Holdout validation data (may not exist in older JSON)
+// ホールドアウト検証データ（旧JSONには存在しない場合あり）
 const holdout = (backtestAll as Record<string, unknown>).holdout as
   | {
       cutoff_year: number;
@@ -141,7 +176,7 @@ const holdout = (backtestAll as Record<string, unknown>).holdout as
     }
   | undefined;
 
-// Jackknife sensitivity data (may not exist in older JSON)
+// ジャックナイフ感度分析データ（旧JSONには存在しない場合あり）
 const jackknife = (backtestAll as Record<string, unknown>).jackknife as
   | {
       n_races: number;
@@ -155,7 +190,7 @@ const jackknife = (backtestAll as Record<string, unknown>).jackknife as
     }
   | undefined;
 
-// Simulation data (may not exist in older JSON)
+// シミュレーションデータ（旧JSONには存在しない場合あり）
 const simulation = (backtestAll as Record<string, unknown>).simulation as
   | {
       initial_bankroll: number;
@@ -166,7 +201,18 @@ const simulation = (backtestAll as Record<string, unknown>).simulation as
     }
   | undefined;
 
-// Build bankroll chart data from simulation paths
+// バンクロール推移（確定的・実績ベース）
+const bankrollHistory = (backtestAll as Record<string, unknown>).bankroll_history as
+  | {
+      initial: number;
+      history: { label: string; win_only: number; combo: number }[];
+      final: { win_only: number; combo: number };
+      max_dd: { win_only: number; combo: number };
+      profit_multiple: { win_only: number; combo: number };
+    }
+  | undefined;
+
+// シミュレーションパスからバンクロールチャートデータを構築
 function buildBankrollData() {
   if (!simulation?.paths) return [];
   const p50 = simulation.paths.p50 || [];
@@ -200,7 +246,7 @@ export default function AnalysisPage() {
       </motion.header>
 
       <main className="px-4 py-4 space-y-5">
-        {/* Model Accuracy with Confidence Intervals */}
+        {/* AIの実力（信頼区間付き） */}
         <motion.section {...fadeIn} transition={{ delay: 0.1 }}>
           <div className="bg-card rounded-xl p-4 border border-white/5">
             <h2 className="text-sm font-bold mb-3">🏆 このAIの実力</h2>
@@ -281,7 +327,7 @@ export default function AnalysisPage() {
           </div>
         </motion.section>
 
-        {/* Holdout Validation */}
+        {/* ホールドアウト検証 */}
         {holdout && holdout.train.n_races > 0 && holdout.test.n_races > 0 && (
           <motion.section {...fadeIn} transition={{ delay: 0.11 }}>
             <div className="bg-card rounded-xl p-4 border border-white/5">
@@ -339,7 +385,7 @@ export default function AnalysisPage() {
           </motion.section>
         )}
 
-        {/* Jackknife Sensitivity */}
+        {/* ジャックナイフ感度分析 */}
         {jackknife && jackknife.races.length > 0 && (() => {
           // 横棒グラフ用データ: impactでソート済み（最も貢献=最も負のimpact → 先頭）
           // 表示は上位10件 + 下位5件
@@ -359,7 +405,7 @@ export default function AnalysisPage() {
                   各レースを1件ずつ除外した時のROI変動（赤=ROI貢献、緑=ROI低下要因）
                 </p>
 
-                {/* KPIs */}
+                {/* KPI指標 */}
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   <div className="bg-navy/50 rounded-lg p-2 text-center">
                     <p className="text-[9px] text-muted-foreground">Top1除外</p>
@@ -381,7 +427,7 @@ export default function AnalysisPage() {
                   </div>
                 </div>
 
-                {/* Bar Chart */}
+                {/* 棒グラフ */}
                 <ResponsiveContainer width="100%" height={Math.min(chartData.length * 22, 600)}>
                   <BarChart
                     data={chartData}
@@ -430,7 +476,7 @@ export default function AnalysisPage() {
                   </BarChart>
                 </ResponsiveContainer>
 
-                {/* Conclusion */}
+                {/* 結論 */}
                 <div className="mt-3 bg-navy/50 rounded-lg p-3">
                   <p className="text-xs">
                     {jackknife.roi_without_top3 >= 1.0 ? (
@@ -449,7 +495,7 @@ export default function AnalysisPage() {
           );
         })()}
 
-        {/* Calibration Curve */}
+        {/* キャリブレーション曲線 */}
         {calibration && calibration.win.length > 0 && (
           <motion.section {...fadeIn} transition={{ delay: 0.12 }}>
             <div className="bg-card rounded-xl p-4 border border-white/5">
@@ -510,11 +556,69 @@ export default function AnalysisPage() {
                 <span className="text-[10px] text-gold">● 複勝</span>
                 <span className="text-[10px] text-muted-foreground">--- 完全校正</span>
               </div>
+
+              {/* 解説 */}
+              <div className="mt-4 space-y-3">
+                <div className="bg-navy/50 rounded-lg p-3">
+                  <p className="text-[11px] font-bold text-white mb-2">グラフの見方</p>
+                  <div className="space-y-1.5 text-[10px] text-gray-300 leading-relaxed">
+                    <p><span className="text-muted-foreground">横軸</span> = AIが出した予測確率、<span className="text-muted-foreground">縦軸</span> = 実際に当たった割合</p>
+                    <p><span className="text-muted-foreground">点線（対角線）</span> = 「予測10%なら10%当たる」完璧なライン</p>
+                    <p><span className="text-muted-foreground">点の大きさ</span> = そのビンのサンプル数（大きい = 信頼度高）</p>
+                  </div>
+                </div>
+
+                <div className="bg-navy/50 rounded-lg p-3">
+                  <p className="text-[11px] font-bold text-white mb-2">読み取り方</p>
+                  <div className="space-y-1.5 text-[10px] text-gray-300 leading-relaxed">
+                    <p>
+                      <span className="text-green-400">対角線の上</span> = AIは控えめ（実際はもっと当たる）
+                    </p>
+                    <p>
+                      <span className="text-red-400">対角線の下</span> = AIは過信（実際はそこまで当たらない）
+                    </p>
+                  </div>
+                </div>
+
+                {(() => {
+                  const winData = calibration.win.filter(d => d.count >= 10);
+                  const showData = calibration.show.filter(d => d.count >= 10);
+                  const winOverconfident = winData.filter(d => d.predicted > d.observed).length;
+                  const showOverconfident = showData.filter(d => d.predicted > d.observed).length;
+                  const isWinOver = winOverconfident > winData.length / 2;
+                  const isShowOver = showOverconfident > showData.length / 2;
+
+                  return (
+                    <div className="bg-navy/50 rounded-lg p-3 border-l-4 border-sakura-pink">
+                      <p className="text-[11px] font-bold text-white mb-2">現在の傾向</p>
+                      <div className="space-y-1.5 text-[10px] text-gray-300 leading-relaxed">
+                        <p>
+                          <span className="text-sakura-pink">単勝</span>:
+                          {isWinOver
+                            ? " 全体的に対角線の下 → やや過信傾向。キャリブレーター（Isotonic Regression）で補正済み"
+                            : " 対角線付近 → 校正は良好"
+                          }
+                        </p>
+                        <p>
+                          <span className="text-gold">複勝</span>:
+                          {isShowOver
+                            ? " 低確率帯では過信だが、高確率帯では控えめ → 本命馬の複勝は信頼できる"
+                            : " 対角線付近 → 校正は良好"
+                          }
+                        </p>
+                        <p className="text-muted-foreground mt-1">
+                          ※ このグラフは補正前の生予測。本番ではキャリブレーターが自動補正します
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
           </motion.section>
         )}
 
-        {/* Combo Hit Rates */}
+        {/* 組合せ馬券的中率 */}
         {comboHitRates && (
           <motion.section {...fadeIn} transition={{ delay: 0.15 }}>
             <div className="bg-card rounded-xl p-4 border border-white/5">
@@ -562,7 +666,7 @@ export default function AnalysisPage() {
           </motion.section>
         )}
 
-        {/* Bankroll Simulation */}
+        {/* バンクロールシミュレーション（Monte Carlo） */}
         {simulation && bankrollData.length > 0 && (
           <motion.section {...fadeIn} transition={{ delay: 0.18 }}>
             <div className="bg-card rounded-xl p-4 border border-white/5">
@@ -608,7 +712,7 @@ export default function AnalysisPage() {
                 </AreaChart>
               </ResponsiveContainer>
 
-              {/* KPIs */}
+              {/* KPI指標 */}
               <div className="grid grid-cols-3 gap-2 mt-3">
                 <div className="bg-navy/50 rounded-lg p-2 text-center">
                   <p className="text-[9px] text-muted-foreground">中央値リターン</p>
@@ -633,10 +737,106 @@ export default function AnalysisPage() {
           </motion.section>
         )}
 
-        {/* Feature Importance */}
+        {/* バンクロール推移（確定的・実績ベース） */}
+        {bankrollHistory && bankrollHistory.history.length > 0 && (
+          <motion.section {...fadeIn} transition={{ delay: 0.19 }}>
+            <div className="bg-card rounded-xl p-4 border border-white/5">
+              <h2 className="text-sm font-bold mb-3">📈 バンクロール推移（実績ベース）</h2>
+              <p className="text-xs text-muted-foreground mb-3">
+                過去{bankrollHistory.history.length}レースの確定実績。初期資金¥{bankrollHistory.initial.toLocaleString()}、1/4 Kelly比率
+              </p>
+
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart
+                  data={bankrollHistory.history}
+                  margin={{ left: 10, right: 10, top: 5, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1A1A2E" />
+                  <XAxis
+                    dataKey="label"
+                    tick={false}
+                    label={{ value: "レース（時系列）", position: "bottom", fill: "#A0A0B0", fontSize: 10, offset: -5 }}
+                  />
+                  <YAxis
+                    tick={{ fill: "#A0A0B0", fontSize: 10 }}
+                    tickFormatter={(v: number) => `¥${(v / 1000).toFixed(0)}k`}
+                  />
+                  <Tooltip
+                    content={({ payload }) => {
+                      if (!payload || payload.length === 0) return null;
+                      const d = payload[0].payload as { label: string; win_only: number; combo: number };
+                      return (
+                        <div className="bg-navy border border-white/10 rounded p-2 text-xs">
+                          <p className="font-bold mb-1">{d.label}</p>
+                          <p><span className="text-[#FFD700]">全戦略:</span> ¥{d.combo.toLocaleString()}</p>
+                          <p><span className="text-[#A0A0B0]">単勝のみ:</span> ¥{d.win_only.toLocaleString()}</p>
+                        </div>
+                      );
+                    }}
+                  />
+                  <ReferenceLine y={bankrollHistory.initial} stroke="#666" strokeDasharray="5 5" />
+                  <Line
+                    type="monotone"
+                    dataKey="win_only"
+                    stroke="#A0A0B0"
+                    strokeWidth={1.5}
+                    dot={false}
+                    name="単勝のみ"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="combo"
+                    stroke="#FFD700"
+                    strokeWidth={2}
+                    dot={false}
+                    name="全戦略"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+
+              <div className="flex justify-center gap-4 mt-1">
+                <span className="text-[10px] text-gold">━ 全戦略（三連複+馬連+ワイド+単勝）</span>
+                <span className="text-[10px] text-[#A0A0B0]">━ 単勝のみ</span>
+              </div>
+
+              {/* KPI指標 */}
+              <div className="grid grid-cols-3 gap-2 mt-3">
+                <div className="bg-navy/50 rounded-lg p-2 text-center">
+                  <p className="text-[9px] text-muted-foreground">最終資金（全戦略）</p>
+                  <p className="font-mono text-sm font-bold text-gold">
+                    ¥{bankrollHistory.final.combo.toLocaleString()}
+                  </p>
+                  <p className="text-[9px] text-muted-foreground">
+                    ×{bankrollHistory.profit_multiple.combo}
+                  </p>
+                </div>
+                <div className="bg-navy/50 rounded-lg p-2 text-center">
+                  <p className="text-[9px] text-muted-foreground">最大DD（全戦略）</p>
+                  <p className="font-mono text-sm font-bold text-orange-400">
+                    {(bankrollHistory.max_dd.combo * 100).toFixed(0)}%
+                  </p>
+                </div>
+                <div className="bg-navy/50 rounded-lg p-2 text-center">
+                  <p className="text-[9px] text-muted-foreground">最終資金（単勝）</p>
+                  <p className={`font-mono text-sm font-bold ${bankrollHistory.final.win_only > bankrollHistory.initial ? "text-green-400" : "text-red-400"}`}>
+                    ¥{bankrollHistory.final.win_only.toLocaleString()}
+                  </p>
+                  <p className="text-[9px] text-muted-foreground">
+                    ×{bankrollHistory.profit_multiple.win_only}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.section>
+        )}
+
+        {/* 特徴量重要度 */}
         <motion.section {...fadeIn} transition={{ delay: 0.2 }}>
           <div className="bg-card rounded-xl p-4 border border-white/5">
             <h2 className="text-sm font-bold mb-3">📊 特徴量重要度 Top10</h2>
+            <p className="text-xs text-muted-foreground mb-3">
+              LightGBMが予測時に各特徴量をどの程度使ったか（タップで解説）
+            </p>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart
                 data={featureImportance}
@@ -651,6 +851,21 @@ export default function AnalysisPage() {
                   width={90}
                   tick={{ fill: "#A0A0B0", fontSize: 10 }}
                 />
+                <Tooltip
+                  cursor={{ fill: "rgba(255,255,255,0.05)" }}
+                  content={({ payload }) => {
+                    if (!payload || payload.length === 0) return null;
+                    const d = payload[0].payload as { name: string; key: string; value: number; desc?: string };
+                    return (
+                      <div className="bg-navy border border-white/10 rounded-lg p-3 text-xs max-w-[260px] shadow-lg">
+                        <p className="font-bold text-white mb-1">{d.name}</p>
+                        <p className="text-muted-foreground font-mono text-[10px] mb-1.5">{d.key}</p>
+                        {d.desc && <p className="text-gray-300 leading-relaxed">{d.desc}</p>}
+                        <p className="text-gold font-mono mt-1.5">寄与度: {(d.value * 100).toFixed(1)}%</p>
+                      </div>
+                    );
+                  }}
+                />
                 <Bar dataKey="value" radius={[0, 4, 4, 0]} animationDuration={1500}>
                   {featureImportance.map((_, i) => (
                     <Cell key={i} fill={i === 0 ? "#FFD700" : "#E8879C"} />
@@ -661,7 +876,7 @@ export default function AnalysisPage() {
           </div>
         </motion.section>
 
-        {/* Frame Win Rate */}
+        {/* 枠順別勝率 */}
         <motion.section {...fadeIn} transition={{ delay: 0.3 }}>
           <div className="bg-card rounded-xl p-4 border border-white/5">
             <h2 className="text-sm font-bold mb-3">🏇 枠順別勝率（{summary.n_races}レース）</h2>
@@ -676,7 +891,7 @@ export default function AnalysisPage() {
           </div>
         </motion.section>
 
-        {/* Popularity Hit Rate */}
+        {/* 人気別3着内率 */}
         <motion.section {...fadeIn} transition={{ delay: 0.4 }}>
           <div className="bg-card rounded-xl p-4 border border-white/5">
             <h2 className="text-sm font-bold mb-3">
@@ -693,7 +908,7 @@ export default function AnalysisPage() {
           </div>
         </motion.section>
 
-        {/* Bloodline Win Rate */}
+        {/* 血統カテゴリ別勝率 */}
         <motion.section {...fadeIn} transition={{ delay: 0.5 }}>
           <div className="bg-card rounded-xl p-4 border border-white/5">
             <h2 className="text-sm font-bold mb-3">🧬 血統カテゴリ別勝率（{summary.n_races}レース）</h2>
@@ -717,7 +932,7 @@ export default function AnalysisPage() {
           </div>
         </motion.section>
 
-        {/* AI Reading */}
+        {/* AIの読み */}
         <motion.section {...fadeIn} transition={{ delay: 0.6 }}>
           <div className="bg-card rounded-xl p-4 border border-white/5">
             <h2 className="text-sm font-bold text-sakura-pink mb-3">
@@ -725,14 +940,15 @@ export default function AnalysisPage() {
             </h2>
             <div className="bg-navy/50 rounded-lg p-4 border-l-4 border-sakura-pink">
               <p className="text-sm leading-relaxed text-gray-300">
-                3歳牝馬重賞では<span className="text-white font-bold">前走上がり3Fが最重要指標</span>。
-                瞬発力のある馬が好走しやすく、
-                内枠有利の傾向は過去のデータでも顕著。
+                3歳牝馬重賞では<span className="text-white font-bold">レースペース（前半の流れ）</span>が最重要指標。
+                ペース偏差値・馬体重・スピード指数の3つで予測力の約36%を占める。
+                ハイペースで先行馬が崩れるか、スローで逃げ切るかの展開読みがカギ。
               </p>
               <p className="text-sm leading-relaxed text-gray-300 mt-2">
                 Model B（オッズ除外）をメインに据えることで、
                 <span className="text-white font-bold">市場が見落とす穴馬</span>を検出。
-                デュアルモデルブレンド（A20+B80）で安定性とエッジを両立。
+                デュアルモデルブレンド（A20+B80）により、
+                組合せ馬券（馬連・三連複）で高回収率を実現。
               </p>
             </div>
           </div>

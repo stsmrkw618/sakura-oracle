@@ -15,7 +15,6 @@ SAKURA ORACLE — 任意レース予測CLI
 """
 
 import json
-import pickle
 import re
 import sys
 from datetime import datetime
@@ -352,17 +351,16 @@ def predict_race(race_label: str) -> None:
     pred_b_show = model_b_show.predict_proba(X_pred_no_odds)[:, 1]
     pred_df["pred_show"] = BLEND_WEIGHT_A * pred_a_show + BLEND_WEIGHT_B * pred_b_show
 
-    # キャリブレーション適用
-    cal_dir = Path(__file__).resolve().parent
-    for target, col in [("win", "pred_win"), ("show", "pred_show")]:
-        cal_path = cal_dir / f"calibrator_{target}.pkl"
-        if cal_path.exists():
-            with open(cal_path, "rb") as f:
-                calibrator = pickle.load(f)
-            pred_df[col] = calibrator.predict(pred_df[col].values)
-            print(f"  ✅ {target}キャリブレーター適用済み")
-        else:
-            print(f"  ⚠️ calibrator_{target}.pkl なし — 未校正確率を使用")
+    # レース内正規化（predictor.pyと同一ロジック）
+    # Isotonic Regressionは小データで階段関数化し分解能が低下するため使用しない
+    # 代わりにレース内正規化で絶対値を補正（馬ごとの相対差は完全に保存される）
+    win_sum = pred_df["pred_win"].sum()
+    show_sum = pred_df["pred_show"].sum()
+    if win_sum > 0:
+        pred_df["pred_win"] = pred_df["pred_win"] / win_sum  # 合計→1.0
+    if show_sum > 0:
+        pred_df["pred_show"] = pred_df["pred_show"] * (3.0 / show_sum)  # 合計→3.0
+    print(f"  ✅ レース内正規化適用済み（win合計=1.0, show合計=3.0）")
 
     pred_df["pred_b_win"] = pred_b_win
 
