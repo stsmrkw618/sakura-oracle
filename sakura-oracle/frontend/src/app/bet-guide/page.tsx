@@ -122,11 +122,15 @@ export default function BetGuidePage() {
 
   const totalInvestment = scaledBets.reduce((s, b) => s + b.scaledAmount, 0);
 
-  // 期待リターン: オッズ入力済みの馬券のみ計算
-  const reliableBets = scaledBets.filter((b) => b.evReliable);
-  const expectedReturn = reliableBets.reduce((s, b) => s + b.scaledAmount * b.ev, 0);
-  const reliableInvestment = reliableBets.reduce((s, b) => s + b.scaledAmount, 0);
-  const roi = reliableInvestment > 0 ? (expectedReturn / reliableInvestment - 1) * 100 : 0;
+  // 期待リターン: 全馬券を含む（オッズ未入力はBT実績ROIで推定）
+  const expectedReturn = scaledBets.reduce((s, b) => {
+    if (b.scaledAmount === 0) return s;
+    // オッズ入力済み → 実EV、未入力 → BT実績ROIで推定
+    const effectiveEv = b.evReliable ? b.ev : b.backtestRoi;
+    return s + b.scaledAmount * effectiveEv;
+  }, 0);
+  const roi = totalInvestment > 0 ? (expectedReturn / totalInvestment - 1) * 100 : 0;
+  const allReliable = scaledBets.filter((b) => b.scaledAmount > 0).every((b) => b.evReliable);
 
   const toggleGlossary = (key: string) => {
     setGlossaryOpen(glossaryOpen === key ? null : key);
@@ -204,7 +208,9 @@ export default function BetGuidePage() {
                 </p>
               </div>
               <div className="bg-navy/50 rounded-lg p-3">
-                <p className="text-[10px] text-muted-foreground mb-1">期待リターン</p>
+                <p className="text-[10px] text-muted-foreground mb-1">
+                  期待リターン{!allReliable && <span className="text-orange-400">*</span>}
+                </p>
                 <p className="font-mono text-sm font-bold text-gold">
                   ¥{Math.round(expectedReturn).toLocaleString()}
                 </p>
@@ -222,7 +228,9 @@ export default function BetGuidePage() {
               </div>
             </div>
             <p className="text-[10px] text-muted-foreground mt-2">
-              ※ 期待リターン = Σ(勝率 × オッズ × 賭け金)。同条件を繰り返した場合の平均回収額。オッズ未入力の組合せ馬券は除外
+              ※ 期待リターン = Σ(賭け金 × EV)。{allReliable
+                ? "全馬券のオッズが入力済みです"
+                : "オッズ未入力の組合せ馬券はBT実績ROIで推定(*印)。オッズ入力で確定値に切替わります"}
             </p>
           </div>
         </motion.section>
