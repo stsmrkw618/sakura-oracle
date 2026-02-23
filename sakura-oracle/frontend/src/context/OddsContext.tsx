@@ -42,6 +42,7 @@ interface Bet {
   amount: number;
   ev: number;
   odds: number | null;
+  kelly: number;
 }
 
 interface OddsContextValue {
@@ -104,23 +105,24 @@ function generateBets(horses: LiveHorse[], budget = 3000): Bet[] {
     return b.kelly_win - a.kelly_win;
   });
 
-  const kellyHorses = sorted.filter((h) => h.kelly_win > 0);
   const topHorses = sorted.filter((h) => ["◎", "○", "▲"].includes(h.mark));
   const bets: Bet[] = [];
 
-  // 単勝: Kelly fraction > 0 の馬に比例配分
-  for (const h of kellyHorses) {
+  // 単勝: ◎○▲の馬のみ（最大3頭）— Kelly > 0 かつ EV > 1.0
+  const winTargets = topHorses.filter((h) => h.kelly_win > 0 && h.ev_win >= 1.0).slice(0, 3);
+  for (const h of winTargets) {
     const amount = Math.max(100, Math.round((budget * h.kelly_win) / 100) * 100);
     bets.push({
       type: "単勝",
-      targets: `${h.horse_number}番`,
+      targets: `${h.horse_number}番 ${h.horse_name}`,
       amount,
       ev: h.ev_win,
       odds: null,
+      kelly: h.kelly_win,
     });
   }
 
-  // 馬連BOX
+  // 馬連BOX（上位2-3頭）
   if (topHorses.length >= 2) {
     const slice = topHorses.slice(0, 3);
     const targets = slice.map((h) => h.horse_number).join("-");
@@ -133,10 +135,26 @@ function generateBets(horses: LiveHorse[], budget = 3000): Bet[] {
       amount,
       ev: Math.round(avgEv * 100) / 100,
       odds: null,
+      kelly: avgKelly,
     });
   }
 
-  // 三連複BOX
+  // ワイド（◎-○）
+  if (topHorses.length >= 2) {
+    const [h1, h2] = topHorses;
+    const avgKelly = (h1.kelly_win + h2.kelly_win) / 2;
+    const amount = Math.max(100, Math.round((budget * avgKelly) / 100) * 100);
+    bets.push({
+      type: "ワイド",
+      targets: `${h1.horse_number}-${h2.horse_number}`,
+      amount,
+      ev: Math.round(((h1.ev_win + h2.ev_win) / 2) * 100) / 100,
+      odds: null,
+      kelly: avgKelly,
+    });
+  }
+
+  // 三連複BOX（上位3-5頭、上位が3頭以上の場合のみ）
   if (topHorses.length >= 3) {
     const top5 = sorted
       .filter((h) => ["◎", "○", "▲", "△"].includes(h.mark))
@@ -152,22 +170,9 @@ function generateBets(horses: LiveHorse[], budget = 3000): Bet[] {
         amount,
         ev: Math.round(avgEv * 100) / 100,
         odds: null,
+        kelly: avgKelly,
       });
     }
-  }
-
-  // ワイド
-  if (topHorses.length >= 2) {
-    const [h1, h2] = topHorses;
-    const avgKelly = (h1.kelly_win + h2.kelly_win) / 2;
-    const amount = Math.max(100, Math.round((budget * avgKelly) / 100) * 100);
-    bets.push({
-      type: "ワイド",
-      targets: `${h1.horse_number}-${h2.horse_number}`,
-      amount,
-      ev: Math.round(((h1.ev_win + h2.ev_win) / 2) * 100) / 100,
-      odds: null,
-    });
   }
 
   return bets;

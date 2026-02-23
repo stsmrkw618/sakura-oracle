@@ -69,54 +69,8 @@ export default function BetGuidePage() {
       </motion.header>
 
       <main className="px-4 py-4 space-y-5">
-        {/* Recommended Bets */}
+        {/* Investment Simulator — 最上部 */}
         <motion.section {...fadeIn} transition={{ delay: 0.1 }}>
-          <h2 className="text-sm font-bold text-muted-foreground mb-3">
-            推奨買い目
-          </h2>
-          <div className="space-y-3">
-            {scaledBets.map((bet, i) => (
-              <div
-                key={i}
-                className="bg-card rounded-xl p-4 border border-white/5"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-bold text-sakura-pink">
-                    {bet.type}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-[10px] text-muted-foreground">
-                      Kelly {((bet as Record<string, unknown>).kelly as number
-                        ? ((bet as Record<string, unknown>).kelly as number * 100).toFixed(1)
-                        : "—")}%
-                    </span>
-                    <span className="font-mono text-sm">
-                      {bet.ev >= 1.5 && "🔥 "}
-                      <span
-                        className={
-                          bet.ev >= 1.5 ? "text-gold font-bold" : "text-white"
-                        }
-                      >
-                        EV {bet.ev.toFixed(2)}
-                      </span>
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    対象: <span className="text-white">{bet.targets}</span>
-                  </span>
-                  <span className="font-mono text-gold">
-                    ¥{bet.scaledAmount.toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.section>
-
-        {/* Investment Simulator */}
-        <motion.section {...fadeIn} transition={{ delay: 0.2 }}>
           <div className="bg-card rounded-xl p-4 border border-white/5">
             <h2 className="text-sm font-bold text-muted-foreground mb-3">
               投資シミュレーター
@@ -172,6 +126,50 @@ export default function BetGuidePage() {
           </div>
         </motion.section>
 
+        {/* Recommended Bets */}
+        <motion.section {...fadeIn} transition={{ delay: 0.2 }}>
+          <h2 className="text-sm font-bold text-muted-foreground mb-3">
+            推奨買い目（{scaledBets.length}点）
+          </h2>
+          <div className="space-y-3">
+            {scaledBets.map((bet, i) => (
+              <div
+                key={i}
+                className="bg-card rounded-xl p-4 border border-white/5"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-bold text-sakura-pink">
+                    {bet.type}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[10px] text-muted-foreground">
+                      Kelly {(bet.kelly * 100).toFixed(1)}%
+                    </span>
+                    <span className="font-mono text-sm">
+                      {bet.ev >= 1.5 && "🔥 "}
+                      <span
+                        className={
+                          bet.ev >= 1.5 ? "text-gold font-bold" : "text-white"
+                        }
+                      >
+                        EV {bet.ev.toFixed(2)}
+                      </span>
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    対象: <span className="text-white">{bet.targets}</span>
+                  </span>
+                  <span className="font-mono text-gold">
+                    ¥{bet.scaledAmount.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.section>
+
         {/* Odds Manual Update */}
         <motion.section {...fadeIn} transition={{ delay: 0.3 }}>
           <div className="bg-card rounded-xl p-4 border border-white/5">
@@ -189,7 +187,7 @@ export default function BetGuidePage() {
               )}
             </div>
             <p className="text-xs text-muted-foreground mb-3">
-              当日のオッズを入力すると全ページの期待値・印・買い目が自動更新されます
+              当日のオッズを入力すると「予測」タブ含め全ページの期待値・印・買い目が即時連動します
             </p>
 
             {/* Column Headers */}
