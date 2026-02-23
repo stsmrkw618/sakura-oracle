@@ -11,20 +11,12 @@ import {
   Cell,
 } from "recharts";
 import Navbar from "@/components/Navbar";
+import backtestAll from "@/data/backtest_all.json";
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
 };
-
-// Backtest data
-const backtestData = [
-  { year: "2021", hit: 2, total: 3 },
-  { year: "2022", hit: 3, total: 3 },
-  { year: "2023", hit: 2, total: 3 },
-  { year: "2024", hit: 1, total: 3 },
-  { year: "2025", hit: 3, total: 3 },
-];
 
 // Feature importance
 const featureImportance = [
@@ -76,6 +68,24 @@ const bloodlineData = [
   { name: "エピファネイア系", rate: 8 },
 ];
 
+// Backtest data from JSON
+const summary = backtestAll.summary;
+const byYear = backtestAll.by_year as Record<string, { n: number; win_rate: number; show_rate: number }>;
+const backtestYears = Object.entries(byYear)
+  .sort(([a], [b]) => a.localeCompare(b))
+  .slice(-5)
+  .map(([year, data]) => ({
+    year,
+    hit: Math.round(data.win_rate * data.n),
+    total: data.n,
+    showRate: data.show_rate,
+  }));
+
+// Combo hit rates from backtest (may not exist in older JSON)
+const comboHitRates = (backtestAll as Record<string, unknown>).combo_hit_rates as
+  | { quinella_box3: number; wide_top2: number; trio_box3: number; trio_box5: number }
+  | undefined;
+
 export default function AnalysisPage() {
   return (
     <div className="min-h-screen bg-navy-dark pb-20">
@@ -95,24 +105,49 @@ export default function AnalysisPage() {
           <div className="bg-card rounded-xl p-4 border border-white/5">
             <h2 className="text-sm font-bold mb-3">🏆 このAIの実力</h2>
             <p className="text-xs text-muted-foreground mb-3">
-              過去5年の桜花賞バックテスト結果
+              過去{summary.n_races}レースのWalk-Forwardバックテスト
             </p>
+
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="bg-navy/50 rounded-lg p-3 text-center">
+                <p className="text-[10px] text-muted-foreground mb-1">1着的中率</p>
+                <p className="font-mono text-lg font-bold text-gold">
+                  {(summary.win_hit_rate * 100).toFixed(0)}%
+                </p>
+              </div>
+              <div className="bg-navy/50 rounded-lg p-3 text-center">
+                <p className="text-[10px] text-muted-foreground mb-1">単勝回収率</p>
+                <p className="font-mono text-lg font-bold text-green-400">
+                  {(summary.win_roi * 100).toFixed(0)}%
+                </p>
+              </div>
+              <div className="bg-navy/50 rounded-lg p-3 text-center">
+                <p className="text-[10px] text-muted-foreground mb-1">複勝的中率</p>
+                <p className="font-mono text-lg font-bold">
+                  {(summary.show_hit_rate * 100).toFixed(0)}%
+                </p>
+              </div>
+              <div className="bg-navy/50 rounded-lg p-3 text-center">
+                <p className="text-[10px] text-muted-foreground mb-1">複勝回収率</p>
+                <p className="font-mono text-lg font-bold text-green-400">
+                  {(summary.show_roi * 100).toFixed(0)}%
+                </p>
+              </div>
+            </div>
+
             <div className="space-y-3">
-              {backtestData.map((d) => (
+              {backtestYears.map((d) => (
                 <div key={d.year}>
                   <div className="flex justify-between text-xs mb-1">
                     <span>{d.year}年</span>
                     <span className="font-mono">
-                      {d.hit}/{d.total}頭的中
-                      {d.hit === d.total && (
-                        <span className="text-gold ml-1">完全的中!</span>
-                      )}
+                      {d.hit}/{d.total}レース的中
                     </span>
                   </div>
                   <div className="bg-white/5 rounded-full h-2.5 overflow-hidden">
                     <div
                       className="h-full bg-sakura-pink rounded-full transition-all duration-700"
-                      style={{ width: `${(d.hit / d.total) * 100}%` }}
+                      style={{ width: `${(d.hit / Math.max(d.total, 1)) * 100}%` }}
                     />
                   </div>
                 </div>
@@ -120,6 +155,47 @@ export default function AnalysisPage() {
             </div>
           </div>
         </motion.section>
+
+        {/* Combo Hit Rates */}
+        {comboHitRates && (
+          <motion.section {...fadeIn} transition={{ delay: 0.15 }}>
+            <div className="bg-card rounded-xl p-4 border border-white/5">
+              <h2 className="text-sm font-bold mb-3">🎯 組合せ馬券 過去的中率</h2>
+              <p className="text-xs text-muted-foreground mb-3">
+                {summary.n_races}レースのバックテスト（AI上位予測馬での的中率）
+              </p>
+
+              <div className="space-y-3">
+                {[
+                  { label: "馬連BOX(3)", rate: comboHitRates.quinella_box3, desc: "上位3頭のうち2頭が1-2着" },
+                  { label: "ワイド(◎-○)", rate: comboHitRates.wide_top2, desc: "上位2頭が両方3着以内" },
+                  { label: "三連複BOX(3)", rate: comboHitRates.trio_box3, desc: "上位3頭が全員3着以内" },
+                  { label: "三連複BOX(5)", rate: comboHitRates.trio_box5, desc: "上位5頭のうち3頭が3着以内" },
+                ].map((item) => (
+                  <div key={item.label}>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span>{item.label}</span>
+                      <span className="font-mono text-gold">
+                        {(item.rate * 100).toFixed(0)}%
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mb-1">{item.desc}</p>
+                    <div className="bg-white/5 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="h-full bg-gold rounded-full transition-all duration-700"
+                        style={{ width: `${item.rate * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-[10px] text-muted-foreground mt-3">
+                ※ 組合せオッズ履歴がないためROIは計算不可。的中率のみ表示
+              </p>
+            </div>
+          </motion.section>
+        )}
 
         {/* Feature Importance */}
         <motion.section {...fadeIn} transition={{ delay: 0.2 }}>

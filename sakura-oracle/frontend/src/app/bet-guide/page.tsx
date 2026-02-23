@@ -12,24 +12,68 @@ const fadeIn = {
   animate: { opacity: 1, y: 0 },
 };
 
+/** 組合せオッズ入力用コンポーネント */
+function ComboOddsInput({
+  comboKey,
+  comboOddsMap,
+  updateComboOdds,
+}: {
+  comboKey: string;
+  comboOddsMap: Record<string, number>;
+  updateComboOdds: (key: string, odds: number) => void;
+}) {
+  const currentValue = comboOddsMap[comboKey];
+  const [localValue, setLocalValue] = useState(
+    currentValue != null ? String(currentValue) : ""
+  );
+
+  return (
+    <input
+      type="number"
+      step="0.1"
+      min="1"
+      value={localValue}
+      placeholder="--"
+      onChange={(e) => {
+        setLocalValue(e.target.value);
+        const v = parseFloat(e.target.value);
+        if (!isNaN(v) && v > 0) {
+          updateComboOdds(comboKey, v);
+        }
+      }}
+      className="w-16 bg-navy/50 border border-white/10 rounded px-2 py-1 text-xs font-mono text-right"
+    />
+  );
+}
+
 export default function BetGuidePage() {
-  const { liveHorses, liveBets, oddsMap, updateOdds, resetOdds } = useOdds();
+  const {
+    liveHorses,
+    liveBets,
+    oddsMap,
+    updateOdds,
+    resetOdds,
+    comboOddsMap,
+    updateComboOdds,
+    resetComboOdds,
+  } = useOdds();
   const [budget, setBudget] = useState(3000);
   const [glossaryOpen, setGlossaryOpen] = useState<string | null>(null);
 
   const hasAnyChange = liveHorses.some((h) => h.oddsChanged);
+  const hasComboOdds = Object.keys(comboOddsMap).length > 0;
 
   const scaledBets = useMemo(() => {
     // 単勝: Kelly比例で予算の70%を配分
     // 組合せ: 残り30%を均等配分
-    const winBets = liveBets.filter((b) => b.evReliable);
-    const comboBets = liveBets.filter((b) => !b.evReliable);
+    const winBets = liveBets.filter((b) => b.type === "単勝");
+    const comboBets = liveBets.filter((b) => b.type !== "単勝");
     const winBudget = Math.round(budget * 0.7);
     const comboBudget = budget - winBudget;
     const totalKelly = winBets.reduce((s, b) => s + b.kelly, 0);
 
     const scaled = liveBets.map((bet) => {
-      if (bet.evReliable) {
+      if (bet.type === "単勝") {
         // 単勝: Kelly比例
         const ratio = totalKelly > 0 ? bet.kelly / totalKelly : 1 / winBets.length;
         const amount = Math.round((winBudget * ratio) / 100) * 100;
@@ -46,12 +90,12 @@ export default function BetGuidePage() {
   }, [budget, liveBets]);
 
   const totalInvestment = scaledBets.reduce((s, b) => s + b.scaledAmount, 0);
-  // 期待リターン: 単勝のみ計算（組合せ馬券はオッズ不明のため除外）
-  const expectedReturn = scaledBets
-    .filter((b) => b.evReliable)
-    .reduce((s, b) => s + b.scaledAmount * b.ev, 0);
-  const winInvestment = scaledBets.filter((b) => b.evReliable).reduce((s, b) => s + b.scaledAmount, 0);
-  const roi = winInvestment > 0 ? (expectedReturn / winInvestment - 1) * 100 : 0;
+
+  // 期待リターン: オッズ入力済みの馬券のみ計算
+  const reliableBets = scaledBets.filter((b) => b.evReliable);
+  const expectedReturn = reliableBets.reduce((s, b) => s + b.scaledAmount * b.ev, 0);
+  const reliableInvestment = reliableBets.reduce((s, b) => s + b.scaledAmount, 0);
+  const roi = reliableInvestment > 0 ? (expectedReturn / reliableInvestment - 1) * 100 : 0;
 
   const toggleGlossary = (key: string) => {
     setGlossaryOpen(glossaryOpen === key ? null : key);
@@ -63,6 +107,12 @@ export default function BetGuidePage() {
       ["◎", "○", "▲", "△"].includes(h.mark)
     );
   }, []);
+
+  // 馬券タイプ別にグルーピング
+  const winBets = scaledBets.filter((b) => b.type === "単勝");
+  const quinellaBets = scaledBets.filter((b) => b.type === "馬連");
+  const wideBets = scaledBets.filter((b) => b.type === "ワイド");
+  const trioBets = scaledBets.filter((b) => b.type === "三連複");
 
   return (
     <div className="min-h-screen bg-navy-dark pb-20">
@@ -77,7 +127,7 @@ export default function BetGuidePage() {
               {predictions.recommendations.headline}
             </p>
           </div>
-          {hasAnyChange && (
+          {(hasAnyChange || hasComboOdds) && (
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-sakura-pink/20 text-sakura-pink font-bold">
               LIVE
             </span>
@@ -123,13 +173,13 @@ export default function BetGuidePage() {
                 </p>
               </div>
               <div className="bg-navy/50 rounded-lg p-3">
-                <p className="text-[10px] text-muted-foreground mb-1">単勝 期待値</p>
+                <p className="text-[10px] text-muted-foreground mb-1">期待リターン</p>
                 <p className="font-mono text-sm font-bold text-gold">
                   ¥{Math.round(expectedReturn).toLocaleString()}
                 </p>
               </div>
               <div className="bg-navy/50 rounded-lg p-3">
-                <p className="text-[10px] text-muted-foreground mb-1">単勝 ROI</p>
+                <p className="text-[10px] text-muted-foreground mb-1">期待ROI</p>
                 <p
                   className={`font-mono text-lg font-bold ${
                     roi >= 0 ? "text-green-400" : "text-red-400"
@@ -141,28 +191,28 @@ export default function BetGuidePage() {
               </div>
             </div>
             <p className="text-[10px] text-muted-foreground mt-2">
-              ※ 期待値・ROIは単勝のみ計算。組合せ馬券はオッズ未確定のため除外
+              ※ 期待リターン = Σ(勝率 × オッズ × 賭け金)。同条件を繰り返した場合の平均回収額。オッズ未入力の組合せ馬券は除外
             </p>
           </div>
         </motion.section>
 
-        {/* Recommended Bets */}
-        <motion.section {...fadeIn} transition={{ delay: 0.2 }}>
-          <h2 className="text-sm font-bold text-muted-foreground mb-3">
-            推奨買い目（{scaledBets.length}点）
-          </h2>
-          <div className="space-y-3">
-            {scaledBets.map((bet, i) => (
-              <div
-                key={i}
-                className="bg-card rounded-xl p-4 border border-white/5"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-bold text-sakura-pink">
-                    {bet.type}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    {bet.evReliable ? (
+        {/* Recommended Bets — 単勝 */}
+        {winBets.length > 0 && (
+          <motion.section {...fadeIn} transition={{ delay: 0.2 }}>
+            <h2 className="text-sm font-bold text-muted-foreground mb-3">
+              単勝（{winBets.length}点）
+            </h2>
+            <div className="space-y-3">
+              {winBets.map((bet, i) => (
+                <div
+                  key={`win-${i}`}
+                  className="bg-card rounded-xl p-4 border border-white/5"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-bold text-sakura-pink">
+                      {bet.type}
+                    </span>
+                    <div className="flex items-center gap-2">
                       <span className="font-mono text-sm">
                         {bet.ev >= 1.5 && "🔥 "}
                         <span
@@ -173,44 +223,115 @@ export default function BetGuidePage() {
                           EV {bet.ev.toFixed(2)}
                         </span>
                       </span>
-                    ) : (
-                      <span className="text-[10px] text-muted-foreground">
-                        補助馬券
-                      </span>
-                    )}
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-1">
+                    {bet.targets}
+                  </p>
+                  <p className="text-xs text-muted-foreground mb-2 leading-relaxed">
+                    {bet.description}
+                  </p>
+                  {bet.winReturn && (
+                    <p className="text-xs text-green-400 mb-2">
+                      的中時 ¥{bet.winReturn.toLocaleString()}（オッズ {bet.odds}倍 × ¥{bet.scaledAmount.toLocaleString()}）
+                    </p>
+                  )}
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-mono text-[10px] text-muted-foreground">
+                      Kelly {(bet.kelly * 100).toFixed(1)}%
+                    </span>
+                    <span className="font-mono text-gold">
+                      ¥{bet.scaledAmount.toLocaleString()}
+                    </span>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground mb-2 leading-relaxed">
-                  {bet.description}
-                </p>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-mono text-[10px] text-muted-foreground">
-                    Kelly {(bet.kelly * 100).toFixed(1)}%
-                  </span>
-                  <span className="font-mono text-gold">
-                    ¥{bet.scaledAmount.toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.section>
+              ))}
+            </div>
+          </motion.section>
+        )}
+
+        {/* 組合せ馬券セクション — 馬連 */}
+        {quinellaBets.length > 0 && (
+          <motion.section {...fadeIn} transition={{ delay: 0.25 }}>
+            <h2 className="text-sm font-bold text-muted-foreground mb-3">
+              馬連（{quinellaBets.length}通り）
+            </h2>
+            <div className="space-y-3">
+              {quinellaBets.map((bet, i) => (
+                <ComboBetCard
+                  key={`quinella-${i}`}
+                  bet={bet}
+                  comboOddsMap={comboOddsMap}
+                  updateComboOdds={updateComboOdds}
+                />
+              ))}
+            </div>
+          </motion.section>
+        )}
+
+        {/* ワイド */}
+        {wideBets.length > 0 && (
+          <motion.section {...fadeIn} transition={{ delay: 0.3 }}>
+            <h2 className="text-sm font-bold text-muted-foreground mb-3">
+              ワイド（{wideBets.length}点）
+            </h2>
+            <div className="space-y-3">
+              {wideBets.map((bet, i) => (
+                <ComboBetCard
+                  key={`wide-${i}`}
+                  bet={bet}
+                  comboOddsMap={comboOddsMap}
+                  updateComboOdds={updateComboOdds}
+                />
+              ))}
+            </div>
+          </motion.section>
+        )}
+
+        {/* 三連複 */}
+        {trioBets.length > 0 && (
+          <motion.section {...fadeIn} transition={{ delay: 0.35 }}>
+            <h2 className="text-sm font-bold text-muted-foreground mb-3">
+              三連複（{trioBets.length}通り）
+            </h2>
+            <div className="space-y-3">
+              {trioBets.map((bet, i) => (
+                <ComboBetCard
+                  key={`trio-${i}`}
+                  bet={bet}
+                  comboOddsMap={comboOddsMap}
+                  updateComboOdds={updateComboOdds}
+                />
+              ))}
+            </div>
+          </motion.section>
+        )}
 
         {/* Odds Manual Update */}
-        <motion.section {...fadeIn} transition={{ delay: 0.3 }}>
+        <motion.section {...fadeIn} transition={{ delay: 0.4 }}>
           <div className="bg-card rounded-xl p-4 border border-white/5">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-bold text-muted-foreground">
-                🔧 オッズ手動更新
+                🔧 単勝・複勝オッズ更新
               </h2>
-              {hasAnyChange && (
-                <button
-                  onClick={resetOdds}
-                  className="text-[10px] text-red-400 underline"
-                >
-                  リセット
-                </button>
-              )}
+              <div className="flex gap-2">
+                {hasComboOdds && (
+                  <button
+                    onClick={resetComboOdds}
+                    className="text-[10px] text-orange-400 underline"
+                  >
+                    組合せリセット
+                  </button>
+                )}
+                {hasAnyChange && (
+                  <button
+                    onClick={resetOdds}
+                    className="text-[10px] text-red-400 underline"
+                  >
+                    リセット
+                  </button>
+                )}
+              </div>
             </div>
             <p className="text-xs text-muted-foreground mb-3">
               当日のオッズを入力すると「予測」タブ含め全ページの期待値・印・買い目が即時連動します
@@ -267,7 +388,7 @@ export default function BetGuidePage() {
         </motion.section>
 
         {/* Glossary */}
-        <motion.section {...fadeIn} transition={{ delay: 0.4 }}>
+        <motion.section {...fadeIn} transition={{ delay: 0.5 }}>
           <div className="bg-card rounded-xl p-4 border border-white/5">
             <h2 className="text-sm font-bold text-muted-foreground mb-3">
               📖 初心者向け用語解説
@@ -282,21 +403,27 @@ export default function BetGuidePage() {
               },
               {
                 key: "ev",
-                title: "期待値とは？",
+                title: "期待値（EV）とは？",
                 content:
-                  "期待値 = 予測確率 × オッズ。1.0を超えればプラス期待値（長期的に利益が出る賭け）。例: 勝率20%で8倍なら 0.20 × 8.0 = 1.6（強く推奨）。",
+                  "期待値 = AI予測確率 × オッズ。1.0を超えればプラス期待値（長期的に利益が出る賭け）。例: 勝率20%で8倍なら 0.20 × 8.0 = 1.6。EV 1.6は「100円賭けると平均160円返ってくる」という意味。オッズそのものではありません。",
+              },
+              {
+                key: "combo-ev",
+                title: "組合せ馬券のEV計算とは？",
+                content:
+                  "AIが各馬の勝率を予測 → Harvilleモデルで2頭・3頭の同時入着確率を算出 → JRAオッズを掛けてEVを計算。EV > 1.0なら「買い」判定。オッズは当日JRAサイトから手入力してください。",
               },
               {
                 key: "umaren",
                 title: "馬連BOXとは？",
                 content:
-                  "選んだ馬の中から、1着と2着の組み合わせを全通り買う方式。3頭BOXなら3通り（A-B, A-C, B-C）。順番は関係なし。",
+                  "選んだ馬の中から、1着と2着の組み合わせを全通り買う方式。3頭BOXなら3通り（A-B, A-C, B-C）。順番は関係なし。JRAでは1通り最低¥100。",
               },
               {
                 key: "sanrenpuku",
                 title: "三連複とは？",
                 content:
-                  "1着・2着・3着に入る3頭の組み合わせを当てる馬券。順番は不問。5頭BOXなら10通り。高配当が狙える。",
+                  "1着・2着・3着に入る3頭の組み合わせを当てる馬券。順番は不問。5頭BOXなら10通り。高配当が狙える。JRAでは1通り最低¥100。",
               },
             ].map((item) => (
               <div key={item.key} className="mb-2">
@@ -325,6 +452,89 @@ export default function BetGuidePage() {
       </main>
 
       <Navbar />
+    </div>
+  );
+}
+
+/** 組合せ馬券のカードコンポーネント */
+function ComboBetCard({
+  bet,
+  comboOddsMap,
+  updateComboOdds,
+}: {
+  bet: ReturnType<typeof Object> & {
+    type: string;
+    targets: string;
+    description: string;
+    scaledAmount: number;
+    ev: number;
+    evReliable: boolean;
+    odds: number | null;
+    kelly: number;
+    comboProb?: number;
+    comboKey?: string;
+  };
+  comboOddsMap: Record<string, number>;
+  updateComboOdds: (key: string, odds: number) => void;
+}) {
+  const hasOdds = bet.comboKey ? comboOddsMap[bet.comboKey] != null : false;
+
+  return (
+    <div className="bg-card rounded-xl p-4 border border-white/5">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-bold text-sakura-pink">
+          {bet.type} {bet.targets}
+        </span>
+        {bet.comboProb != null && (
+          <span className="text-[10px] text-muted-foreground font-mono">
+            的中率 {(bet.comboProb * 100).toFixed(1)}%
+          </span>
+        )}
+      </div>
+      <p className="text-xs text-muted-foreground mb-2 leading-relaxed">
+        {bet.description}
+      </p>
+
+      {/* オッズ入力 + EV判定 */}
+      {bet.comboKey && (
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-[10px] text-muted-foreground">JRAオッズ:</span>
+          <ComboOddsInput
+            comboKey={bet.comboKey}
+            comboOddsMap={comboOddsMap}
+            updateComboOdds={updateComboOdds}
+          />
+          {hasOdds ? (
+            <div className="flex items-center gap-1">
+              <span className="text-xs font-mono">
+                EV {bet.ev.toFixed(2)}
+              </span>
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                  bet.ev >= 1.0
+                    ? "bg-green-500/20 text-green-400"
+                    : "bg-red-500/20 text-red-400"
+                }`}
+              >
+                {bet.ev >= 1.0 ? "買い" : "見送り"}
+              </span>
+            </div>
+          ) : (
+            <span className="text-[10px] text-muted-foreground">
+              オッズ未入力
+            </span>
+          )}
+        </div>
+      )}
+
+      <div className="flex items-center justify-between text-sm">
+        <span className="font-mono text-[10px] text-muted-foreground">
+          Kelly {(bet.kelly * 100).toFixed(1)}%
+        </span>
+        <span className="font-mono text-gold">
+          ¥{bet.scaledAmount.toLocaleString()}
+        </span>
+      </div>
     </div>
   );
 }

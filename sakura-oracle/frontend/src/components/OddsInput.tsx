@@ -6,6 +6,7 @@ interface OddsInputProps {
   value: number;
   onChange: (v: number) => void;
   className?: string;
+  placeholder?: string;
 }
 
 /**
@@ -13,7 +14,7 @@ interface OddsInputProps {
  * ローカルに文字列状態を持ち、入力途中（空文字・無効値）でも
  * UIが壊れないようにする。有効な値のみ親に伝搬。
  */
-export default function OddsInput({ value, onChange, className }: OddsInputProps) {
+export default function OddsInput({ value, onChange, className, placeholder }: OddsInputProps) {
   const [localValue, setLocalValue] = useState(String(value));
 
   // 外部からの値変更（リセット等）を同期
@@ -27,6 +28,7 @@ export default function OddsInput({ value, onChange, className }: OddsInputProps
       step="0.1"
       min="1"
       value={localValue}
+      placeholder={placeholder}
       onChange={(e) => {
         setLocalValue(e.target.value);
         const v = parseFloat(e.target.value);

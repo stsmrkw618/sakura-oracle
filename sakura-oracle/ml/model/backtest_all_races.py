@@ -235,6 +235,22 @@ def run_walk_forward(df: pd.DataFrame) -> list[dict]:
             if row["着順_num"] <= 3:
                 show_return_total += row["odds"] * 0.3 * 100
 
+        # === 組合せ馬券的中判定 ===
+        actual_top2_nums = set(test_df[test_df["着順_num"] <= 2]["horse_number"].values)
+        actual_top3_nums = set(test_df[test_df["着順_num"] <= 3]["horse_number"].values)
+        pred_top3_nums = set(test_df.nlargest(3, "pred_win")["horse_number"].values)
+        pred_top5_nums = set(test_df.nlargest(5, "pred_win")["horse_number"].values)
+        pred_top2_nums = set(test_df.nlargest(2, "pred_win")["horse_number"].values)
+
+        # 馬連BOX(3): AI上位3頭のうち2頭が1-2着
+        quinella_box3_hit = int(len(pred_top3_nums & actual_top2_nums) >= 2)
+        # ワイド(上位2頭): AI上位2頭が両方3着以内
+        wide_top2_hit = int(len(pred_top2_nums & actual_top3_nums) >= 2)
+        # 三連複BOX(3): AI上位3頭が全員3着以内
+        trio_box3_hit = int(pred_top3_nums <= actual_top3_nums)
+        # 三連複BOX(5): AI上位5頭のうち3頭が1-2-3着
+        trio_box5_hit = int(len(pred_top5_nums & actual_top3_nums) >= 3)
+
         results.append({
             "label": label,
             "race_base": race["race_base"],
@@ -251,6 +267,10 @@ def run_walk_forward(df: pd.DataFrame) -> list[dict]:
             "win_return": win_return,
             "show_return": show_return_total,
             "ai_odds": round(float(top1["odds"]), 1),
+            "quinella_box3_hit": quinella_box3_hit,
+            "wide_top2_hit": wide_top2_hit,
+            "trio_box3_hit": trio_box3_hit,
+            "trio_box5_hit": trio_box5_hit,
         })
 
     return results
@@ -285,6 +305,12 @@ def print_summary(results: list[dict]) -> None:
 
     avg_horses = np.mean([r["n_horses"] for r in results])
 
+    # --- 組合せ馬券 ---
+    quinella_hits = sum(r.get("quinella_box3_hit", 0) for r in results)
+    wide_hits = sum(r.get("wide_top2_hit", 0) for r in results)
+    trio3_hits = sum(r.get("trio_box3_hit", 0) for r in results)
+    trio5_hits = sum(r.get("trio_box5_hit", 0) for r in results)
+
     print(f"\n平均出走頭数: {avg_horses:.1f}頭")
     print(f"\n{'':>20} {'AI':>10} {'1番人気':>10} {'ランダム':>10}")
     print("-" * 55)
@@ -292,6 +318,12 @@ def print_summary(results: list[dict]) -> None:
     print(f"{'複勝的中率':>20} {show_hits_total/show_possible:>9.1%} {fav_shows/n:>9.1%} {3/avg_horses:>9.1%}")
     print(f"{'単勝回収率':>20} {win_roi:>9.0%} {'---':>10} {'---':>10}")
     print(f"{'複勝回収率':>20} {show_roi:>9.0%} {'---':>10} {'---':>10}")
+
+    print(f"\n{'組合せ馬券的中率':>20}")
+    print(f"  馬連BOX(3): {quinella_hits}/{n} ({quinella_hits/n:.0%})")
+    print(f"  ワイド(◎-○): {wide_hits}/{n} ({wide_hits/n:.0%})")
+    print(f"  三連複BOX(3): {trio3_hits}/{n} ({trio3_hits/n:.0%})")
+    print(f"  三連複BOX(5): {trio5_hits}/{n} ({trio5_hits/n:.0%})")
 
     # --- グレード別 ---
     print(f"\n{'='*65}")
@@ -399,6 +431,12 @@ def print_summary(results: list[dict]) -> None:
             "show_roi": round(show_roi, 3),
             "fav_win_rate": round(fav_wins / n, 3),
             "fav_show_rate": round(fav_shows / n, 3),
+        },
+        "combo_hit_rates": {
+            "quinella_box3": round(quinella_hits / n, 3) if n > 0 else 0,
+            "wide_top2": round(wide_hits / n, 3) if n > 0 else 0,
+            "trio_box3": round(trio3_hits / n, 3) if n > 0 else 0,
+            "trio_box5": round(trio5_hits / n, 3) if n > 0 else 0,
         },
         "by_grade": {},
         "by_race": {},

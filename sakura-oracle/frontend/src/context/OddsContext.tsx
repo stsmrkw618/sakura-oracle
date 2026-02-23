@@ -10,6 +10,12 @@ import {
   type ReactNode,
 } from "react";
 import predictions from "@/data/predictions.json";
+import {
+  normalizeProbabilities,
+  quinellaProb,
+  wideProb,
+  trioProb,
+} from "@/lib/harville";
 
 // --- Types ---
 
@@ -28,6 +34,8 @@ interface LiveHorse {
   kelly_win: number;
   kelly_show: number;
   mark: string;
+  odds_win: number;
+  odds_show: number;
   /** original values from predictions.json */
   orig_ev_win: number;
   orig_ev_show: number;
@@ -42,9 +50,15 @@ interface Bet {
   description: string;
   amount: number;
   ev: number;
-  evReliable: boolean; // true=単勝(実オッズ), false=組合せ(参考値)
+  evReliable: boolean; // true=実オッズでEV計算済み
   odds: number | null;
   kelly: number;
+  /** 的中時リターン (単勝: amount × odds) */
+  winReturn?: number;
+  /** Harville的中確率 (組合せ馬券) */
+  comboProb?: number;
+  /** 組合せオッズ検索キー (例: "quinella-7-12") */
+  comboKey?: string;
 }
 
 interface OddsContextValue {
@@ -53,9 +67,14 @@ interface OddsContextValue {
   resetOdds: () => void;
   liveHorses: LiveHorse[];
   liveBets: Bet[];
+  comboOddsMap: Record<string, number>;
+  updateComboOdds: (key: string, odds: number) => void;
+  resetComboOdds: () => void;
+  normProbs: Map<number, number>;
 }
 
 const STORAGE_KEY = "sakura-oracle-odds";
+const COMBO_STORAGE_KEY = "sakura-oracle-combo-odds";
 
 // --- Initial odds from predictions.json ---
 
@@ -96,7 +115,12 @@ function calcMark(
 
 // --- Bet generation (Kelly-based — mirrors predictor.py) ---
 
-function generateBets(horses: LiveHorse[], budget = 3000): Bet[] {
+function generateBets(
+  horses: LiveHorse[],
+  normProbs: Map<number, number>,
+  comboOddsMap: Record<string, number>,
+  budget = 3000,
+): Bet[] {
   const MARK_ORDER: Record<string, number> = {
     "◎": 0, "○": 1, "▲": 2, "△": 3, "×": 4,
   };
@@ -125,54 +149,77 @@ function generateBets(horses: LiveHorse[], budget = 3000): Bet[] {
     bets.push({
       type: "単勝",
       targets: `${h.horse_number}番 ${h.horse_name}`,
-      description: `${h.horse_name}が1着なら的中（オッズ×賭け金が払い戻し）`,
+      description: `${h.horse_name}が1着なら的中`,
       amount,
       ev: h.ev_win,
       evReliable: true,
-      odds: null,
+      odds: h.odds_win,
       kelly: h.kelly_win,
+      winReturn: Math.round(amount * h.odds_win),
     });
   }
 
-  // 馬連BOX（上位2-3頭）
+  // 馬連BOX（上位2-3頭）→ 個別組合せに展開
   if (topHorses.length >= 2) {
     const slice = topHorses.slice(0, 3);
     const n = slice.length;
     const numCombs = comb(n, 2);
-    const names = slice.map((h) => `${h.horse_number}番${h.horse_name}`);
-    const targets = slice.map((h) => h.horse_number).join("-");
     const avgKelly = slice.reduce((s, h) => s + h.kelly_win, 0) / slice.length;
-    const amount = Math.max(100, Math.round((budget * avgKelly) / 100) * 100);
-    bets.push({
-      type: `馬連BOX（${numCombs}通り）`,
-      targets,
-      description: `${names.join("・")}の中から1着と2着の組み合わせを全${numCombs}通り購入。順番は不問`,
-      amount,
-      ev: 0,
-      evReliable: false,
-      odds: null,
-      kelly: avgKelly,
-    });
+    const totalAmount = Math.max(100 * numCombs, Math.round((budget * avgKelly) / 100) * 100);
+    const perCombo = Math.max(100, Math.round(totalAmount / numCombs / 100) * 100);
+
+    for (let i = 0; i < slice.length; i++) {
+      for (let j = i + 1; j < slice.length; j++) {
+        const a = slice[i], b = slice[j];
+        const nums = [a.horse_number, b.horse_number].sort((x, y) => x - y);
+        const comboKey = `quinella-${nums[0]}-${nums[1]}`;
+        const prob = quinellaProb(normProbs, nums[0], nums[1]);
+        const comboOdds = comboOddsMap[comboKey] ?? null;
+        const ev = comboOdds ? Math.round(prob * comboOdds * 100) / 100 : 0;
+        const kelly = comboOdds ? calcKelly(prob, comboOdds) : avgKelly;
+
+        bets.push({
+          type: "馬連",
+          targets: `${nums[0]}-${nums[1]}`,
+          description: `${a.horse_name}と${b.horse_name}が1着2着（順不問）`,
+          amount: perCombo,
+          ev,
+          evReliable: comboOdds !== null,
+          odds: comboOdds,
+          kelly,
+          comboProb: prob,
+          comboKey,
+        });
+      }
+    }
   }
 
   // ワイド（◎-○）
   if (topHorses.length >= 2) {
     const [h1, h2] = topHorses;
+    const nums = [h1.horse_number, h2.horse_number].sort((a, b) => a - b);
+    const comboKey = `wide-${nums[0]}-${nums[1]}`;
+    const prob = wideProb(normProbs, nums[0], nums[1]);
+    const comboOdds = comboOddsMap[comboKey] ?? null;
+    const ev = comboOdds ? Math.round(prob * comboOdds * 100) / 100 : 0;
     const avgKelly = (h1.kelly_win + h2.kelly_win) / 2;
-    const amount = Math.max(100, Math.round((budget * avgKelly) / 100) * 100);
+    const kelly = comboOdds ? calcKelly(prob, comboOdds) : avgKelly;
+    const amount = Math.max(100, Math.round((budget * (comboOdds ? kelly : avgKelly)) / 100) * 100);
     bets.push({
       type: "ワイド",
-      targets: `${h1.horse_number}-${h2.horse_number}`,
-      description: `${h1.horse_number}番${h1.horse_name}と${h2.horse_number}番${h2.horse_name}が両方3着以内なら的中`,
+      targets: `${nums[0]}-${nums[1]}`,
+      description: `${h1.horse_name}と${h2.horse_name}が両方3着以内なら的中`,
       amount,
-      ev: 0,
-      evReliable: false,
-      odds: null,
-      kelly: avgKelly,
+      ev,
+      evReliable: comboOdds !== null,
+      odds: comboOdds,
+      kelly,
+      comboProb: prob,
+      comboKey,
     });
   }
 
-  // 三連複BOX（上位3-5頭、上位が3頭以上の場合のみ）
+  // 三連複BOX（上位3-5頭）→ 個別組合せに展開
   if (topHorses.length >= 3) {
     const top5 = sorted
       .filter((h) => ["◎", "○", "▲", "△"].includes(h.mark))
@@ -180,20 +227,36 @@ function generateBets(horses: LiveHorse[], budget = 3000): Bet[] {
     if (top5.length >= 3) {
       const n = top5.length;
       const numCombs = comb(n, 3);
-      const names = top5.map((h) => `${h.horse_number}番`);
-      const targets = top5.map((h) => h.horse_number).join("-");
       const avgKelly = top5.reduce((s, h) => s + h.kelly_win, 0) / top5.length;
-      const amount = Math.max(100, Math.round((budget * avgKelly * 0.5) / 100) * 100);
-      bets.push({
-        type: `三連複BOX（${numCombs}通り）`,
-        targets,
-        description: `${names.join("・")}の中から1-2-3着の組み合わせを全${numCombs}通り購入。順番は不問`,
-        amount,
-        ev: 0,
-        evReliable: false,
-        odds: null,
-        kelly: avgKelly,
-      });
+      const totalAmount = Math.max(100 * numCombs, Math.round((budget * avgKelly * 0.5) / 100) * 100);
+      const perCombo = Math.max(100, Math.round(totalAmount / numCombs / 100) * 100);
+
+      for (let i = 0; i < top5.length; i++) {
+        for (let j = i + 1; j < top5.length; j++) {
+          for (let k = j + 1; k < top5.length; k++) {
+            const a = top5[i], b = top5[j], c = top5[k];
+            const nums = [a.horse_number, b.horse_number, c.horse_number].sort((x, y) => x - y);
+            const comboKey = `trio-${nums[0]}-${nums[1]}-${nums[2]}`;
+            const prob = trioProb(normProbs, nums[0], nums[1], nums[2]);
+            const comboOdds = comboOddsMap[comboKey] ?? null;
+            const ev = comboOdds ? Math.round(prob * comboOdds * 100) / 100 : 0;
+            const kelly = comboOdds ? calcKelly(prob, comboOdds) : avgKelly;
+
+            bets.push({
+              type: "三連複",
+              targets: `${nums[0]}-${nums[1]}-${nums[2]}`,
+              description: `${a.horse_name}・${b.horse_name}・${c.horse_name}が1-2-3着（順不問）`,
+              amount: perCombo,
+              ev,
+              evReliable: comboOdds !== null,
+              odds: comboOdds,
+              kelly,
+              comboProb: prob,
+              comboKey,
+            });
+          }
+        }
+      }
     }
   }
 
@@ -208,9 +271,10 @@ export function OddsProvider({ children }: { children: ReactNode }) {
   const initialOdds = useMemo(() => buildInitialOdds(), []);
 
   const [oddsMap, setOddsMap] = useState<Record<number, OddsEntry>>(() => {
-    // Try loading from localStorage (deferred to useEffect for SSR safety)
     return initialOdds;
   });
+
+  const [comboOddsMap, setComboOddsMap] = useState<Record<string, number>>({});
 
   // Hydrate from localStorage on mount
   useEffect(() => {
@@ -223,6 +287,15 @@ export function OddsProvider({ children }: { children: ReactNode }) {
     } catch {
       // ignore parse errors
     }
+    try {
+      const stored = localStorage.getItem(COMBO_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as Record<string, number>;
+        setComboOddsMap(parsed);
+      }
+    } catch {
+      // ignore
+    }
   }, []);
 
   // Persist to localStorage on change
@@ -233,6 +306,14 @@ export function OddsProvider({ children }: { children: ReactNode }) {
       // ignore quota errors
     }
   }, [oddsMap]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(COMBO_STORAGE_KEY, JSON.stringify(comboOddsMap));
+    } catch {
+      // ignore
+    }
+  }, [comboOddsMap]);
 
   const updateOdds = useCallback(
     (horseNumber: number, win: number, show: number) => {
@@ -252,6 +333,19 @@ export function OddsProvider({ children }: { children: ReactNode }) {
       // ignore
     }
   }, [initialOdds]);
+
+  const updateComboOdds = useCallback((key: string, odds: number) => {
+    setComboOddsMap((prev) => ({ ...prev, [key]: odds }));
+  }, []);
+
+  const resetComboOdds = useCallback(() => {
+    setComboOddsMap({});
+    try {
+      localStorage.removeItem(COMBO_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+  }, []);
 
   // Compute live horses with dynamic EV, Kelly, mark
   const liveHorses = useMemo(() => {
@@ -273,6 +367,8 @@ export function OddsProvider({ children }: { children: ReactNode }) {
         kelly_win,
         kelly_show,
         mark: "", // will be computed below
+        odds_win: odds.win,
+        odds_show: odds.show,
         orig_ev_win: h.ev_win,
         orig_ev_show: h.ev_show,
         orig_mark: h.mark,
@@ -288,11 +384,30 @@ export function OddsProvider({ children }: { children: ReactNode }) {
     return horses;
   }, [oddsMap]);
 
-  const liveBets = useMemo(() => generateBets(liveHorses), [liveHorses]);
+  // Harville normalized probabilities
+  const normProbs = useMemo(
+    () => normalizeProbabilities(liveHorses),
+    [liveHorses]
+  );
+
+  const liveBets = useMemo(
+    () => generateBets(liveHorses, normProbs, comboOddsMap),
+    [liveHorses, normProbs, comboOddsMap]
+  );
 
   const value = useMemo<OddsContextValue>(
-    () => ({ oddsMap, updateOdds, resetOdds, liveHorses, liveBets }),
-    [oddsMap, updateOdds, resetOdds, liveHorses, liveBets]
+    () => ({
+      oddsMap,
+      updateOdds,
+      resetOdds,
+      liveHorses,
+      liveBets,
+      comboOddsMap,
+      updateComboOdds,
+      resetComboOdds,
+      normProbs,
+    }),
+    [oddsMap, updateOdds, resetOdds, liveHorses, liveBets, comboOddsMap, updateComboOdds, resetComboOdds, normProbs]
   );
 
   return (

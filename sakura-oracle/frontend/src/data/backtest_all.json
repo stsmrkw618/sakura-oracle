@@ -8,6 +8,12 @@
     "fav_win_rate": 0.26,
     "fav_show_rate": 0.48
   },
+  "combo_hit_rates": {
+    "quinella_box3": 0.24,
+    "wide_top2": 0.26,
+    "trio_box3": 0.06,
+    "trio_box5": 0.3
+  },
   "by_grade": {
     "G1": {
       "n": 15,
