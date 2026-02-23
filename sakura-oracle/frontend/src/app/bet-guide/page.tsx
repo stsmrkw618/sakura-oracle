@@ -231,9 +231,9 @@ export default function BetGuidePage() {
                   <p className="text-xs text-muted-foreground mb-2 leading-relaxed">
                     {bet.description}
                   </p>
-                  {bet.winReturn && (
+                  {bet.odds && (
                     <p className="text-xs text-green-400 mb-2">
-                      的中時 ¥{bet.winReturn.toLocaleString()}（オッズ {bet.odds}倍 × ¥{bet.scaledAmount.toLocaleString()}）
+                      的中時 ¥{Math.round(bet.odds * bet.scaledAmount).toLocaleString()}（オッズ {bet.odds}倍 × ¥{bet.scaledAmount.toLocaleString()}）
                     </p>
                   )}
                   <div className="flex items-center justify-between text-sm">
