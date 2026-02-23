@@ -39,8 +39,10 @@ interface LiveHorse {
 interface Bet {
   type: string;
   targets: string;
+  description: string;
   amount: number;
   ev: number;
+  evReliable: boolean; // true=単勝(実オッズ), false=組合せ(参考値)
   odds: number | null;
   kelly: number;
 }
@@ -108,6 +110,14 @@ function generateBets(horses: LiveHorse[], budget = 3000): Bet[] {
   const topHorses = sorted.filter((h) => ["◎", "○", "▲"].includes(h.mark));
   const bets: Bet[] = [];
 
+  // nCr計算
+  const comb = (n: number, r: number) => {
+    if (r > n) return 0;
+    let result = 1;
+    for (let i = 0; i < r; i++) result = result * (n - i) / (i + 1);
+    return result;
+  };
+
   // 単勝: ◎○▲の馬のみ（最大3頭）— Kelly > 0 かつ EV > 1.0
   const winTargets = topHorses.filter((h) => h.kelly_win > 0 && h.ev_win >= 1.0).slice(0, 3);
   for (const h of winTargets) {
@@ -115,8 +125,10 @@ function generateBets(horses: LiveHorse[], budget = 3000): Bet[] {
     bets.push({
       type: "単勝",
       targets: `${h.horse_number}番 ${h.horse_name}`,
+      description: `${h.horse_name}が1着なら的中（オッズ×賭け金が払い戻し）`,
       amount,
       ev: h.ev_win,
+      evReliable: true,
       odds: null,
       kelly: h.kelly_win,
     });
@@ -125,15 +137,19 @@ function generateBets(horses: LiveHorse[], budget = 3000): Bet[] {
   // 馬連BOX（上位2-3頭）
   if (topHorses.length >= 2) {
     const slice = topHorses.slice(0, 3);
+    const n = slice.length;
+    const numCombs = comb(n, 2);
+    const names = slice.map((h) => `${h.horse_number}番${h.horse_name}`);
     const targets = slice.map((h) => h.horse_number).join("-");
-    const avgEv = slice.reduce((s, h) => s + h.ev_win, 0) / slice.length;
     const avgKelly = slice.reduce((s, h) => s + h.kelly_win, 0) / slice.length;
     const amount = Math.max(100, Math.round((budget * avgKelly) / 100) * 100);
     bets.push({
-      type: "馬連BOX",
+      type: `馬連BOX（${numCombs}通り）`,
       targets,
+      description: `${names.join("・")}の中から1着と2着の組み合わせを全${numCombs}通り購入。順番は不問`,
       amount,
-      ev: Math.round(avgEv * 100) / 100,
+      ev: 0,
+      evReliable: false,
       odds: null,
       kelly: avgKelly,
     });
@@ -147,8 +163,10 @@ function generateBets(horses: LiveHorse[], budget = 3000): Bet[] {
     bets.push({
       type: "ワイド",
       targets: `${h1.horse_number}-${h2.horse_number}`,
+      description: `${h1.horse_number}番${h1.horse_name}と${h2.horse_number}番${h2.horse_name}が両方3着以内なら的中`,
       amount,
-      ev: Math.round(((h1.ev_win + h2.ev_win) / 2) * 100) / 100,
+      ev: 0,
+      evReliable: false,
       odds: null,
       kelly: avgKelly,
     });
@@ -160,15 +178,19 @@ function generateBets(horses: LiveHorse[], budget = 3000): Bet[] {
       .filter((h) => ["◎", "○", "▲", "△"].includes(h.mark))
       .slice(0, 5);
     if (top5.length >= 3) {
+      const n = top5.length;
+      const numCombs = comb(n, 3);
+      const names = top5.map((h) => `${h.horse_number}番`);
       const targets = top5.map((h) => h.horse_number).join("-");
-      const avgEv = top5.reduce((s, h) => s + h.ev_win, 0) / top5.length;
       const avgKelly = top5.reduce((s, h) => s + h.kelly_win, 0) / top5.length;
       const amount = Math.max(100, Math.round((budget * avgKelly * 0.5) / 100) * 100);
       bets.push({
-        type: "三連複BOX",
+        type: `三連複BOX（${numCombs}通り）`,
         targets,
+        description: `${names.join("・")}の中から1-2-3着の組み合わせを全${numCombs}通り購入。順番は不問`,
         amount,
-        ev: Math.round(avgEv * 100) / 100,
+        ev: 0,
+        evReliable: false,
         odds: null,
         kelly: avgKelly,
       });

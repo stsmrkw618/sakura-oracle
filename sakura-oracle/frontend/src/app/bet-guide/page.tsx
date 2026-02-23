@@ -19,22 +19,39 @@ export default function BetGuidePage() {
 
   const hasAnyChange = liveHorses.some((h) => h.oddsChanged);
 
-  const totalEv = liveBets.reduce((s, b) => s + b.ev, 0);
-
   const scaledBets = useMemo(() => {
-    return liveBets.map((bet) => {
-      const ratio = totalEv > 0 ? bet.ev / totalEv : 0;
-      const amount = Math.round((budget * ratio) / 100) * 100;
-      return { ...bet, scaledAmount: Math.max(amount, 100) };
+    // 単勝: Kelly比例で予算の70%を配分
+    // 組合せ: 残り30%を均等配分
+    const winBets = liveBets.filter((b) => b.evReliable);
+    const comboBets = liveBets.filter((b) => !b.evReliable);
+    const winBudget = Math.round(budget * 0.7);
+    const comboBudget = budget - winBudget;
+    const totalKelly = winBets.reduce((s, b) => s + b.kelly, 0);
+
+    const scaled = liveBets.map((bet) => {
+      if (bet.evReliable) {
+        // 単勝: Kelly比例
+        const ratio = totalKelly > 0 ? bet.kelly / totalKelly : 1 / winBets.length;
+        const amount = Math.round((winBudget * ratio) / 100) * 100;
+        return { ...bet, scaledAmount: Math.max(amount, 100) };
+      } else {
+        // 組合せ: 均等配分
+        const amount = comboBets.length > 0
+          ? Math.round((comboBudget / comboBets.length) / 100) * 100
+          : 100;
+        return { ...bet, scaledAmount: Math.max(amount, 100) };
+      }
     });
-  }, [budget, liveBets, totalEv]);
+    return scaled;
+  }, [budget, liveBets]);
 
   const totalInvestment = scaledBets.reduce((s, b) => s + b.scaledAmount, 0);
-  const expectedReturn = scaledBets.reduce(
-    (s, b) => s + b.scaledAmount * b.ev,
-    0
-  );
-  const roi = totalInvestment > 0 ? (expectedReturn / totalInvestment - 1) * 100 : 0;
+  // 期待リターン: 単勝のみ計算（組合せ馬券はオッズ不明のため除外）
+  const expectedReturn = scaledBets
+    .filter((b) => b.evReliable)
+    .reduce((s, b) => s + b.scaledAmount * b.ev, 0);
+  const winInvestment = scaledBets.filter((b) => b.evReliable).reduce((s, b) => s + b.scaledAmount, 0);
+  const roi = winInvestment > 0 ? (expectedReturn / winInvestment - 1) * 100 : 0;
 
   const toggleGlossary = (key: string) => {
     setGlossaryOpen(glossaryOpen === key ? null : key);
@@ -106,13 +123,13 @@ export default function BetGuidePage() {
                 </p>
               </div>
               <div className="bg-navy/50 rounded-lg p-3">
-                <p className="text-[10px] text-muted-foreground mb-1">期待リターン</p>
+                <p className="text-[10px] text-muted-foreground mb-1">単勝 期待値</p>
                 <p className="font-mono text-sm font-bold text-gold">
                   ¥{Math.round(expectedReturn).toLocaleString()}
                 </p>
               </div>
               <div className="bg-navy/50 rounded-lg p-3">
-                <p className="text-[10px] text-muted-foreground mb-1">期待ROI</p>
+                <p className="text-[10px] text-muted-foreground mb-1">単勝 ROI</p>
                 <p
                   className={`font-mono text-lg font-bold ${
                     roi >= 0 ? "text-green-400" : "text-red-400"
@@ -123,6 +140,9 @@ export default function BetGuidePage() {
                 </p>
               </div>
             </div>
+            <p className="text-[10px] text-muted-foreground mt-2">
+              ※ 期待値・ROIは単勝のみ計算。組合せ馬券はオッズ未確定のため除外
+            </p>
           </div>
         </motion.section>
 
@@ -142,24 +162,30 @@ export default function BetGuidePage() {
                     {bet.type}
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-[10px] text-muted-foreground">
-                      Kelly {(bet.kelly * 100).toFixed(1)}%
-                    </span>
-                    <span className="font-mono text-sm">
-                      {bet.ev >= 1.5 && "🔥 "}
-                      <span
-                        className={
-                          bet.ev >= 1.5 ? "text-gold font-bold" : "text-white"
-                        }
-                      >
-                        EV {bet.ev.toFixed(2)}
+                    {bet.evReliable ? (
+                      <span className="font-mono text-sm">
+                        {bet.ev >= 1.5 && "🔥 "}
+                        <span
+                          className={
+                            bet.ev >= 1.5 ? "text-gold font-bold" : "text-white"
+                          }
+                        >
+                          EV {bet.ev.toFixed(2)}
+                        </span>
                       </span>
-                    </span>
+                    ) : (
+                      <span className="text-[10px] text-muted-foreground">
+                        補助馬券
+                      </span>
+                    )}
                   </div>
                 </div>
+                <p className="text-xs text-muted-foreground mb-2 leading-relaxed">
+                  {bet.description}
+                </p>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    対象: <span className="text-white">{bet.targets}</span>
+                  <span className="font-mono text-[10px] text-muted-foreground">
+                    Kelly {(bet.kelly * 100).toFixed(1)}%
                   </span>
                   <span className="font-mono text-gold">
                     ¥{bet.scaledAmount.toLocaleString()}
