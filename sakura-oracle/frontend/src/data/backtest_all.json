@@ -12,7 +12,11 @@
     "quinella_box3": 0.24,
     "wide_top2": 0.26,
     "trio_box3": 0.06,
-    "trio_box5": 0.3
+    "trio_box5": 0.3,
+    "quinella_box3_roi": 4.049,
+    "wide_top2_roi": 2.304,
+    "trio_box3_roi": 0.814,
+    "trio_box5_roi": 6.912
   },
   "by_grade": {
     "G1": {

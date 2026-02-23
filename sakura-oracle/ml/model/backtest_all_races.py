@@ -146,6 +146,34 @@ def _train_model(
     return model
 
 
+def _load_payouts() -> dict:
+    """payouts.jsonをロード"""
+    payout_path = DATA_DIR / "raw" / "payouts.json"
+    if payout_path.exists():
+        with open(payout_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+
+def _find_payout(payouts_for_race: dict, bet_type: str, combo_set: set[int]) -> int:
+    """配当データからcombo_setに一致する配当を検索
+
+    Args:
+        payouts_for_race: {"quinella": [...], "wide": [...], "trio": [...]}
+        bet_type: "quinella", "wide", "trio"
+        combo_set: 馬番のset（例: {1, 5}）
+
+    Returns:
+        配当額（円）。見つからなければ0
+    """
+    entries = payouts_for_race.get(bet_type, [])
+    for entry in entries:
+        combo_nums = set(int(x) for x in entry["combo"].split("-"))
+        if combo_nums == combo_set:
+            return entry["payout"]
+    return 0
+
+
 def run_walk_forward(df: pd.DataFrame) -> list[dict]:
     """Walk-Forwardバックテスト（デュアルモデル + 正則化 + 早期停止）"""
     print("=" * 60)
@@ -154,6 +182,13 @@ def run_walk_forward(df: pd.DataFrame) -> list[dict]:
     print()
     print("方針: 各レースRを予測する際、race_id < R のデータのみで学習")
     print(f"モデル: A(市場連動={BLEND_WEIGHT_A}) + B(エッジ検出={BLEND_WEIGHT_B})")
+    print()
+
+    payouts = _load_payouts()
+    if payouts:
+        print(f"配当データ: {len(payouts)}レース分ロード済み")
+    else:
+        print("⚠️ payouts.json なし — 組合せ馬券ROIは計算不可")
     print()
 
     races = build_race_order(df)
@@ -251,6 +286,35 @@ def run_walk_forward(df: pd.DataFrame) -> list[dict]:
         # 三連複BOX(5): AI上位5頭のうち3頭が1-2-3着
         trio_box5_hit = int(len(pred_top5_nums & actual_top3_nums) >= 3)
 
+        # === 組合せ馬券ROI計算（実配当ベース） ===
+        race_payouts = payouts.get(current_race_id, {})
+        quinella_box3_roi = 0.0
+        wide_top2_roi = 0.0
+        trio_box3_roi = 0.0
+        trio_box5_roi = 0.0
+
+        if race_payouts:
+            # 馬連BOX(3): 3C2=3通り×100円=300円投資
+            if quinella_box3_hit:
+                hit_combo = actual_top2_nums  # 実際の1-2着馬番
+                payout = _find_payout(race_payouts, "quinella", hit_combo)
+                quinella_box3_roi = payout / 300.0  # 配当/投資額
+
+            # ワイド(◎-○): 1通り×100円=100円投資
+            if wide_top2_hit:
+                payout = _find_payout(race_payouts, "wide", pred_top2_nums)
+                wide_top2_roi = payout / 100.0
+
+            # 三連複BOX(3): 1通り×100円=100円投資
+            if trio_box3_hit:
+                payout = _find_payout(race_payouts, "trio", actual_top3_nums)
+                trio_box3_roi = payout / 100.0
+
+            # 三連複BOX(5): 5C3=10通り×100円=1000円投資
+            if trio_box5_hit:
+                payout = _find_payout(race_payouts, "trio", actual_top3_nums)
+                trio_box5_roi = payout / 1000.0
+
         results.append({
             "label": label,
             "race_base": race["race_base"],
@@ -271,6 +335,10 @@ def run_walk_forward(df: pd.DataFrame) -> list[dict]:
             "wide_top2_hit": wide_top2_hit,
             "trio_box3_hit": trio_box3_hit,
             "trio_box5_hit": trio_box5_hit,
+            "quinella_box3_roi": quinella_box3_roi,
+            "wide_top2_roi": wide_top2_roi,
+            "trio_box3_roi": trio_box3_roi,
+            "trio_box5_roi": trio_box5_roi,
         })
 
     return results
@@ -311,6 +379,23 @@ def print_summary(results: list[dict]) -> None:
     trio3_hits = sum(r.get("trio_box3_hit", 0) for r in results)
     trio5_hits = sum(r.get("trio_box5_hit", 0) for r in results)
 
+    # 組合せ馬券ROI（投資額ベース）
+    quinella_invest = n * 300  # 3通り×100円
+    quinella_return = sum(r.get("quinella_box3_roi", 0) * 300 for r in results)
+    quinella_roi = quinella_return / quinella_invest if quinella_invest > 0 else 0
+
+    wide_invest = n * 100  # 1通り×100円
+    wide_return = sum(r.get("wide_top2_roi", 0) * 100 for r in results)
+    wide_roi = wide_return / wide_invest if wide_invest > 0 else 0
+
+    trio3_invest = n * 100  # 1通り×100円
+    trio3_return = sum(r.get("trio_box3_roi", 0) * 100 for r in results)
+    trio3_roi = trio3_return / trio3_invest if trio3_invest > 0 else 0
+
+    trio5_invest = n * 1000  # 10通り×100円
+    trio5_return = sum(r.get("trio_box5_roi", 0) * 1000 for r in results)
+    trio5_roi = trio5_return / trio5_invest if trio5_invest > 0 else 0
+
     print(f"\n平均出走頭数: {avg_horses:.1f}頭")
     print(f"\n{'':>20} {'AI':>10} {'1番人気':>10} {'ランダム':>10}")
     print("-" * 55)
@@ -319,11 +404,12 @@ def print_summary(results: list[dict]) -> None:
     print(f"{'単勝回収率':>20} {win_roi:>9.0%} {'---':>10} {'---':>10}")
     print(f"{'複勝回収率':>20} {show_roi:>9.0%} {'---':>10} {'---':>10}")
 
-    print(f"\n{'組合せ馬券的中率':>20}")
-    print(f"  馬連BOX(3): {quinella_hits}/{n} ({quinella_hits/n:.0%})")
-    print(f"  ワイド(◎-○): {wide_hits}/{n} ({wide_hits/n:.0%})")
-    print(f"  三連複BOX(3): {trio3_hits}/{n} ({trio3_hits/n:.0%})")
-    print(f"  三連複BOX(5): {trio5_hits}/{n} ({trio5_hits/n:.0%})")
+    print(f"\n{'組合せ馬券':>20} {'的中率':>10} {'回収率':>10}")
+    print("-" * 45)
+    print(f"  馬連BOX(3):   {quinella_hits}/{n} ({quinella_hits/n:>4.0%})  {quinella_roi:>6.0%}")
+    print(f"  ワイド(◎-○):  {wide_hits}/{n} ({wide_hits/n:>4.0%})  {wide_roi:>6.0%}")
+    print(f"  三連複BOX(3): {trio3_hits}/{n} ({trio3_hits/n:>4.0%})  {trio3_roi:>6.0%}")
+    print(f"  三連複BOX(5): {trio5_hits}/{n} ({trio5_hits/n:>4.0%})  {trio5_roi:>6.0%}")
 
     # --- グレード別 ---
     print(f"\n{'='*65}")
@@ -437,6 +523,10 @@ def print_summary(results: list[dict]) -> None:
             "wide_top2": round(wide_hits / n, 3) if n > 0 else 0,
             "trio_box3": round(trio3_hits / n, 3) if n > 0 else 0,
             "trio_box5": round(trio5_hits / n, 3) if n > 0 else 0,
+            "quinella_box3_roi": round(quinella_roi, 3),
+            "wide_top2_roi": round(wide_roi, 3),
+            "trio_box3_roi": round(trio3_roi, 3),
+            "trio_box5_roi": round(trio5_roi, 3),
         },
         "by_grade": {},
         "by_race": {},

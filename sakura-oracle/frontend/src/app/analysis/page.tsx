@@ -83,7 +83,10 @@ const backtestYears = Object.entries(byYear)
 
 // Combo hit rates from backtest (may not exist in older JSON)
 const comboHitRates = (backtestAll as Record<string, unknown>).combo_hit_rates as
-  | { quinella_box3: number; wide_top2: number; trio_box3: number; trio_box5: number }
+  | {
+      quinella_box3: number; wide_top2: number; trio_box3: number; trio_box5: number;
+      quinella_box3_roi?: number; wide_top2_roi?: number; trio_box3_roi?: number; trio_box5_roi?: number;
+    }
   | undefined;
 
 export default function AnalysisPage() {
@@ -167,23 +170,30 @@ export default function AnalysisPage() {
 
               <div className="space-y-3">
                 {[
-                  { label: "馬連BOX(3)", rate: comboHitRates.quinella_box3, desc: "上位3頭のうち2頭が1-2着" },
-                  { label: "ワイド(◎-○)", rate: comboHitRates.wide_top2, desc: "上位2頭が両方3着以内" },
-                  { label: "三連複BOX(3)", rate: comboHitRates.trio_box3, desc: "上位3頭が全員3着以内" },
-                  { label: "三連複BOX(5)", rate: comboHitRates.trio_box5, desc: "上位5頭のうち3頭が3着以内" },
+                  { label: "馬連BOX(3)", rate: comboHitRates.quinella_box3, roi: comboHitRates.quinella_box3_roi, desc: "上位3頭のうち2頭が1-2着", cost: "3通り×100円" },
+                  { label: "ワイド(◎-○)", rate: comboHitRates.wide_top2, roi: comboHitRates.wide_top2_roi, desc: "上位2頭が両方3着以内", cost: "1通り×100円" },
+                  { label: "三連複BOX(3)", rate: comboHitRates.trio_box3, roi: comboHitRates.trio_box3_roi, desc: "上位3頭が全員3着以内", cost: "1通り×100円" },
+                  { label: "三連複BOX(5)", rate: comboHitRates.trio_box5, roi: comboHitRates.trio_box5_roi, desc: "上位5頭のうち3頭が3着以内", cost: "10通り×100円" },
                 ].map((item) => (
                   <div key={item.label}>
                     <div className="flex justify-between text-xs mb-1">
                       <span>{item.label}</span>
-                      <span className="font-mono text-gold">
-                        {(item.rate * 100).toFixed(0)}%
-                      </span>
+                      <div className="flex gap-3">
+                        <span className="font-mono text-gold">
+                          的中{(item.rate * 100).toFixed(0)}%
+                        </span>
+                        {item.roi != null && (
+                          <span className={`font-mono ${item.roi >= 1 ? "text-green-400" : "text-red-400"}`}>
+                            回収{(item.roi * 100).toFixed(0)}%
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-[10px] text-muted-foreground mb-1">{item.desc}</p>
+                    <p className="text-[10px] text-muted-foreground mb-1">{item.desc}（{item.cost}）</p>
                     <div className="bg-white/5 rounded-full h-2 overflow-hidden">
                       <div
                         className="h-full bg-gold rounded-full transition-all duration-700"
-                        style={{ width: `${item.rate * 100}%` }}
+                        style={{ width: `${Math.min(item.rate * 100, 100)}%` }}
                       />
                     </div>
                   </div>
@@ -191,7 +201,7 @@ export default function AnalysisPage() {
               </div>
 
               <p className="text-[10px] text-muted-foreground mt-3">
-                ※ 組合せオッズ履歴がないためROIは計算不可。的中率のみ表示
+                ※ 回収率は過去{summary.n_races}レースの実配当ベース。100%超でプラス収支
               </p>
             </div>
           </motion.section>
