@@ -370,12 +370,15 @@ export default function BetGuidePage() {
           </motion.section>
         )}
 
-        {/* 三連複 */}
+        {/* 三連複BOX(5) */}
         {trioBets.length > 0 && (
           <motion.section {...fadeIn} transition={{ delay: 0.35 }}>
-            <h2 className="text-sm font-bold text-muted-foreground mb-3">
-              三連複（{trioBets.length}通り）
+            <h2 className="text-sm font-bold text-muted-foreground mb-2">
+              三連複BOX(5)（{trioBets.length}通り）
             </h2>
+            <p className="text-[10px] text-muted-foreground mb-3">
+              BT実績: 的中30% / 回収691% — AI上位5頭から全10通り
+            </p>
             <div className="space-y-3">
               {trioBets.map((bet, i) => (
                 <ComboBetCard

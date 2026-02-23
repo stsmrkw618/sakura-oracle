@@ -37,6 +37,8 @@ interface LiveHorse {
   mark: string;
   odds_win: number;
   odds_show: number;
+  /** market implied probability (overround-normalized) */
+  market_prob: number;
   /** original values from predictions.json */
   orig_ev_win: number;
   orig_ev_show: number;
@@ -227,10 +229,11 @@ function generateBets(
     });
   }
 
-  // 三連複BOX（上位3-5頭）→ 個別組合せに展開
-  if (topHorses.length >= 3) {
+  // 三連複BOX(5): 常に上位5頭から全10通りを展開
+  // バックテスト実績: 的中30%, 回収691% (BOX(3)の81%を大幅に上回る)
+  {
     const top5 = sorted
-      .filter((h) => ["◎", "○", "▲", "△"].includes(h.mark))
+      .filter((h) => h.win_prob > 0)
       .slice(0, 5);
     if (top5.length >= 3) {
       const n = top5.length;
@@ -378,9 +381,16 @@ export function OddsProvider({ children }: { children: ReactNode }) {
     try { localStorage.removeItem(keys.combo); } catch { /* ignore */ }
   }, [selectedRaceId]);
 
-  // Compute live horses with dynamic EV, Kelly, mark
+  // Compute live horses with dynamic EV, Kelly, mark, market_prob
   const liveHorses = useMemo(() => {
-    const horses = predictions.predictions.map((h) => {
+    // Market implied probability: 1/odds normalized by overround
+    const rawImplied = predictions.predictions.map((h) => {
+      const odds = oddsMap[h.horse_number] || { win: h.odds.win, show: h.odds.show };
+      return 1 / Math.max(odds.win, 1.01);
+    });
+    const totalImplied = rawImplied.reduce((s, v) => s + v, 0);
+
+    const horses = predictions.predictions.map((h, idx) => {
       const odds = oddsMap[h.horse_number] || { win: h.odds.win, show: h.odds.show };
       const ev_win = Math.round(h.win_prob * odds.win * 100) / 100;
       const ev_show = Math.round(h.show_prob * odds.show * 100) / 100;
@@ -388,6 +398,7 @@ export function OddsProvider({ children }: { children: ReactNode }) {
       const kelly_show = calcKelly(h.show_prob, odds.show);
       const oddsChanged =
         odds.win !== h.odds.win || odds.show !== h.odds.show;
+      const market_prob = totalImplied > 0 ? rawImplied[idx] / totalImplied : 0;
       return {
         horse_number: h.horse_number,
         horse_name: h.horse_name,
@@ -400,6 +411,7 @@ export function OddsProvider({ children }: { children: ReactNode }) {
         mark: "", // will be computed below
         odds_win: odds.win,
         odds_show: odds.show,
+        market_prob,
         orig_ev_win: h.ev_win,
         orig_ev_show: h.ev_show,
         orig_mark: h.mark,

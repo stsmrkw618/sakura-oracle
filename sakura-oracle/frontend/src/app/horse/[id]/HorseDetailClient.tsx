@@ -251,6 +251,60 @@ export default function HorseDetailClient() {
               </div>
             </div>
 
+            {/* Edge Analysis */}
+            {live && (
+              <div className="bg-navy/50 rounded-lg p-3 mb-4 border border-white/10">
+                <h3 className="text-xs font-bold text-muted-foreground mb-2">
+                  📊 エッジ分析
+                </h3>
+                <div className="space-y-2">
+                  <div>
+                    <div className="flex justify-between text-[10px] mb-1">
+                      <span className="text-sakura-pink">AI確率</span>
+                      <span className="font-mono text-sakura-pink">
+                        {(horse.win_prob * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="bg-white/5 rounded-full h-2.5 overflow-hidden">
+                      <div
+                        className="h-full bg-sakura-pink rounded-full"
+                        style={{ width: `${Math.min(horse.win_prob * 100, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-[10px] mb-1">
+                      <span className="text-blue-400">市場確率</span>
+                      <span className="font-mono text-blue-400">
+                        {(live.market_prob * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="bg-white/5 rounded-full h-2.5 overflow-hidden">
+                      <div
+                        className="h-full bg-blue-400 rounded-full"
+                        style={{ width: `${Math.min(live.market_prob * 100, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="text-center pt-1">
+                    {(() => {
+                      const edge = horse.win_prob - live.market_prob;
+                      const edgePct = (edge * 100).toFixed(1);
+                      return edge > 0 ? (
+                        <span className="text-green-400 font-mono text-sm font-bold">
+                          +{edgePct}% エッジあり
+                        </span>
+                      ) : (
+                        <span className="text-red-400 font-mono text-sm">
+                          {edgePct}% 市場が上
+                        </span>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* EV */}
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-navy/50 rounded-lg p-3 text-center">

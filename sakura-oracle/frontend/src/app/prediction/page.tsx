@@ -22,7 +22,7 @@ export default function PredictionPage() {
   const [oddsMode, setOddsMode] = useState(false);
 
   const sortedHorses = useMemo(() => {
-    // Merge static data with live EV/mark
+    // Merge static data with live EV/mark/marketProb
     const merged = predictions.predictions.map((h) => {
       const live = liveHorses.find((l) => l.horse_number === h.horse_number);
       return {
@@ -31,6 +31,7 @@ export default function PredictionPage() {
         ev_show: live?.ev_show ?? h.ev_show,
         mark: live?.mark ?? h.mark,
         oddsChanged: live?.oddsChanged ?? false,
+        marketProb: live?.market_prob ?? 0,
       };
     });
 
@@ -101,6 +102,7 @@ export default function PredictionPage() {
               liveEv={horse.ev_win}
               liveMark={horse.mark}
               oddsChanged={horse.oddsChanged}
+              marketProb={horse.marketProb}
             />
             {oddsMode && (
               <motion.div

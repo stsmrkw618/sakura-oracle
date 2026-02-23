@@ -9,6 +9,7 @@ SAKURA ORACLE — LightGBM予測モデル＆predictions.json生成
 """
 
 import json
+import pickle
 import sys
 from pathlib import Path
 
@@ -386,6 +387,18 @@ def generate_predictions_json(
     pred_a_show = models["show_a"].predict_proba(X_all)[:, 1]
     pred_b_show = models["show_b"].predict_proba(X_no_odds)[:, 1]
     race_df["pred_show"] = BLEND_WEIGHT_A * pred_a_show + BLEND_WEIGHT_B * pred_b_show
+
+    # キャリブレーション適用
+    cal_dir = Path(__file__).resolve().parent
+    for target, col in [("win", "pred_win"), ("show", "pred_show")]:
+        cal_path = cal_dir / f"calibrator_{target}.pkl"
+        if cal_path.exists():
+            with open(cal_path, "rb") as f:
+                calibrator = pickle.load(f)
+            race_df[col] = calibrator.predict(race_df[col].values)
+            print(f"  ✅ {target}キャリブレーター適用済み")
+        else:
+            print(f"  ⚠️ calibrator_{target}.pkl なし — 未校正確率を使用")
 
     race_df["pred_finish"] = models["finish"].predict(X_all)
 

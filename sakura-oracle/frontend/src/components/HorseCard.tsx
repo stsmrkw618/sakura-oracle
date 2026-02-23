@@ -22,6 +22,7 @@ interface HorseCardProps {
   liveEv?: number;
   liveMark?: string;
   oddsChanged?: boolean;
+  marketProb?: number;
 }
 
 export default function HorseCard({
@@ -30,6 +31,7 @@ export default function HorseCard({
   liveEv,
   liveMark,
   oddsChanged,
+  marketProb,
 }: HorseCardProps) {
   const frame = FRAME_COLORS[horse.frame_number] || FRAME_COLORS[1];
   const displayEv = liveEv ?? horse.ev_win;
@@ -74,6 +76,13 @@ export default function HorseCard({
               <span className="font-mono text-sm text-sakura-pink w-10 text-right">
                 {(horse.win_prob * 100).toFixed(0)}%
               </span>
+              {marketProb != null && (
+                <span className={`font-mono text-[10px] w-14 text-right ${
+                  horse.win_prob > marketProb ? "text-green-400" : "text-red-400"
+                }`}>
+                  市場{(marketProb * 100).toFixed(0)}%
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground w-8">複勝</span>

@@ -9,6 +9,7 @@ SAKURA ORACLE — 全重賞Walk-Forwardバックテスト
 """
 
 import json
+import pickle
 import re
 import sys
 from pathlib import Path
@@ -16,6 +17,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import lightgbm as lgb
+from sklearn.isotonic import IsotonicRegression
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from ml.scraper.config import DATA_DIR, BASE_DIR
@@ -174,7 +176,164 @@ def _find_payout(payouts_for_race: dict, bet_type: str, combo_set: set[int]) -> 
     return 0
 
 
-def run_walk_forward(df: pd.DataFrame) -> list[dict]:
+def _fit_calibrators(calib_pairs: list[dict]) -> dict:
+    """Isotonic Regressionでキャリブレーターをフィットし、pickle保存 + 曲線データ返却"""
+    if not calib_pairs:
+        return {}
+
+    pred_win = np.array([p["pred_win"] for p in calib_pairs])
+    is_win = np.array([p["is_win"] for p in calib_pairs])
+    pred_show = np.array([p["pred_show"] for p in calib_pairs])
+    is_show = np.array([p["is_show"] for p in calib_pairs])
+
+    cal_win = IsotonicRegression(y_min=0.0, y_max=1.0, out_of_bounds="clip")
+    cal_win.fit(pred_win, is_win)
+
+    cal_show = IsotonicRegression(y_min=0.0, y_max=1.0, out_of_bounds="clip")
+    cal_show.fit(pred_show, is_show)
+
+    # pickle保存
+    model_dir = Path(__file__).resolve().parent
+    with open(model_dir / "calibrator_win.pkl", "wb") as f:
+        pickle.dump(cal_win, f)
+    with open(model_dir / "calibrator_show.pkl", "wb") as f:
+        pickle.dump(cal_show, f)
+    print(f"\n✅ キャリブレーター保存: {model_dir}/calibrator_*.pkl")
+
+    # キャリブレーション曲線データ (10ビン)
+    def _build_curve(pred: np.ndarray, actual: np.ndarray, n_bins: int = 10) -> list[dict]:
+        bins = np.linspace(0, 1, n_bins + 1)
+        curve = []
+        for i in range(n_bins):
+            mask = (pred >= bins[i]) & (pred < bins[i + 1])
+            count = int(mask.sum())
+            if count == 0:
+                continue
+            bin_center = round((bins[i] + bins[i + 1]) / 2, 3)
+            predicted = round(float(pred[mask].mean()), 4)
+            observed = round(float(actual[mask].mean()), 4)
+            curve.append({
+                "bin_center": bin_center,
+                "predicted": predicted,
+                "observed": observed,
+                "count": count,
+            })
+        return curve
+
+    return {
+        "win": _build_curve(pred_win, is_win),
+        "show": _build_curve(pred_show, is_show),
+    }
+
+
+def _bootstrap_confidence(results: list[dict], n_iter: int = 10000) -> dict:
+    """Bootstrap法で的中率・ROIの95%信頼区間とp値を算出"""
+    n = len(results)
+    if n == 0:
+        return {}
+
+    rng = np.random.default_rng(42)
+
+    win_hits_arr = np.array([r["win_hit"] for r in results])
+    show_hits_arr = np.array([r["show_hits"] for r in results])
+    win_return_arr = np.array([r["win_return"] for r in results])
+    show_return_arr = np.array([r["show_return"] for r in results])
+
+    bs_win_hit = np.zeros(n_iter)
+    bs_win_roi = np.zeros(n_iter)
+    bs_show_hit = np.zeros(n_iter)
+    bs_show_roi = np.zeros(n_iter)
+
+    for i in range(n_iter):
+        idx = rng.integers(0, n, size=n)
+        bs_win_hit[i] = win_hits_arr[idx].mean()
+        bs_win_roi[i] = win_return_arr[idx].sum() / (n * 100)
+        bs_show_hit[i] = show_hits_arr[idx].mean() / 3  # show_hits is out of 3
+        bs_show_roi[i] = show_return_arr[idx].sum() / (n * 300)
+
+    p_value_win_roi = float((bs_win_roi <= 1.0).sum()) / n_iter
+
+    return {
+        "win_hit_rate_ci": [
+            round(float(np.percentile(bs_win_hit, 2.5)), 3),
+            round(float(np.percentile(bs_win_hit, 97.5)), 3),
+        ],
+        "win_roi_ci": [
+            round(float(np.percentile(bs_win_roi, 2.5)), 3),
+            round(float(np.percentile(bs_win_roi, 97.5)), 3),
+        ],
+        "show_hit_rate_ci": [
+            round(float(np.percentile(bs_show_hit, 2.5)), 3),
+            round(float(np.percentile(bs_show_hit, 97.5)), 3),
+        ],
+        "show_roi_ci": [
+            round(float(np.percentile(bs_show_roi, 2.5)), 3),
+            round(float(np.percentile(bs_show_roi, 97.5)), 3),
+        ],
+        "win_roi_pvalue": round(p_value_win_roi, 4),
+    }
+
+
+def _simulate_bankroll(
+    results: list[dict], n_sim: int = 1000, initial: int = 10000,
+) -> dict:
+    """Monte Carloバンクロールシミュレーション"""
+    n = len(results)
+    if n == 0:
+        return {}
+
+    rng = np.random.default_rng(42)
+    kelly_bets = np.array([r["kelly_bet"] for r in results])
+    kelly_returns = np.array([r["kelly_return"] for r in results])
+
+    # 各シミュレーションの資金推移を記録
+    all_paths = np.zeros((n_sim, n + 1))
+    all_paths[:, 0] = initial
+    max_drawdowns = np.zeros(n_sim)
+
+    for s in range(n_sim):
+        idx = rng.integers(0, n, size=n)
+        bankroll = float(initial)
+        peak = bankroll
+        max_dd = 0.0
+        for step in range(n):
+            ret = kelly_returns[idx[step]]
+            bankroll *= (1 + ret)
+            bankroll = max(bankroll, 0)  # 破産防止
+            all_paths[s, step + 1] = bankroll
+            if bankroll > peak:
+                peak = bankroll
+            dd = (peak - bankroll) / peak if peak > 0 else 0
+            if dd > max_dd:
+                max_dd = dd
+        max_drawdowns[s] = max_dd
+
+    # パーセンタイルパスを計算
+    percentiles = [5, 25, 50, 75, 95]
+    paths = {}
+    for p in percentiles:
+        path = np.percentile(all_paths, p, axis=0)
+        paths[f"p{p}"] = [round(float(v)) for v in path]
+
+    final_values = all_paths[:, -1]
+
+    return {
+        "initial_bankroll": initial,
+        "n_races": n,
+        "paths": paths,
+        "max_drawdown": {
+            "median": round(float(np.median(max_drawdowns)), 3),
+            "p95": round(float(np.percentile(max_drawdowns, 95)), 3),
+        },
+        "final_bankroll": {
+            "median": round(float(np.median(final_values))),
+            "p5": round(float(np.percentile(final_values, 5))),
+            "p95": round(float(np.percentile(final_values, 95))),
+        },
+    }
+
+
+def run_walk_forward(df: pd.DataFrame) -> tuple[list[dict], dict]:
     """Walk-Forwardバックテスト（デュアルモデル + 正則化 + 早期停止）"""
     print("=" * 60)
     print("全重賞 Walk-Forward バックテスト（改良版）")
@@ -194,6 +353,9 @@ def run_walk_forward(df: pd.DataFrame) -> list[dict]:
     races = build_race_order(df)
     results = []
     min_train_size = 50
+
+    # キャリブレーション用: 全馬の (予測確率, 実績) ペアを蓄積
+    calib_pairs: list[dict] = []
 
     # 利用可能な特徴量を事前確認
     feat_all = _get_available_features(df, FEATURE_COLS_ALL)
@@ -245,6 +407,15 @@ def run_walk_forward(df: pd.DataFrame) -> list[dict]:
         test_df["pred_win"] = pred_win
         test_df["pred_show"] = pred_show
         test_df["pred_b_win"] = pred_b_win  # Model Bの生予測（EV計算用）
+
+        # キャリブレーション用ペアを蓄積
+        for _, row in test_df.iterrows():
+            calib_pairs.append({
+                "pred_win": float(row["pred_win"]),
+                "is_win": int(row["着順_num"] == 1),
+                "pred_show": float(row["pred_show"]),
+                "is_show": int(row["着順_num"] <= 3),
+            })
 
         n_horses = len(test_df)
 
@@ -315,6 +486,22 @@ def run_walk_forward(df: pd.DataFrame) -> list[dict]:
                 payout = _find_payout(race_payouts, "trio", actual_top3_nums)
                 trio_box5_roi = payout / 1000.0
 
+        # Kelly return (1/4 Kelly): AI本命馬の単勝Kelly
+        ai_odds = float(top1["odds"])
+        ai_prob = float(top1["pred_win"])
+        kelly_frac = 0.25
+        if ai_odds > 1.0 and ai_prob > 0:
+            b = ai_odds - 1
+            f_full = (ai_prob * b - (1 - ai_prob)) / b
+            kelly_bet = max(0.0, f_full * kelly_frac)
+        else:
+            kelly_bet = 0.0
+        # 的中時: +kelly * (odds-1), 不的中時: -kelly
+        if win_hit and kelly_bet > 0:
+            kelly_return = kelly_bet * (ai_odds - 1)
+        else:
+            kelly_return = -kelly_bet
+
         results.append({
             "label": label,
             "race_base": race["race_base"],
@@ -331,6 +518,8 @@ def run_walk_forward(df: pd.DataFrame) -> list[dict]:
             "win_return": win_return,
             "show_return": show_return_total,
             "ai_odds": round(float(top1["odds"]), 1),
+            "kelly_bet": round(kelly_bet, 6),
+            "kelly_return": round(kelly_return, 6),
             "quinella_box3_hit": quinella_box3_hit,
             "wide_top2_hit": wide_top2_hit,
             "trio_box3_hit": trio_box3_hit,
@@ -341,10 +530,17 @@ def run_walk_forward(df: pd.DataFrame) -> list[dict]:
             "trio_box5_roi": trio_box5_roi,
         })
 
-    return results
+    # --- キャリブレーター生成 & pickle保存 ---
+    calib_data = _fit_calibrators(calib_pairs)
+
+    return results, calib_data
 
 
-def print_summary(results: list[dict]) -> None:
+def print_summary(
+    results: list[dict],
+    calib_data: dict | None = None,
+    df: pd.DataFrame | None = None,
+) -> None:
     """サマリー出力"""
     n = len(results)
     if n == 0:
@@ -507,6 +703,32 @@ def print_summary(results: list[dict]) -> None:
     print(f"\n  ※ JRA控除率: 単勝20%, 複勝20%")
     print(f"  ※ 回収率80%以上で「市場平均超え」、100%超で「プラス収支」")
 
+    # --- Bootstrap信頼区間 ---
+    confidence = _bootstrap_confidence(results)
+    if confidence:
+        print(f"\n{'='*65}")
+        print("Bootstrap 95% 信頼区間 (10,000回)")
+        print(f"{'='*65}")
+        ci = confidence
+        print(f"  1着的中率: [{ci['win_hit_rate_ci'][0]:.1%} – {ci['win_hit_rate_ci'][1]:.1%}]")
+        print(f"  複勝的中率: [{ci['show_hit_rate_ci'][0]:.1%} – {ci['show_hit_rate_ci'][1]:.1%}]")
+        print(f"  単勝回収率: [{ci['win_roi_ci'][0]:.0%} – {ci['win_roi_ci'][1]:.0%}]")
+        print(f"  複勝回収率: [{ci['show_roi_ci'][0]:.0%} – {ci['show_roi_ci'][1]:.0%}]")
+        print(f"  単勝ROI > 100% p値: {ci['win_roi_pvalue']:.4f}")
+
+    # --- バンクロールシミュレーション ---
+    simulation = _simulate_bankroll(results)
+    if simulation:
+        print(f"\n{'='*65}")
+        print("バンクロールシミュレーション (1,000パス)")
+        print(f"{'='*65}")
+        fb = simulation["final_bankroll"]
+        mdd = simulation["max_drawdown"]
+        print(f"  初期資金: ¥{simulation['initial_bankroll']:,}")
+        print(f"  最終資金 中央値: ¥{fb['median']:,}")
+        print(f"  最終資金 5%tile: ¥{fb['p5']:,}  95%tile: ¥{fb['p95']:,}")
+        print(f"  最大DD 中央値: {mdd['median']:.1%}  95%tile: {mdd['p95']:.1%}")
+
     # --- JSON保存 ---
     output = {
         "summary": {
@@ -517,6 +739,7 @@ def print_summary(results: list[dict]) -> None:
             "show_roi": round(show_roi, 3),
             "fav_win_rate": round(fav_wins / n, 3),
             "fav_show_rate": round(fav_shows / n, 3),
+            "confidence": confidence if confidence else None,
         },
         "combo_hit_rates": {
             "quinella_box3": round(quinella_hits / n, 3) if n > 0 else 0,
@@ -582,6 +805,114 @@ def print_summary(results: list[dict]) -> None:
             "show_return": round(r["show_return"], 1),
         })
 
+    # 統計データ（枠順別・人気別・血統別）
+    if df is not None:
+        try:
+            # 枠順別勝率
+            frame_stats = []
+            for f in sorted(df["frame_number"].dropna().unique()):
+                sub = df[df["frame_number"] == f]
+                wins = int(sub["is_win"].sum())
+                total = len(sub)
+                frame_stats.append({
+                    "frame": f"{int(f)}枠",
+                    "rate": round(wins / total * 100, 1) if total > 0 else 0,
+                    "n": total,
+                })
+            output["frame_win_rate"] = frame_stats
+
+            # 人気別3着内率
+            pop_stats = []
+            for p in range(1, 11):
+                sub = df[df["popularity"] == p]
+                shows = int(sub["is_show"].sum())
+                total = len(sub)
+                if total > 0:
+                    pop_stats.append({
+                        "pop": f"{p}人気",
+                        "rate": round(shows / total * 100, 1),
+                        "n": total,
+                    })
+            output["popularity_show_rate"] = pop_stats
+
+            # 血統カテゴリ別勝率
+            pedigree_path = DATA_DIR / "raw" / "horse_pedigree.csv"
+            if pedigree_path.exists():
+                ped_df = pd.read_csv(pedigree_path)
+                merged = df.merge(
+                    ped_df[["horse_name", "sire"]],
+                    left_on="馬名", right_on="horse_name", how="left",
+                )
+                # カテゴリ代表名を取得
+                sire_stats = []
+                for code in sorted(merged["sire_category_code"].dropna().unique()):
+                    sub = merged[merged["sire_category_code"] == code]
+                    wins = int(sub["is_win"].sum())
+                    total = len(sub)
+                    # 最頻出の父を代表名に
+                    top_sire = sub["sire"].value_counts().index[0] if sub["sire"].notna().any() else f"Cat{int(code)}"
+                    sire_stats.append({
+                        "name": f"{top_sire}系",
+                        "rate": round(wins / total * 100, 1) if total > 0 else 0,
+                        "n": total,
+                    })
+                # 勝率降順
+                sire_stats.sort(key=lambda x: -x["rate"])
+                output["bloodline_win_rate"] = sire_stats
+        except Exception as e:
+            print(f"  ⚠️ 統計データ生成失敗: {e}")
+
+    # 特徴量重要度（実モデルから取得）
+    if df is not None:
+        try:
+            importance = get_feature_importance(df)
+            total_imp = sum(importance.values())
+            if total_imp > 0:
+                # 日本語ラベルマッピング
+                label_map = {
+                    "speed_index": "スピード指数",
+                    "weight": "馬体重",
+                    "field_strength": "場の強さ",
+                    "odds": "オッズ",
+                    "horse_number": "馬番",
+                    "frame_number": "枠番",
+                    "weight_diff": "馬体重増減",
+                    "jockey_win_rate": "騎手勝率",
+                    "popularity": "人気",
+                    "last1_start_pos": "前走スタート位置",
+                    "last1_speed": "前走スピード",
+                    "trainer_win_rate": "調教師勝率",
+                    "best_last3f": "最速上がり3F",
+                    "avg_last3f": "平均上がり3F",
+                    "grade_encoded": "グレード",
+                    "last1_last3f": "前走上がり3F",
+                    "last2_last3f": "2走前上がり3F",
+                    "total_runs": "通算出走数",
+                    "show_rate": "複勝率",
+                    "last1_finish": "前走着順",
+                    "hanshin_runs": "阪神実績",
+                    "jockey_g1_wins": "騎手G1勝数",
+                    "distance_m": "距離",
+                    "last1_margin": "前走着差",
+                }
+                sorted_imp = sorted(importance.items(), key=lambda x: -x[1])[:10]
+                output["feature_importance"] = [
+                    {
+                        "name": label_map.get(name, name),
+                        "key": name,
+                        "value": round(val / total_imp, 4),
+                    }
+                    for name, val in sorted_imp
+                ]
+        except Exception as e:
+            print(f"  ⚠️ 特徴量重要度取得失敗: {e}")
+
+    # キャリブレーション・シミュレーションデータ追加
+    if calib_data:
+        output["calibration"] = calib_data
+    if simulation:
+        output["simulation"] = simulation
+
     json_path = BASE_DIR / "frontend" / "src" / "data" / "backtest_all.json"
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
@@ -645,8 +976,8 @@ def main() -> None:
     print(f"特徴量（固定）: Model A {len(FEATURE_COLS_ALL)}個 / Model B {len(FEATURE_COLS_NO_ODDS)}個\n")
 
     # 本番バックテスト
-    results = run_walk_forward(df)
-    print_summary(results)
+    results, calib_data = run_walk_forward(df)
+    print_summary(results, calib_data, df)
     print("\n完了!")
 
 
