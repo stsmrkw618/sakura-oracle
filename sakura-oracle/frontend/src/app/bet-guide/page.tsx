@@ -64,29 +64,16 @@ export default function BetGuidePage() {
   const hasComboOdds = Object.keys(comboOddsMap).length > 0;
 
   const scaledBets = useMemo(() => {
-    // 単勝: Kelly比例で予算の70%を配分
-    // 組合せ: 残り30%を均等配分
-    const winBets = liveBets.filter((b) => b.type === "単勝");
-    const comboBets = liveBets.filter((b) => b.type !== "単勝");
-    const winBudget = Math.round(budget * 0.7);
-    const comboBudget = budget - winBudget;
-    const totalKelly = winBets.reduce((s, b) => s + b.kelly, 0);
-
-    const scaled = liveBets.map((bet) => {
-      if (bet.type === "単勝") {
-        // 単勝: Kelly比例
-        const ratio = totalKelly > 0 ? bet.kelly / totalKelly : 1 / winBets.length;
-        const amount = Math.round((winBudget * ratio) / 100) * 100;
-        return { ...bet, scaledAmount: Math.max(amount, 100) };
-      } else {
-        // 組合せ: 均等配分
-        const amount = comboBets.length > 0
-          ? Math.round((comboBudget / comboBets.length) / 100) * 100
-          : 100;
-        return { ...bet, scaledAmount: Math.max(amount, 100) };
-      }
+    // generateBets()が計算済みのamountを予算に比例スケール
+    const totalOriginal = liveBets.reduce((s, b) => s + b.amount, 0);
+    if (totalOriginal === 0) {
+      return liveBets.map((b) => ({ ...b, scaledAmount: 100 }));
+    }
+    const scale = budget / totalOriginal;
+    return liveBets.map((bet) => {
+      const amount = Math.max(100, Math.round((bet.amount * scale) / 100) * 100);
+      return { ...bet, scaledAmount: amount };
     });
-    return scaled;
   }, [budget, liveBets]);
 
   const totalInvestment = scaledBets.reduce((s, b) => s + b.scaledAmount, 0);
