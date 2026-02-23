@@ -12,12 +12,12 @@
       "horse_number": 17,
       "horse_name": "プリムツァール",
       "mark": "◎",
-      "win_prob": 0.0692,
-      "show_prob": 0.0408,
-      "ev_win": 10.93,
-      "ev_show": 1.93,
-      "kelly_win": 0.0158,
-      "kelly_show": 0.005,
+      "win_prob": 0.0751,
+      "show_prob": 0.0,
+      "ev_win": 11.87,
+      "ev_show": 0.0,
+      "kelly_win": 0.0173,
+      "kelly_show": 0.0,
       "speed_index": 53.0,
       "radar": {
         "speed": 79,
@@ -46,12 +46,12 @@
       "horse_number": 16,
       "horse_name": "ナムラクララ",
       "mark": "○",
-      "win_prob": 0.0692,
-      "show_prob": 0.0408,
-      "ev_win": 6.49,
-      "ev_show": 1.15,
-      "kelly_win": 0.0148,
-      "kelly_show": 0.0014,
+      "win_prob": 0.0751,
+      "show_prob": 0.0,
+      "ev_win": 7.04,
+      "ev_show": 0.0,
+      "kelly_win": 0.0163,
+      "kelly_show": 0.0,
       "speed_index": 38.0,
       "radar": {
         "speed": 50,
@@ -80,12 +80,12 @@
       "horse_number": 14,
       "horse_name": "ダンツエラン",
       "mark": "○",
-      "win_prob": 0.0692,
-      "show_prob": 0.0604,
-      "ev_win": 7.55,
-      "ev_show": 1.98,
-      "kelly_win": 0.0151,
-      "kelly_show": 0.0077,
+      "win_prob": 0.0751,
+      "show_prob": 0.0,
+      "ev_win": 8.19,
+      "ev_show": 0.0,
+      "kelly_win": 0.0166,
+      "kelly_show": 0.0,
       "speed_index": 26.0,
       "radar": {
         "speed": 27,
@@ -115,9 +115,9 @@
       "horse_name": "リンクスティップ",
       "mark": "▲",
       "win_prob": 0.1846,
-      "show_prob": 0.3125,
+      "show_prob": 0.3504,
       "ev_win": 1.26,
-      "ev_show": 0.64,
+      "ev_show": 0.71,
       "kelly_win": 0.011,
       "kelly_show": 0.0,
       "speed_index": 60.0,
@@ -145,15 +145,117 @@
       "frame_number": 6
     },
     {
+      "horse_number": 10,
+      "horse_name": "トワイライトシティ",
+      "mark": "▲",
+      "win_prob": 0.0751,
+      "show_prob": 0.0,
+      "ev_win": 6.77,
+      "ev_show": 0.0,
+      "kelly_win": 0.0162,
+      "kelly_show": 0.0,
+      "speed_index": 12.0,
+      "radar": {
+        "speed": 0,
+        "stamina": 0,
+        "instant": 58,
+        "pedigree": 0,
+        "jockey": 0,
+        "course_fit": 0
+      },
+      "comment": "前走5着。上がり34.5秒は平均的。",
+      "risk": "キャリアが浅い。阪神未経験",
+      "last3_results": [
+        "5着",
+        "4着",
+        "3着"
+      ],
+      "odds": {
+        "win": 90.2,
+        "show": 27.1
+      },
+      "sire": "エピファネイア",
+      "jockey": "松山",
+      "frame_number": 5
+    },
+    {
+      "horse_number": 11,
+      "horse_name": "ミストレス",
+      "mark": "▲",
+      "win_prob": 0.0751,
+      "show_prob": 0.0,
+      "ev_win": 6.32,
+      "ev_show": 0.0,
+      "kelly_win": 0.016,
+      "kelly_show": 0.0,
+      "speed_index": 16.0,
+      "radar": {
+        "speed": 8,
+        "stamina": 50,
+        "instant": 75,
+        "pedigree": 0,
+        "jockey": 27,
+        "course_fit": 50
+      },
+      "comment": "前走8着。阪神1走経験あり。",
+      "risk": "キャリアが浅い。前走着順が振るわない",
+      "last3_results": [
+        "8着",
+        "2着",
+        "3着"
+      ],
+      "odds": {
+        "win": 84.2,
+        "show": 25.3
+      },
+      "sire": "キズナ",
+      "jockey": "坂井",
+      "frame_number": 6
+    },
+    {
+      "horse_number": 3,
+      "horse_name": "マピュース",
+      "mark": "▲",
+      "win_prob": 0.0751,
+      "show_prob": 0.3504,
+      "ev_win": 2.69,
+      "ev_show": 3.76,
+      "kelly_win": 0.0121,
+      "kelly_show": 0.0709,
+      "speed_index": 55.0,
+      "radar": {
+        "speed": 83,
+        "stamina": 75,
+        "instant": 92,
+        "pedigree": 67,
+        "jockey": 0,
+        "course_fit": 0
+      },
+      "comment": "前走10着。",
+      "risk": "阪神未経験。前走着順が振るわない",
+      "last3_results": [
+        "10着",
+        "2着",
+        "7着"
+      ],
+      "odds": {
+        "win": 35.8,
+        "show": 10.7
+      },
+      "sire": "マインドユアビスケッツ",
+      "jockey": "田辺",
+      "frame_number": 2
+    },
+    {
       "horse_number": 13,
       "horse_name": "チェルビアット",
       "mark": "▲",
-      "win_prob": 0.0692,
-      "show_prob": 0.1739,
-      "ev_win": 3.67,
-      "ev_show": 2.77,
-      "kelly_win": 0.0128,
-      "kelly_show": 0.0296,
+      "win_prob": 0.0751,
+      "show_prob": 0.0,
+      "ev_win": 3.98,
+      "ev_show": 0.0,
+      "kelly_win": 0.0143,
+      "kelly_show": 0.0,
       "speed_index": 53.0,
       "radar": {
         "speed": 79,
@@ -183,9 +285,9 @@
       "horse_name": "エンブロイダリー",
       "mark": "×",
       "win_prob": 0.1846,
-      "show_prob": 0.3125,
+      "show_prob": 0.3504,
       "ev_win": 0.92,
-      "ev_show": 0.47,
+      "ev_show": 0.53,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 64.0,
@@ -217,9 +319,9 @@
       "horse_name": "アルマヴェローチェ",
       "mark": "×",
       "win_prob": 0.1846,
-      "show_prob": 0.3125,
+      "show_prob": 0.3504,
       "ev_win": 0.7,
-      "ev_show": 0.36,
+      "ev_show": 0.4,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 64.0,
@@ -250,10 +352,10 @@
       "horse_number": 2,
       "horse_name": "エリカエクスプレス",
       "mark": "×",
-      "win_prob": 0.0761,
-      "show_prob": 0.1739,
+      "win_prob": 0.0751,
+      "show_prob": 0.0274,
       "ev_win": 0.26,
-      "ev_show": 0.18,
+      "ev_show": 0.03,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 53.0,
@@ -284,10 +386,10 @@
       "horse_number": 6,
       "horse_name": "ビップデイジー",
       "mark": "×",
-      "win_prob": 0.0692,
-      "show_prob": 0.0604,
-      "ev_win": 0.89,
-      "ev_show": 0.23,
+      "win_prob": 0.0751,
+      "show_prob": 0.0274,
+      "ev_win": 0.96,
+      "ev_show": 0.11,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 45.0,
@@ -315,81 +417,47 @@
       "frame_number": 3
     },
     {
-      "horse_number": 3,
-      "horse_name": "マピュース",
+      "horse_number": 18,
+      "horse_name": "ブラウンラチェット",
       "mark": "×",
-      "win_prob": 0.0303,
-      "show_prob": 0.1739,
-      "ev_win": 1.08,
-      "ev_show": 1.87,
-      "kelly_win": 0.0006,
-      "kelly_show": 0.0223,
-      "speed_index": 55.0,
-      "radar": {
-        "speed": 83,
-        "stamina": 75,
-        "instant": 92,
-        "pedigree": 67,
-        "jockey": 0,
-        "course_fit": 0
-      },
-      "comment": "前走10着。",
-      "risk": "阪神未経験。前走着順が振るわない",
-      "last3_results": [
-        "10着",
-        "2着",
-        "7着"
-      ],
-      "odds": {
-        "win": 35.8,
-        "show": 10.7
-      },
-      "sire": "マインドユアビスケッツ",
-      "jockey": "田辺",
-      "frame_number": 2
-    },
-    {
-      "horse_number": 10,
-      "horse_name": "トワイライトシティ",
-      "mark": "×",
-      "win_prob": 0.0051,
-      "show_prob": 0.0604,
-      "ev_win": 0.46,
-      "ev_show": 1.63,
+      "win_prob": 0.0204,
+      "show_prob": 0.0,
+      "ev_win": 0.6,
+      "ev_show": 0.0,
       "kelly_win": 0.0,
-      "kelly_show": 0.0061,
-      "speed_index": 12.0,
+      "kelly_show": 0.0,
+      "speed_index": 50.0,
       "radar": {
-        "speed": 0,
-        "stamina": 0,
-        "instant": 58,
+        "speed": 73,
+        "stamina": 75,
+        "instant": 96,
         "pedigree": 0,
-        "jockey": 0,
-        "course_fit": 0
+        "jockey": 7,
+        "course_fit": 50
       },
-      "comment": "前走5着。上がり34.5秒は平均的。",
-      "risk": "キャリアが浅い。阪神未経験",
+      "comment": "前走18着。阪神1走経験あり。高い勝率が魅力。",
+      "risk": "前走着順が振るわない。馬体重増が大きい",
       "last3_results": [
-        "5着",
-        "4着",
-        "3着"
+        "18着",
+        "16着",
+        "1着"
       ],
       "odds": {
-        "win": 90.2,
-        "show": 27.1
+        "win": 29.4,
+        "show": 8.8
       },
-      "sire": "エピファネイア",
-      "jockey": "松山",
-      "frame_number": 5
+      "sire": "キズナ",
+      "jockey": "横山武",
+      "frame_number": 8
     },
     {
       "horse_number": 15,
       "horse_name": "クリノメイ",
       "mark": "×",
-      "win_prob": 0.0051,
-      "show_prob": 0.0604,
-      "ev_win": 0.14,
-      "ev_show": 0.49,
+      "win_prob": 0.0063,
+      "show_prob": 0.0,
+      "ev_win": 0.17,
+      "ev_show": 0.0,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 35.0,
@@ -420,12 +488,12 @@
       "horse_number": 4,
       "horse_name": "ショウナンザナドゥ",
       "mark": "×",
-      "win_prob": 0.0051,
-      "show_prob": 0.1739,
-      "ev_win": 0.11,
-      "ev_show": 1.1,
+      "win_prob": 0.0063,
+      "show_prob": 0.0,
+      "ev_win": 0.13,
+      "ev_show": 0.0,
       "kelly_win": 0.0,
-      "kelly_show": 0.0047,
+      "kelly_show": 0.0,
       "speed_index": 46.0,
       "radar": {
         "speed": 65,
@@ -451,81 +519,13 @@
       "frame_number": 2
     },
     {
-      "horse_number": 18,
-      "horse_name": "ブラウンラチェット",
-      "mark": "×",
-      "win_prob": 0.0051,
-      "show_prob": 0.0408,
-      "ev_win": 0.15,
-      "ev_show": 0.36,
-      "kelly_win": 0.0,
-      "kelly_show": 0.0,
-      "speed_index": 50.0,
-      "radar": {
-        "speed": 73,
-        "stamina": 75,
-        "instant": 96,
-        "pedigree": 0,
-        "jockey": 7,
-        "course_fit": 50
-      },
-      "comment": "前走18着。阪神1走経験あり。高い勝率が魅力。",
-      "risk": "前走着順が振るわない。馬体重増が大きい",
-      "last3_results": [
-        "18着",
-        "16着",
-        "1着"
-      ],
-      "odds": {
-        "win": 29.4,
-        "show": 8.8
-      },
-      "sire": "キズナ",
-      "jockey": "横山武",
-      "frame_number": 8
-    },
-    {
-      "horse_number": 11,
-      "horse_name": "ミストレス",
-      "mark": "×",
-      "win_prob": 0.0051,
-      "show_prob": 0.0604,
-      "ev_win": 0.43,
-      "ev_show": 1.53,
-      "kelly_win": 0.0,
-      "kelly_show": 0.0054,
-      "speed_index": 16.0,
-      "radar": {
-        "speed": 8,
-        "stamina": 50,
-        "instant": 75,
-        "pedigree": 0,
-        "jockey": 27,
-        "course_fit": 50
-      },
-      "comment": "前走8着。阪神1走経験あり。",
-      "risk": "キャリアが浅い。前走着順が振るわない",
-      "last3_results": [
-        "8着",
-        "2着",
-        "3着"
-      ],
-      "odds": {
-        "win": 84.2,
-        "show": 25.3
-      },
-      "sire": "キズナ",
-      "jockey": "坂井",
-      "frame_number": 6
-    },
-    {
       "horse_number": 1,
       "horse_name": "ヴーレヴー",
       "mark": "×",
-      "win_prob": 0.0051,
-      "show_prob": 0.0604,
-      "ev_win": 0.2,
-      "ev_show": 0.7,
+      "win_prob": 0.0063,
+      "show_prob": 0.0,
+      "ev_win": 0.24,
+      "ev_show": 0.0,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 50.0,
@@ -556,10 +556,10 @@
       "horse_number": 8,
       "horse_name": "ウォーターガーベラ",
       "mark": "×",
-      "win_prob": 0.0051,
-      "show_prob": 0.0604,
-      "ev_win": 0.21,
-      "ev_show": 0.74,
+      "win_prob": 0.0063,
+      "show_prob": 0.0,
+      "ev_win": 0.26,
+      "ev_show": 0.0,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 38.0,
@@ -590,12 +590,12 @@
       "horse_number": 5,
       "horse_name": "ボンヌソワレ",
       "mark": "×",
-      "win_prob": 0.0051,
-      "show_prob": 0.1739,
-      "ev_win": 0.39,
-      "ev_show": 4.03,
+      "win_prob": 0.0063,
+      "show_prob": 0.0,
+      "ev_win": 0.49,
+      "ev_show": 0.0,
       "kelly_win": 0.0,
-      "kelly_show": 0.0342,
+      "kelly_show": 0.0,
       "speed_index": 44.0,
       "radar": {
         "speed": 62,
@@ -628,25 +628,25 @@
         "type": "単勝",
         "targets": "17番 プリムツァール",
         "amount": 100,
-        "ev": 10.93,
+        "ev": 11.87,
         "odds": 158.0,
-        "kelly": 0.0158
+        "kelly": 0.0173
       },
       {
         "type": "単勝",
         "targets": "16番 ナムラクララ",
         "amount": 100,
-        "ev": 6.49,
+        "ev": 7.04,
         "odds": 93.8,
-        "kelly": 0.0148
+        "kelly": 0.0163
       },
       {
         "type": "単勝",
         "targets": "14番 ダンツエラン",
         "amount": 100,
-        "ev": 7.55,
+        "ev": 8.19,
         "odds": 109.1,
-        "kelly": 0.0151
+        "kelly": 0.0166
       },
       {
         "type": "単勝",
@@ -658,46 +658,62 @@
       },
       {
         "type": "単勝",
-        "targets": "13番 チェルビアット",
+        "targets": "10番 トワイライトシティ",
         "amount": 100,
-        "ev": 3.67,
-        "odds": 53.0,
-        "kelly": 0.0128
+        "ev": 6.77,
+        "odds": 90.2,
+        "kelly": 0.0162
+      },
+      {
+        "type": "単勝",
+        "targets": "11番 ミストレス",
+        "amount": 100,
+        "ev": 6.32,
+        "odds": 84.2,
+        "kelly": 0.016
       },
       {
         "type": "単勝",
         "targets": "3番 マピュース",
         "amount": 100,
-        "ev": 1.08,
+        "ev": 2.69,
         "odds": 35.8,
-        "kelly": 0.0006
+        "kelly": 0.0121
+      },
+      {
+        "type": "単勝",
+        "targets": "13番 チェルビアット",
+        "amount": 100,
+        "ev": 3.98,
+        "odds": 53.0,
+        "kelly": 0.0143
       },
       {
         "type": "馬連BOX",
         "targets": "17-16-14",
         "amount": 100,
-        "ev": 8.32,
+        "ev": 9.03,
         "odds": null,
-        "kelly": 0.0152
+        "kelly": 0.0167
       },
       {
         "type": "三連複BOX",
-        "targets": "17-16-14-12-13",
+        "targets": "17-16-14-12-10",
         "amount": 100,
-        "ev": 5.98,
+        "ev": 7.03,
         "odds": null,
-        "kelly": 0.0139
+        "kelly": 0.0155
       },
       {
         "type": "ワイド",
         "targets": "17-16",
         "amount": 100,
-        "ev": 8.71,
+        "ev": 9.46,
         "odds": null,
-        "kelly": 0.0153
+        "kelly": 0.0168
       }
     ],
-    "total_investment": 900,
-    "expected_return": 5399
+    "total_investment": 1100,
+    "expected_return": 7364
   }
 }

@@ -37,6 +37,8 @@ _BASE_FEATURES = [
     "last1_start_pos",
     "last1_margin",
     "field_strength",
+    # ペース（新規）
+    "pace_deviation", "last1_pace_deviation", "n_front_runners_est",
 ]
 
 # Model A: 市場連動型（オッズ込み） — 24特徴量
@@ -1026,6 +1028,11 @@ def print_summary(
                     "jockey_g1_wins": "騎手G1勝数",
                     "distance_m": "距離",
                     "last1_margin": "前走着差",
+                    "running_style_avg": "脚質平均",
+                    "last1_running_style": "前走脚質",
+                    "pace_deviation": "ペース偏差値",
+                    "last1_pace_deviation": "前走ペース偏差値",
+                    "n_front_runners_est": "推定先行頭数",
                 }
                 sorted_imp = sorted(importance.items(), key=lambda x: -x[1])[:10]
                 output["feature_importance"] = [

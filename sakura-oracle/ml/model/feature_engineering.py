@@ -254,13 +254,23 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
         df["final_pos"] = passing.apply(lambda x: x[1])
         df["position_gain"] = df["start_pos"] - df["final_pos"]  # 正=追い込み
 
-        # 前走の通過順特徴量
+        # 脚質分類（通過順ベース）
+        df["n_horses"] = df.groupby("race_id")["馬名"].transform("count")
+        ratio = df["start_pos"] / df["n_horses"]
+        df["running_style_code"] = pd.cut(
+            ratio, bins=[-0.01, 1/8, 3/8, 5/8, 1.01],
+            labels=[0, 1, 2, 3]
+        ).astype(float)
+
+        # 前走の通過順特徴量 + 脚質累積
         df = df.sort_values(["馬名", "race_id"]).reset_index(drop=True)
         last_pass = []
         for _, group in df.groupby("馬名"):
             g = group.copy()
             g["last1_start_pos"] = g["start_pos"].shift(1)
             g["last1_position_gain"] = g["position_gain"].shift(1)
+            g["running_style_avg"] = g["running_style_code"].expanding().mean().shift(1)
+            g["last1_running_style"] = g["running_style_code"].shift(1)
             last_pass.append(g)
         df = pd.concat(last_pass, ignore_index=True)
     else:
@@ -316,6 +326,28 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     race_odds_sum = df.groupby("race_id")["_odds_inv"].transform("sum")
     df["field_strength"] = df["_odds_inv"] / race_odds_sum
     df = df.drop(columns=["_odds_inv"])
+
+    # === ペース指標 ===
+    df["front_half_time"] = df["time_sec"] - df["last3f"]
+    df["pace_per_furlong"] = df["front_half_time"] / ((df["distance_m"] - 600) / 200)
+    # 距離帯別z-score → 偏差値
+    df["pace_deviation"] = df.groupby(
+        pd.cut(df["distance_m"], bins=[0, 1500, 1700, 1900, 3000])
+    )["pace_per_furlong"].transform(lambda x: (x - x.mean()) / x.std() * 10 + 50)
+
+    # 前走ペース偏差値
+    df = df.sort_values(["馬名", "race_id"]).reset_index(drop=True)
+    pace_stats = []
+    for _, group in df.groupby("馬名"):
+        g = group.copy()
+        g["last1_pace_deviation"] = g["pace_deviation"].shift(1)
+        pace_stats.append(g)
+    df = pd.concat(pace_stats, ignore_index=True)
+
+    # === 推定逃げ・先行頭数（過去走平均ベース → リーケージなし） ===
+    df["_is_front_est"] = (df["running_style_avg"] < 1.0).astype(float)
+    df["n_front_runners_est"] = df.groupby("race_id")["_is_front_est"].transform("sum")
+    df = df.drop(columns=["_is_front_est"])
 
     # === 血統データマージ ===
     pedigree_path = RAW_DIR / "horse_pedigree.csv"
@@ -374,12 +406,16 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
         "jockey_win_rate", "jockey_g1_wins",
         # 調教師（新規）
         "trainer_win_rate",
-        # 通過順（新規）
+        # 通過順
         "last1_start_pos", "last1_position_gain",
-        # 着差（新規）
+        # 脚質（新規）
+        "running_style_code", "running_style_avg", "last1_running_style",
+        # 着差
         "last1_margin",
         # フィールド強度
         "field_strength",
+        # ペース（新規）
+        "pace_deviation", "last1_pace_deviation", "n_front_runners_est",
         # 血統
         "sire_category_code", "sire_win_rate",
         # オッズ

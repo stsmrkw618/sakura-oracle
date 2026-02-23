@@ -38,6 +38,8 @@ _BASE_FEATURES = [
     "last1_start_pos",
     "last1_margin",
     "field_strength",
+    # ペース（新規）
+    "pace_deviation", "last1_pace_deviation", "n_front_runners_est",
 ]
 
 # Model A: 市場連動型（オッズ込み）
