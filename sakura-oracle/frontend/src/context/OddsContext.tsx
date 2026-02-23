@@ -7,9 +7,10 @@ import {
   useMemo,
   useCallback,
   useEffect,
+  useRef,
   type ReactNode,
 } from "react";
-import predictions from "@/data/predictions.json";
+import { useRace } from "@/context/RaceContext";
 import {
   normalizeProbabilities,
   quinellaProb,
@@ -73,14 +74,21 @@ interface OddsContextValue {
   normProbs: Map<number, number>;
 }
 
-const STORAGE_KEY = "sakura-oracle-odds";
-const COMBO_STORAGE_KEY = "sakura-oracle-combo-odds";
+function storageKey(raceId: string | null) {
+  const suffix = raceId ? `-${raceId}` : "";
+  return {
+    odds: `sakura-oracle-odds${suffix}`,
+    combo: `sakura-oracle-combo-odds${suffix}`,
+  };
+}
 
-// --- Initial odds from predictions.json ---
+// --- Initial odds from predictions ---
 
-function buildInitialOdds(): Record<number, OddsEntry> {
+function buildInitialOdds(
+  preds: { horse_number: number; odds: { win: number; show: number } }[],
+): Record<number, OddsEntry> {
   const map: Record<number, OddsEntry> = {};
-  for (const h of predictions.predictions) {
+  for (const h of preds) {
     map[h.horse_number] = { win: h.odds.win, show: h.odds.show };
   }
   return map;
@@ -268,52 +276,81 @@ function generateBets(
 const OddsContext = createContext<OddsContextValue | null>(null);
 
 export function OddsProvider({ children }: { children: ReactNode }) {
-  const initialOdds = useMemo(() => buildInitialOdds(), []);
+  const { predictions, selectedRaceId } = useRace();
+  const prevRaceIdRef = useRef(selectedRaceId);
 
-  const [oddsMap, setOddsMap] = useState<Record<number, OddsEntry>>(() => {
-    return initialOdds;
-  });
+  const initialOdds = useMemo(
+    () => buildInitialOdds(predictions.predictions),
+    [predictions],
+  );
 
+  const [oddsMap, setOddsMap] = useState<Record<number, OddsEntry>>(initialOdds);
   const [comboOddsMap, setComboOddsMap] = useState<Record<string, number>>({});
+
+  // Reset odds when race changes
+  useEffect(() => {
+    if (prevRaceIdRef.current !== selectedRaceId) {
+      prevRaceIdRef.current = selectedRaceId;
+
+      // Load per-race localStorage
+      const keys = storageKey(selectedRaceId);
+      let restored = false;
+      try {
+        const stored = localStorage.getItem(keys.odds);
+        if (stored) {
+          setOddsMap(JSON.parse(stored));
+          restored = true;
+        }
+      } catch { /* ignore */ }
+
+      if (!restored) {
+        setOddsMap(buildInitialOdds(predictions.predictions));
+      }
+
+      try {
+        const stored = localStorage.getItem(keys.combo);
+        if (stored) {
+          setComboOddsMap(JSON.parse(stored));
+        } else {
+          setComboOddsMap({});
+        }
+      } catch {
+        setComboOddsMap({});
+      }
+    } else {
+      // Same race but predictions data refreshed (initial load) — sync initialOdds
+      setOddsMap(initialOdds);
+    }
+  }, [predictions, selectedRaceId, initialOdds]);
 
   // Hydrate from localStorage on mount
   useEffect(() => {
+    const keys = storageKey(selectedRaceId);
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(keys.odds);
       if (stored) {
-        const parsed = JSON.parse(stored) as Record<number, OddsEntry>;
-        setOddsMap(parsed);
+        setOddsMap(JSON.parse(stored));
       }
-    } catch {
-      // ignore parse errors
-    }
+    } catch { /* ignore */ }
     try {
-      const stored = localStorage.getItem(COMBO_STORAGE_KEY);
+      const stored = localStorage.getItem(keys.combo);
       if (stored) {
-        const parsed = JSON.parse(stored) as Record<string, number>;
-        setComboOddsMap(parsed);
+        setComboOddsMap(JSON.parse(stored));
       }
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Persist to localStorage on change
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(oddsMap));
-    } catch {
-      // ignore quota errors
-    }
-  }, [oddsMap]);
+    const keys = storageKey(selectedRaceId);
+    try { localStorage.setItem(keys.odds, JSON.stringify(oddsMap)); } catch { /* ignore */ }
+  }, [oddsMap, selectedRaceId]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(COMBO_STORAGE_KEY, JSON.stringify(comboOddsMap));
-    } catch {
-      // ignore
-    }
-  }, [comboOddsMap]);
+    const keys = storageKey(selectedRaceId);
+    try { localStorage.setItem(keys.combo, JSON.stringify(comboOddsMap)); } catch { /* ignore */ }
+  }, [comboOddsMap, selectedRaceId]);
 
   const updateOdds = useCallback(
     (horseNumber: number, win: number, show: number) => {
@@ -327,12 +364,9 @@ export function OddsProvider({ children }: { children: ReactNode }) {
 
   const resetOdds = useCallback(() => {
     setOddsMap(initialOdds);
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // ignore
-    }
-  }, [initialOdds]);
+    const keys = storageKey(selectedRaceId);
+    try { localStorage.removeItem(keys.odds); } catch { /* ignore */ }
+  }, [initialOdds, selectedRaceId]);
 
   const updateComboOdds = useCallback((key: string, odds: number) => {
     setComboOddsMap((prev) => ({ ...prev, [key]: odds }));
@@ -340,12 +374,9 @@ export function OddsProvider({ children }: { children: ReactNode }) {
 
   const resetComboOdds = useCallback(() => {
     setComboOddsMap({});
-    try {
-      localStorage.removeItem(COMBO_STORAGE_KEY);
-    } catch {
-      // ignore
-    }
-  }, []);
+    const keys = storageKey(selectedRaceId);
+    try { localStorage.removeItem(keys.combo); } catch { /* ignore */ }
+  }, [selectedRaceId]);
 
   // Compute live horses with dynamic EV, Kelly, mark
   const liveHorses = useMemo(() => {
@@ -382,7 +413,7 @@ export function OddsProvider({ children }: { children: ReactNode }) {
     }
 
     return horses;
-  }, [oddsMap]);
+  }, [oddsMap, predictions]);
 
   // Harville normalized probabilities
   const normProbs = useMemo(

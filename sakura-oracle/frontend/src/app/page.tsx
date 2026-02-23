@@ -3,11 +3,13 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import SakuraParticles from "@/components/SakuraParticles";
-import predictions from "@/data/predictions.json";
-
-const raceInfo = predictions.race_info;
+import RaceSelector from "@/components/RaceSelector";
+import { useRace } from "@/context/RaceContext";
 
 export default function Home() {
+  const { predictions } = useRace();
+  const raceInfo = predictions.race_info;
+
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-navy-dark">
       <SakuraParticles />
@@ -44,10 +46,19 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.8 }}
-          className="text-sm text-muted-foreground mb-12"
+          className="text-sm text-muted-foreground mb-8"
         >
           {raceInfo.date} {raceInfo.course}
         </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.9 }}
+          className="w-full max-w-[280px] mb-4"
+        >
+          <RaceSelector />
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

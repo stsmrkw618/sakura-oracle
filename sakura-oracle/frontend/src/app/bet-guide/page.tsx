@@ -2,10 +2,10 @@
 
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import predictions from "@/data/predictions.json";
 import Navbar from "@/components/Navbar";
 import OddsInput from "@/components/OddsInput";
 import { useOdds } from "@/context/OddsContext";
+import { useRace } from "@/context/RaceContext";
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
@@ -47,6 +47,7 @@ function ComboOddsInput({
 }
 
 export default function BetGuidePage() {
+  const { predictions } = useRace();
   const {
     liveHorses,
     liveBets,
@@ -64,16 +65,53 @@ export default function BetGuidePage() {
   const hasComboOdds = Object.keys(comboOddsMap).length > 0;
 
   const scaledBets = useMemo(() => {
-    // generateBets()が計算済みのamountを予算に比例スケール
-    const totalOriginal = liveBets.reduce((s, b) => s + b.amount, 0);
-    if (totalOriginal === 0) {
-      return liveBets.map((b) => ({ ...b, scaledAmount: 100 }));
+    if (liveBets.length === 0) return [];
+
+    // --- Kelly重み配分: EV確定 & kelly > 0 の馬券のみ予算配分 ---
+    const weights = liveBets.map((b) =>
+      b.evReliable && b.kelly > 0 ? b.kelly : 0,
+    );
+    const totalWeight = weights.reduce((s, w) => s + w, 0);
+
+    if (totalWeight === 0) {
+      return liveBets.map((b) => ({ ...b, scaledAmount: 0 }));
     }
-    const scale = budget / totalOriginal;
-    return liveBets.map((bet) => {
-      const amount = Math.max(100, Math.round((bet.amount * scale) / 100) * 100);
-      return { ...bet, scaledAmount: amount };
+
+    // 第1パス: 重みに比例して予算配分（¥100単位に丸め）
+    const amounts = weights.map((w) => {
+      if (w === 0) return 0;
+      return Math.max(100, Math.round((w / totalWeight) * budget / 100) * 100);
     });
+
+    // 第2パス: 合計 = 予算 になるよう最大重みの馬券で調整
+    let total = amounts.reduce((s, a) => s + a, 0);
+
+    // 不足分 → 最大重みの馬券に加算
+    const maxIdx = weights.indexOf(Math.max(...weights));
+    if (total < budget) {
+      amounts[maxIdx] += budget - total;
+      total = budget;
+    }
+    // 超過分 → 最小重みの非ゼロ馬券から¥100ずつ削減
+    while (total > budget) {
+      let reduced = false;
+      // 重み昇順で走査
+      const ascending = weights
+        .map((w, i) => ({ w, i }))
+        .filter((x) => x.w > 0)
+        .sort((a, b) => a.w - b.w);
+      for (const { i } of ascending) {
+        if (amounts[i] > 100) {
+          amounts[i] -= 100;
+          total -= 100;
+          reduced = true;
+          break;
+        }
+      }
+      if (!reduced) break;
+    }
+
+    return liveBets.map((bet, i) => ({ ...bet, scaledAmount: amounts[i] }));
   }, [budget, liveBets]);
 
   const totalInvestment = scaledBets.reduce((s, b) => s + b.scaledAmount, 0);
@@ -93,7 +131,7 @@ export default function BetGuidePage() {
     return predictions.predictions.filter((h) =>
       ["◎", "○", "▲", "△"].includes(h.mark)
     );
-  }, []);
+  }, [predictions]);
 
   // 馬券タイプ別にグルーピング
   const winBets = scaledBets.filter((b) => b.type === "単勝");
@@ -123,7 +161,7 @@ export default function BetGuidePage() {
       </motion.header>
 
       <main className="px-4 py-4 space-y-5">
-        {/* Investment Simulator — 最上部 */}
+        {/* Investment Simulator */}
         <motion.section {...fadeIn} transition={{ delay: 0.1 }}>
           <div className="bg-card rounded-xl p-4 border border-white/5">
             <h2 className="text-sm font-bold text-muted-foreground mb-3">
@@ -182,6 +220,63 @@ export default function BetGuidePage() {
             </p>
           </div>
         </motion.section>
+
+        {/* 購入リスト */}
+        {scaledBets.some((b) => b.scaledAmount > 0) && (
+          <motion.section {...fadeIn} transition={{ delay: 0.15 }}>
+            <div className="bg-card rounded-xl p-4 border border-white/5">
+              <h2 className="text-sm font-bold text-muted-foreground mb-3">
+                📋 購入リスト
+              </h2>
+              <div className="space-y-1.5">
+                {scaledBets
+                  .filter((b) => b.scaledAmount > 0)
+                  .map((bet, i) => (
+                    <div
+                      key={`summary-${i}`}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <span className="text-sakura-pink font-bold shrink-0">
+                          {bet.type}
+                        </span>
+                        <span className="text-muted-foreground truncate text-xs">
+                          {bet.targets}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span
+                          className={`text-[10px] font-mono ${
+                            bet.ev >= 1.5
+                              ? "text-gold"
+                              : bet.ev >= 1.0
+                                ? "text-green-400"
+                                : "text-muted-foreground"
+                          }`}
+                        >
+                          EV {bet.ev.toFixed(2)}
+                        </span>
+                        <span className="font-mono text-gold font-bold w-16 text-right">
+                          ¥{bet.scaledAmount.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+              <div className="border-t border-white/10 mt-3 pt-2 flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">合計</span>
+                <span className="font-mono text-gold font-bold">
+                  ¥{totalInvestment.toLocaleString()}
+                </span>
+              </div>
+              {scaledBets.some((b) => b.scaledAmount === 0 && b.comboKey) && (
+                <p className="text-[10px] text-muted-foreground mt-2">
+                  ※ 組合せ馬券はJRAオッズ入力後に配分額が計算されます
+                </p>
+              )}
+            </div>
+          </motion.section>
+        )}
 
         {/* Recommended Bets — 単勝 */}
         {winBets.length > 0 && (
@@ -518,8 +613,10 @@ function ComboBetCard({
         <span className="font-mono text-[10px] text-muted-foreground">
           Kelly {(bet.kelly * 100).toFixed(1)}%
         </span>
-        <span className="font-mono text-gold">
-          ¥{bet.scaledAmount.toLocaleString()}
+        <span className={`font-mono ${bet.scaledAmount > 0 ? "text-gold" : "text-muted-foreground"}`}>
+          {bet.scaledAmount > 0
+            ? `¥${bet.scaledAmount.toLocaleString()}`
+            : "---"}
         </span>
       </div>
     </div>

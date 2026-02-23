@@ -48,6 +48,22 @@ from ml.model.predictor import (
 )
 
 
+RACE_SLUG: dict[str, str] = {
+    "桜花賞": "sakura",
+    "チューリップ賞": "tulip",
+    "フィリーズレビュー": "fillies",
+    "クイーンC": "queenc",
+    "フェアリーS": "fairy",
+    "阪神JF": "hanshinjf",
+    "アルテミスS": "artemis",
+    "ファンタジーS": "fantasy",
+    "オークス": "oaks",
+    "秋華賞": "shuka",
+    "ローズS": "rose",
+    "紫苑S": "shion",
+}
+
+
 def _parse_race_arg(arg: str) -> tuple[str, str]:
     """コマンドライン引数からレース基本名と年を抽出する。
 
@@ -508,6 +524,44 @@ def predict_race(race_label: str) -> None:
     json_path = BASE_DIR / "frontend" / "src" / "data" / "predictions.json"
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
+
+    # --- public/races/ 出力（フロントエンドのレース選択UI用）---
+    slug = RACE_SLUG.get(race_base, race_base)
+    race_file_id = f"{slug}{year}"
+    races_dir = BASE_DIR / "frontend" / "public" / "races"
+    races_dir.mkdir(parents=True, exist_ok=True)
+
+    race_json_path = races_dir / f"{race_file_id}.json"
+    with open(race_json_path, "w", encoding="utf-8") as f:
+        json.dump(output, f, ensure_ascii=False, indent=2)
+
+    # index.json upsert
+    index_path = races_dir / "index.json"
+    index_data: list[dict] = []
+    if index_path.exists():
+        try:
+            with open(index_path, "r", encoding="utf-8") as f:
+                index_data = json.load(f)
+        except (json.JSONDecodeError, ValueError):
+            index_data = []
+
+    entry = {
+        "id": race_file_id,
+        "label": f"{race_base}({grade_label}) {year}",
+        "date": formatted_date,
+        "course": f"{venue} {surface}{distance}m",
+    }
+    # upsert by id
+    index_data = [e for e in index_data if e.get("id") != race_file_id]
+    index_data.append(entry)
+    # sort by date descending
+    index_data.sort(key=lambda e: e.get("date", ""), reverse=True)
+
+    with open(index_path, "w", encoding="utf-8") as f:
+        json.dump(index_data, f, ensure_ascii=False, indent=2)
+
+    print(f"  races/{race_file_id}.json 保存: {race_json_path}")
+    print(f"  races/index.json 更新: {len(index_data)}レース")
 
     # --- 結果表示 ---
     print(f"\n{'='*60}")

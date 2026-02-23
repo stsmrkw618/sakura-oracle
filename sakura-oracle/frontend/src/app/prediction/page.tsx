@@ -2,12 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import predictions from "@/data/predictions.json";
 import HorseCard from "@/components/HorseCard";
 import Navbar from "@/components/Navbar";
 import OddsInput from "@/components/OddsInput";
 import { MARK_ORDER } from "@/lib/constants";
 import { useOdds } from "@/context/OddsContext";
+import { useRace } from "@/context/RaceContext";
 
 const goingColors: Record<string, string> = {
   "良": "bg-green-600",
@@ -17,6 +17,7 @@ const goingColors: Record<string, string> = {
 };
 
 export default function PredictionPage() {
+  const { predictions } = useRace();
   const { liveHorses, oddsMap, updateOdds, resetOdds } = useOdds();
   const [oddsMode, setOddsMode] = useState(false);
 
@@ -39,7 +40,7 @@ export default function PredictionPage() {
       if (orderA !== orderB) return orderA - orderB;
       return b.win_prob - a.win_prob;
     });
-  }, [liveHorses]);
+  }, [liveHorses, predictions]);
 
   const raceInfo = predictions.race_info;
   const goingColor = goingColors[raceInfo.going] || "bg-gray-600";

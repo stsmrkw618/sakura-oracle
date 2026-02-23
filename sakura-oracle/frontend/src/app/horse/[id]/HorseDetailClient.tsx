@@ -3,7 +3,6 @@
 import { useParams, useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import predictions from "@/data/predictions.json";
 import MarkBadge from "@/components/MarkBadge";
 import HorseAvatar from "@/components/HorseAvatar";
 import HorseRadarChart from "@/components/HorseRadarChart";
@@ -11,6 +10,7 @@ import Navbar from "@/components/Navbar";
 import OddsInput from "@/components/OddsInput";
 import { FRAME_COLORS } from "@/lib/constants";
 import { useOdds } from "@/context/OddsContext";
+import { useRace } from "@/context/RaceContext";
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
@@ -21,11 +21,12 @@ export default function HorseDetailClient() {
   const params = useParams();
   const router = useRouter();
   const horseNumber = Number(params.id);
+  const { predictions } = useRace();
   const { liveHorses, oddsMap, updateOdds } = useOdds();
 
   const horse = useMemo(
     () => predictions.predictions.find((h) => h.horse_number === horseNumber),
-    [horseNumber]
+    [horseNumber, predictions]
   );
 
   const live = useMemo(
