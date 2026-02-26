@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import OddsInput from "@/components/OddsInput";
-import { useOdds } from "@/context/OddsContext";
+import { useOdds, type ComboMode } from "@/context/OddsContext";
 import { useRace } from "@/context/RaceContext";
 
 const fadeIn = {
@@ -57,6 +57,8 @@ export default function BetGuidePage() {
     comboOddsMap,
     updateComboOdds,
     resetComboOdds,
+    comboMode,
+    setComboMode,
   } = useOdds();
   const [budget, setBudget] = useState(3000);
   const [glossaryOpen, setGlossaryOpen] = useState<string | null>(null);
@@ -171,6 +173,52 @@ export default function BetGuidePage() {
       </motion.header>
 
       <main className="px-4 py-4 space-y-5">
+        {/* BOX / 軸流し 切替 */}
+        <motion.section {...fadeIn} transition={{ delay: 0.05 }}>
+          <div className="bg-card rounded-xl p-4 border border-white/5">
+            <h2 className="text-sm font-bold text-muted-foreground mb-3">
+              戦略モード
+            </h2>
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              <button
+                onClick={() => setComboMode("box")}
+                className={`rounded-lg p-3 text-left border transition-all ${
+                  comboMode === "box"
+                    ? "border-sakura-pink bg-sakura-pink/10"
+                    : "border-white/10 bg-navy/50"
+                }`}
+              >
+                <span className="text-sm font-bold block mb-1">
+                  {comboMode === "box" ? "● " : "○ "}BOX
+                </span>
+                <span className="text-[10px] text-muted-foreground leading-relaxed block">
+                  馬連ROI高く(550%)、安定重視の方にオススメ
+                </span>
+              </button>
+              <button
+                onClick={() => setComboMode("nagashi")}
+                className={`rounded-lg p-3 text-left border transition-all ${
+                  comboMode === "nagashi"
+                    ? "border-gold bg-gold/10"
+                    : "border-white/10 bg-navy/50"
+                }`}
+              >
+                <span className="text-sm font-bold block mb-1">
+                  {comboMode === "nagashi" ? "● " : "○ "}◎軸流し
+                </span>
+                <span className="text-[10px] text-muted-foreground leading-relaxed block">
+                  三連複ROI最高(589%)、高配当狙い・少額投資の方にオススメ
+                </span>
+              </button>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              {comboMode === "box"
+                ? "BOX: 上位馬の全組合せを均等に購入。的中率が高く安定した回収。"
+                : "◎軸流し: AI本命◎を軸に固定し、相手を広く取る。点数を絞って高配当を狙う戦略。"}
+            </p>
+          </div>
+        </motion.section>
+
         {/* Investment Simulator */}
         <motion.section {...fadeIn} transition={{ delay: 0.1 }}>
           <div className="bg-card rounded-xl p-4 border border-white/5">
@@ -235,19 +283,27 @@ export default function BetGuidePage() {
           </div>
         </motion.section>
 
-        {/* 戦略サマリー — BT実績ROI */}
+        {/* 戦略サマリー — BT実績ROI（モード連動） */}
         <motion.section {...fadeIn} transition={{ delay: 0.12 }}>
           <div className="bg-card rounded-xl p-4 border border-white/5">
             <h2 className="text-sm font-bold text-muted-foreground mb-3">
-              BT実績に基づく推奨配分
+              BT実績に基づく推奨配分（{comboMode === "box" ? "BOX" : "◎軸流し"}）
             </h2>
             <div className="space-y-2">
-              {[
-                { label: "馬連BOX(3)", roi: 550, hit: 32, color: "bg-sakura-pink" },
-                { label: "三連複BOX(5)", roi: 474, hit: 34, color: "bg-gold" },
-                { label: "ワイド(◎-○)", roi: 465, hit: 30, color: "bg-orange-400" },
-                { label: "単勝", roi: 265, hit: 46, color: "bg-blue-400" },
-              ].map((item) => (
+              {(comboMode === "box"
+                ? [
+                    { label: "馬連BOX(3)", roi: 550, hit: 32, color: "bg-sakura-pink" },
+                    { label: "三連複BOX(5)", roi: 474, hit: 34, color: "bg-gold" },
+                    { label: "ワイド(◎-○)", roi: 465, hit: 30, color: "bg-orange-400" },
+                    { label: "単勝", roi: 265, hit: 46, color: "bg-blue-400" },
+                  ]
+                : [
+                    { label: "三連複◎軸流し(6)", roi: 589, hit: 28, color: "bg-gold" },
+                    { label: "馬連◎軸流し(4)", roi: 452, hit: 36, color: "bg-sakura-pink" },
+                    { label: "ワイド(◎-○)", roi: 465, hit: 30, color: "bg-orange-400" },
+                    { label: "単勝", roi: 265, hit: 46, color: "bg-blue-400" },
+                  ]
+              ).map((item) => (
                 <div key={item.label}>
                   <div className="flex items-center justify-between text-xs mb-1">
                     <span className="text-muted-foreground">{item.label}</span>
@@ -270,7 +326,7 @@ export default function BetGuidePage() {
               ))}
             </div>
             <p className="text-[10px] text-muted-foreground mt-3">
-              ※ 50レースのバックテスト実績（v9）。オッズ入力で配分が自動最適化されます
+              ※ 50レースのバックテスト実績（v10）。オッズ入力で配分が自動最適化されます
             </p>
           </div>
         </motion.section>
@@ -341,14 +397,18 @@ export default function BetGuidePage() {
           </motion.section>
         )}
 
-        {/* 三連複BOX(5) — BT ROI最高 */}
+        {/* 三連複 — BOX or ◎軸流し */}
         {trioBets.length > 0 && (
           <motion.section {...fadeIn} transition={{ delay: 0.2 }}>
             <h2 className="text-sm font-bold text-muted-foreground mb-2">
-              三連複BOX(5)（{trioBets.length}通り）
+              {comboMode === "box"
+                ? `三連複BOX(5)（${trioBets.length}通り）`
+                : `三連複◎軸流し（${trioBets.length}通り）`}
             </h2>
             <p className="text-[10px] text-muted-foreground mb-3">
-              BT実績: 的中34% / 回収474% — AI上位5頭から全10通り
+              {comboMode === "box"
+                ? "BT実績: 的中34% / 回収474% — AI上位5頭から全10通り"
+                : "BT実績: 的中28% / 回収589% — ◎軸固定 + 2-5位から2頭選択"}
             </p>
             <div className="space-y-3">
               {trioBets.map((bet, i) => (
@@ -363,14 +423,18 @@ export default function BetGuidePage() {
           </motion.section>
         )}
 
-        {/* 馬連BOX(3) */}
+        {/* 馬連 — BOX or ◎軸流し */}
         {quinellaBets.length > 0 && (
           <motion.section {...fadeIn} transition={{ delay: 0.25 }}>
             <h2 className="text-sm font-bold text-muted-foreground mb-2">
-              馬連BOX(3)（{quinellaBets.length}通り）
+              {comboMode === "box"
+                ? `馬連BOX(3)（${quinellaBets.length}通り）`
+                : `馬連◎軸流し（${quinellaBets.length}通り）`}
             </h2>
             <p className="text-[10px] text-muted-foreground mb-3">
-              BT実績: 的中32% / 回収550%
+              {comboMode === "box"
+                ? "BT実績: 的中32% / 回収550%"
+                : "BT実績: 的中36% / 回収452% — ◎軸→2-5位"}
             </p>
             <div className="space-y-3">
               {quinellaBets.map((bet, i) => (
@@ -578,6 +642,12 @@ export default function BetGuidePage() {
                 title: "三連複とは？",
                 content:
                   "1着・2着・3着に入る3頭の組み合わせを当てる馬券。順番は不問。5頭BOXなら10通り。高配当が狙える。JRAでは1通り最低¥100。",
+              },
+              {
+                key: "nagashi",
+                title: "軸流しとは？",
+                content:
+                  "1頭を「軸」として固定し、残りの相手馬との組み合わせを買う方式。BOXより点数を絞れるため、1点あたりの投資額を増やせる。当システムではAI本命◎を軸に設定。馬連なら◎→2-5位の4通り、三連複なら◎固定+2-5位から2頭=6通り。",
               },
             ].map((item) => (
               <div key={item.key} className="mb-2">

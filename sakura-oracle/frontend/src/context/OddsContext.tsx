@@ -20,6 +20,9 @@ import {
 
 // --- Types ---
 
+/** BOX買い or ◎軸流し */
+export type ComboMode = "box" | "nagashi";
+
 interface OddsEntry {
   win: number;
   show: number;
@@ -76,6 +79,8 @@ interface OddsContextValue {
   updateComboOdds: (key: string, odds: number) => void;
   resetComboOdds: () => void;
   normProbs: Map<number, number>;
+  comboMode: ComboMode;
+  setComboMode: (mode: ComboMode) => void;
 }
 
 function storageKey(raceId: string | null) {
@@ -131,6 +136,7 @@ function generateBets(
   horses: LiveHorse[],
   normProbs: Map<number, number>,
   comboOddsMap: Record<string, number>,
+  comboMode: ComboMode = "box",
   budget = 3000,
 ): Bet[] {
   const MARK_ORDER: Record<string, number> = {
@@ -154,13 +160,12 @@ function generateBets(
     return result;
   };
 
-  // BT実績ROI定数
-  const BT_ROI: Record<string, number> = {
-    "馬連": 5.50,
-    "三連複": 4.74,
-    "ワイド": 4.65,
-    "単勝": 2.65,
+  // BT実績ROI定数（モード別）
+  const BT_ROI: Record<ComboMode, Record<string, number>> = {
+    box: { "馬連": 5.50, "三連複": 4.74, "ワイド": 4.65, "単勝": 2.65 },
+    nagashi: { "馬連": 4.515, "三連複": 5.89, "ワイド": 4.65, "単勝": 2.65 },
   };
+  const roi = BT_ROI[comboMode];
 
   // 単勝: ◎○▲の馬のみ（最大3頭）— Kelly > 0 かつ EV > 1.0
   const winTargets = topHorses.filter((h) => h.kelly_win > 0 && h.ev_win >= 1.0).slice(0, 3);
@@ -175,24 +180,60 @@ function generateBets(
       evReliable: true,
       odds: h.odds_win,
       kelly: h.kelly_win,
-      backtestRoi: BT_ROI["単勝"],
+      backtestRoi: roi["単勝"],
       winReturn: Math.round(amount * h.odds_win),
     });
   }
 
-  // 馬連BOX（上位2-3頭）→ 個別組合せに展開
-  if (topHorses.length >= 2) {
-    const slice = topHorses.slice(0, 3);
-    const n = slice.length;
-    const numCombs = comb(n, 2);
-    const avgKelly = slice.reduce((s, h) => s + h.kelly_win, 0) / slice.length;
-    const totalAmount = Math.max(100 * numCombs, Math.round((budget * avgKelly) / 100) * 100);
-    const perCombo = Math.max(100, Math.round(totalAmount / numCombs / 100) * 100);
+  // 馬連: BOX=上位3頭のBOX(3通り) / nagashi=◎軸→2-5位(4通り)
+  if (comboMode === "box") {
+    // BOX: 上位2-3頭の全組合せ
+    if (topHorses.length >= 2) {
+      const slice = topHorses.slice(0, 3);
+      const n = slice.length;
+      const numCombs = comb(n, 2);
+      const avgKelly = slice.reduce((s, h) => s + h.kelly_win, 0) / slice.length;
+      const totalAmount = Math.max(100 * numCombs, Math.round((budget * avgKelly) / 100) * 100);
+      const perCombo = Math.max(100, Math.round(totalAmount / numCombs / 100) * 100);
 
-    for (let i = 0; i < slice.length; i++) {
-      for (let j = i + 1; j < slice.length; j++) {
-        const a = slice[i], b = slice[j];
-        const nums = [a.horse_number, b.horse_number].sort((x, y) => x - y);
+      for (let i = 0; i < slice.length; i++) {
+        for (let j = i + 1; j < slice.length; j++) {
+          const a = slice[i], b = slice[j];
+          const nums = [a.horse_number, b.horse_number].sort((x, y) => x - y);
+          const comboKey = `quinella-${nums[0]}-${nums[1]}`;
+          const prob = quinellaProb(normProbs, nums[0], nums[1]);
+          const comboOdds = comboOddsMap[comboKey] ?? null;
+          const ev = comboOdds ? Math.round(prob * comboOdds * 100) / 100 : 0;
+          const kelly = comboOdds ? calcKelly(prob, comboOdds) : avgKelly;
+
+          bets.push({
+            type: "馬連",
+            targets: `${nums[0]}-${nums[1]}`,
+            description: `${a.horse_name}と${b.horse_name}が1着2着（順不問）`,
+            amount: perCombo,
+            ev,
+            evReliable: comboOdds !== null,
+            odds: comboOdds,
+            kelly,
+            backtestRoi: roi["馬連"],
+            comboProb: prob,
+            comboKey,
+          });
+        }
+      }
+    }
+  } else {
+    // nagashi: ◎軸 → 2-5位への4通り
+    if (sorted.length >= 2) {
+      const pivot = sorted[0]; // ◎（軸）
+      const partners = sorted.slice(1, 5); // 2-5位
+      const avgKelly = [pivot, ...partners].reduce((s, h) => s + h.kelly_win, 0) / (partners.length + 1);
+      const numCombs = partners.length;
+      const totalAmount = Math.max(100 * numCombs, Math.round((budget * avgKelly) / 100) * 100);
+      const perCombo = Math.max(100, Math.round(totalAmount / numCombs / 100) * 100);
+
+      for (const partner of partners) {
+        const nums = [pivot.horse_number, partner.horse_number].sort((x, y) => x - y);
         const comboKey = `quinella-${nums[0]}-${nums[1]}`;
         const prob = quinellaProb(normProbs, nums[0], nums[1]);
         const comboOdds = comboOddsMap[comboKey] ?? null;
@@ -202,13 +243,13 @@ function generateBets(
         bets.push({
           type: "馬連",
           targets: `${nums[0]}-${nums[1]}`,
-          description: `${a.horse_name}と${b.horse_name}が1着2着（順不問）`,
+          description: `${pivot.horse_name}と${partner.horse_name}が1着2着（順不問）`,
           amount: perCombo,
           ev,
           evReliable: comboOdds !== null,
           odds: comboOdds,
           kelly,
-          backtestRoi: BT_ROI["馬連"],
+          backtestRoi: roi["馬連"],
           comboProb: prob,
           comboKey,
         });
@@ -216,7 +257,7 @@ function generateBets(
     }
   }
 
-  // ワイド（◎-○）
+  // ワイド（◎-○）— モード共通
   if (topHorses.length >= 2) {
     const [h1, h2] = topHorses;
     const nums = [h1.horse_number, h2.horse_number].sort((a, b) => a - b);
@@ -236,15 +277,15 @@ function generateBets(
       evReliable: comboOdds !== null,
       odds: comboOdds,
       kelly,
-      backtestRoi: BT_ROI["ワイド"],
+      backtestRoi: roi["ワイド"],
       comboProb: prob,
       comboKey,
     });
   }
 
-  // 三連複BOX(5): 常に上位5頭から全10通りを展開
-  // バックテスト実績: 的中32%, 回収272% (BOX(3)の93%を大幅に上回る)
-  {
+  // 三連複: BOX=上位5頭(10通り) / nagashi=◎軸+2-5位から2頭(6通り)
+  if (comboMode === "box") {
+    // BOX(5): 上位5頭から全10通り
     const top5 = sorted
       .filter((h) => h.win_prob > 0)
       .slice(0, 5);
@@ -275,11 +316,50 @@ function generateBets(
               evReliable: comboOdds !== null,
               odds: comboOdds,
               kelly,
-              backtestRoi: BT_ROI["三連複"],
+              backtestRoi: roi["三連複"],
               comboProb: prob,
               comboKey,
             });
           }
+        }
+      }
+    }
+  } else {
+    // nagashi: ◎軸固定 + 2-5位から2頭選択 = 4C2 = 6通り
+    const top5 = sorted
+      .filter((h) => h.win_prob > 0)
+      .slice(0, 5);
+    if (top5.length >= 3) {
+      const pivot = top5[0]; // ◎（軸）
+      const partners = top5.slice(1); // 2-5位
+      const avgKelly = top5.reduce((s, h) => s + h.kelly_win, 0) / top5.length;
+      const numCombs = comb(partners.length, 2);
+      const totalAmount = Math.max(100 * numCombs, Math.round((budget * avgKelly * 0.5) / 100) * 100);
+      const perCombo = Math.max(100, Math.round(totalAmount / numCombs / 100) * 100);
+
+      for (let i = 0; i < partners.length; i++) {
+        for (let j = i + 1; j < partners.length; j++) {
+          const b = partners[i], c = partners[j];
+          const nums = [pivot.horse_number, b.horse_number, c.horse_number].sort((x, y) => x - y);
+          const comboKey = `trio-${nums[0]}-${nums[1]}-${nums[2]}`;
+          const prob = trioProb(normProbs, nums[0], nums[1], nums[2]);
+          const comboOdds = comboOddsMap[comboKey] ?? null;
+          const ev = comboOdds ? Math.round(prob * comboOdds * 100) / 100 : 0;
+          const kelly = comboOdds ? calcKelly(prob, comboOdds) : avgKelly;
+
+          bets.push({
+            type: "三連複",
+            targets: `${nums[0]}-${nums[1]}-${nums[2]}`,
+            description: `${pivot.horse_name}・${b.horse_name}・${c.horse_name}が1-2-3着（順不問）`,
+            amount: perCombo,
+            ev,
+            evReliable: comboOdds !== null,
+            odds: comboOdds,
+            kelly,
+            backtestRoi: roi["三連複"],
+            comboProb: prob,
+            comboKey,
+          });
         }
       }
     }
@@ -306,6 +386,13 @@ export function OddsProvider({ children }: { children: ReactNode }) {
 
   const [oddsMap, setOddsMap] = useState<Record<number, OddsEntry>>(initialOdds);
   const [comboOddsMap, setComboOddsMap] = useState<Record<string, number>>({});
+  const [comboMode, setComboModeState] = useState<ComboMode>("box");
+
+  // comboMode の localStorage 永続化
+  const setComboMode = useCallback((mode: ComboMode) => {
+    setComboModeState(mode);
+    try { localStorage.setItem("sakura-oracle-combo-mode", mode); } catch { /* ignore */ }
+  }, []);
 
   // Reset odds when race changes
   useEffect(() => {
@@ -356,6 +443,12 @@ export function OddsProvider({ children }: { children: ReactNode }) {
       const stored = localStorage.getItem(keys.combo);
       if (stored) {
         setComboOddsMap(JSON.parse(stored));
+      }
+    } catch { /* ignore */ }
+    try {
+      const stored = localStorage.getItem("sakura-oracle-combo-mode");
+      if (stored === "box" || stored === "nagashi") {
+        setComboModeState(stored);
       }
     } catch { /* ignore */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -451,8 +544,8 @@ export function OddsProvider({ children }: { children: ReactNode }) {
   );
 
   const liveBets = useMemo(
-    () => generateBets(liveHorses, normProbs, comboOddsMap),
-    [liveHorses, normProbs, comboOddsMap]
+    () => generateBets(liveHorses, normProbs, comboOddsMap, comboMode),
+    [liveHorses, normProbs, comboOddsMap, comboMode]
   );
 
   const value = useMemo<OddsContextValue>(
@@ -466,8 +559,10 @@ export function OddsProvider({ children }: { children: ReactNode }) {
       updateComboOdds,
       resetComboOdds,
       normProbs,
+      comboMode,
+      setComboMode,
     }),
-    [oddsMap, updateOdds, resetOdds, liveHorses, liveBets, comboOddsMap, updateComboOdds, resetComboOdds, normProbs]
+    [oddsMap, updateOdds, resetOdds, liveHorses, liveBets, comboOddsMap, updateComboOdds, resetComboOdds, normProbs, comboMode, setComboMode]
   );
 
   return (
