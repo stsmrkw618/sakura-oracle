@@ -601,9 +601,12 @@ def predict_race(race_label: str, override_race_id: str | None = None) -> None:
         },
     }
 
-    json_path = BASE_DIR / "frontend" / "src" / "data" / "predictions.json"
-    with open(json_path, "w", encoding="utf-8") as f:
-        json.dump(output, f, ensure_ascii=False, indent=2)
+    # predictions.jsonは桜花賞（メインレース）専用 — 他レースは上書きしない
+    if race_base == "桜花賞":
+        json_path = BASE_DIR / "frontend" / "src" / "data" / "predictions.json"
+        with open(json_path, "w", encoding="utf-8") as f:
+            json.dump(output, f, ensure_ascii=False, indent=2)
+        print(f"  predictions.json 更新（メインレース）")
 
     # --- public/races/ 出力（フロントエンドのレース選択UI用）---
     slug = RACE_SLUG.get(race_base, race_base)
@@ -656,7 +659,7 @@ def predict_race(race_label: str, override_race_id: str | None = None) -> None:
             f"{p['ev_win']:>5.2f} {p['kelly_win']:>7.4f}"
         )
 
-    print(f"\n  predictions.json 保存: {json_path}")
+    print(f"\n  races/{race_file_id}.json 保存完了")
     print(f"  出走馬: {len(predictions)}頭")
     marks = {m: sum(1 for p in predictions if p["mark"] == m) for m in ["◎", "○", "▲", "△", "×"]}
     print(f"  印: ◎{marks['◎']} ○{marks['○']} ▲{marks['▲']} △{marks['△']} ×{marks['×']}")
