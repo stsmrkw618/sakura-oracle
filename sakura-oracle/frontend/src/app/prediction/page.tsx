@@ -29,7 +29,8 @@ export default function PredictionPage() {
         ...h,
         ev_win: live?.ev_win ?? h.ev_win,
         ev_show: live?.ev_show ?? h.ev_show,
-        mark: live?.mark ?? h.mark,
+        // オッズ変更時のみ動的mark、未変更時はpredictions.jsonのオリジナルmark
+        mark: live?.oddsChanged ? live.mark : h.mark,
         oddsChanged: live?.oddsChanged ?? false,
         marketProb: live?.market_prob ?? 0,
       };
