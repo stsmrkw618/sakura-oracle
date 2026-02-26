@@ -636,6 +636,11 @@ def run_walk_forward(df: pd.DataFrame) -> tuple[list[dict], dict]:
         pred_top5_nums = set(test_df.nlargest(5, "pred_win")["horse_number"].values)
         pred_top2_nums = set(test_df.nlargest(2, "pred_win")["horse_number"].values)
 
+        # 軸馬 = pred_win最大の1頭（◎）
+        axis_num = int(test_df.nlargest(1, "pred_win")["horse_number"].values[0])
+        # 相手馬 = 2-5位
+        partners_4 = set(test_df.nlargest(5, "pred_win")["horse_number"].values) - {axis_num}
+
         # 馬連BOX(3): AI上位3頭のうち2頭が1-2着
         quinella_box3_hit = int(len(pred_top3_nums & actual_top2_nums) >= 2)
         # ワイド(上位2頭): AI上位2頭が両方3着以内
@@ -645,12 +650,28 @@ def run_walk_forward(df: pd.DataFrame) -> tuple[list[dict], dict]:
         # 三連複BOX(5): AI上位5頭のうち3頭が1-2-3着
         trio_box5_hit = int(len(pred_top5_nums & actual_top3_nums) >= 3)
 
+        # --- 軸流し的中判定 ---
+        # 馬連 軸1頭流し: ◎→{2-5位の4頭} = 4通り
+        # 的中条件: ◎が1-2着 かつ 相手4頭のうち1頭が1-2着
+        quinella_nagashi_hit = int(
+            axis_num in actual_top2_nums
+            and len(partners_4 & actual_top2_nums) >= 1
+        )
+        # 三連複 軸1頭流し: ◎固定 + {2-5位から2頭} = 4C2=6通り
+        # 的中条件: ◎が3着以内 かつ 相手4頭のうち2頭が3着以内
+        trio_nagashi_hit = int(
+            axis_num in actual_top3_nums
+            and len(partners_4 & actual_top3_nums) >= 2
+        )
+
         # === 組合せ馬券ROI計算（実配当ベース） ===
         race_payouts = payouts.get(current_race_id, {})
         quinella_box3_roi = 0.0
         wide_top2_roi = 0.0
         trio_box3_roi = 0.0
         trio_box5_roi = 0.0
+        quinella_nagashi_roi = 0.0
+        trio_nagashi_roi = 0.0
 
         if race_payouts:
             # 馬連BOX(3): 3C2=3通り×100円=300円投資
@@ -673,6 +694,16 @@ def run_walk_forward(df: pd.DataFrame) -> tuple[list[dict], dict]:
             if trio_box5_hit:
                 payout = _find_payout(race_payouts, "trio", actual_top3_nums)
                 trio_box5_roi = payout / 1000.0
+
+            # 馬連 軸1頭流し: 4通り×100円=400円投資
+            if quinella_nagashi_hit:
+                payout = _find_payout(race_payouts, "quinella", actual_top2_nums)
+                quinella_nagashi_roi = payout / 400.0
+
+            # 三連複 軸1頭流し: 4C2=6通り×100円=600円投資
+            if trio_nagashi_hit:
+                payout = _find_payout(race_payouts, "trio", actual_top3_nums)
+                trio_nagashi_roi = payout / 600.0
 
         # Kelly return (1/4 Kelly): AI本命馬の単勝Kelly
         ai_odds = float(top1["odds"])
@@ -716,6 +747,10 @@ def run_walk_forward(df: pd.DataFrame) -> tuple[list[dict], dict]:
             "wide_top2_roi": wide_top2_roi,
             "trio_box3_roi": trio_box3_roi,
             "trio_box5_roi": trio_box5_roi,
+            "quinella_nagashi_hit": quinella_nagashi_hit,
+            "trio_nagashi_hit": trio_nagashi_hit,
+            "quinella_nagashi_roi": quinella_nagashi_roi,
+            "trio_nagashi_roi": trio_nagashi_roi,
         })
 
     # --- キャリブレーター生成 & pickle保存 ---
@@ -763,6 +798,10 @@ def print_summary(
     trio3_hits = sum(r.get("trio_box3_hit", 0) for r in results)
     trio5_hits = sum(r.get("trio_box5_hit", 0) for r in results)
 
+    # 軸流し
+    quinella_nagashi_hits = sum(r.get("quinella_nagashi_hit", 0) for r in results)
+    trio_nagashi_hits = sum(r.get("trio_nagashi_hit", 0) for r in results)
+
     # 組合せ馬券ROI（投資額ベース）
     quinella_invest = n * 300  # 3通り×100円
     quinella_return = sum(r.get("quinella_box3_roi", 0) * 300 for r in results)
@@ -780,6 +819,15 @@ def print_summary(
     trio5_return = sum(r.get("trio_box5_roi", 0) * 1000 for r in results)
     trio5_roi = trio5_return / trio5_invest if trio5_invest > 0 else 0
 
+    # 軸流しROI
+    q_nagashi_invest = n * 400  # 4通り×100円
+    q_nagashi_return = sum(r.get("quinella_nagashi_roi", 0) * 400 for r in results)
+    q_nagashi_roi = q_nagashi_return / q_nagashi_invest if q_nagashi_invest > 0 else 0
+
+    t_nagashi_invest = n * 600  # 6通り×100円
+    t_nagashi_return = sum(r.get("trio_nagashi_roi", 0) * 600 for r in results)
+    t_nagashi_roi = t_nagashi_return / t_nagashi_invest if t_nagashi_invest > 0 else 0
+
     print(f"\n平均出走頭数: {avg_horses:.1f}頭")
     print(f"\n{'':>20} {'AI':>10} {'1番人気':>10} {'ランダム':>10}")
     print("-" * 55)
@@ -788,12 +836,14 @@ def print_summary(
     print(f"{'単勝回収率':>20} {win_roi:>9.0%} {'---':>10} {'---':>10}")
     print(f"{'複勝回収率':>20} {show_roi:>9.0%} {'---':>10} {'---':>10}")
 
-    print(f"\n{'組合せ馬券':>20} {'的中率':>10} {'回収率':>10}")
-    print("-" * 45)
-    print(f"  馬連BOX(3):   {quinella_hits}/{n} ({quinella_hits/n:>4.0%})  {quinella_roi:>6.0%}")
-    print(f"  ワイド(◎-○):  {wide_hits}/{n} ({wide_hits/n:>4.0%})  {wide_roi:>6.0%}")
-    print(f"  三連複BOX(3): {trio3_hits}/{n} ({trio3_hits/n:>4.0%})  {trio3_roi:>6.0%}")
-    print(f"  三連複BOX(5): {trio5_hits}/{n} ({trio5_hits/n:>4.0%})  {trio5_roi:>6.0%}")
+    print(f"\n{'組合せ馬券':>20} {'的中率':>10} {'回収率':>10} {'投資/R':>8}")
+    print("-" * 55)
+    print(f"  馬連BOX(3):        {quinella_hits:>2}/{n} ({quinella_hits/n:>4.0%})  {quinella_roi:>6.0%}   ¥300")
+    print(f"  馬連◎軸流し(4):   {quinella_nagashi_hits:>2}/{n} ({quinella_nagashi_hits/n:>4.0%})  {q_nagashi_roi:>6.0%}   ¥400")
+    print(f"  ワイド(◎-○):      {wide_hits:>2}/{n} ({wide_hits/n:>4.0%})  {wide_roi:>6.0%}   ¥100")
+    print(f"  三連複BOX(3):      {trio3_hits:>2}/{n} ({trio3_hits/n:>4.0%})  {trio3_roi:>6.0%}   ¥100")
+    print(f"  三連複BOX(5):      {trio5_hits:>2}/{n} ({trio5_hits/n:>4.0%})  {trio5_roi:>6.0%}  ¥1000")
+    print(f"  三連複◎軸流し(6): {trio_nagashi_hits:>2}/{n} ({trio_nagashi_hits/n:>4.0%})  {t_nagashi_roi:>6.0%}   ¥600")
 
     # --- グレード別 ---
     print(f"\n{'='*65}")
@@ -987,6 +1037,10 @@ def print_summary(
             "wide_top2_roi": round(wide_roi, 3),
             "trio_box3_roi": round(trio3_roi, 3),
             "trio_box5_roi": round(trio5_roi, 3),
+            "quinella_nagashi": round(quinella_nagashi_hits / n, 3) if n > 0 else 0,
+            "trio_nagashi": round(trio_nagashi_hits / n, 3) if n > 0 else 0,
+            "quinella_nagashi_roi": round(q_nagashi_roi, 3),
+            "trio_nagashi_roi": round(t_nagashi_roi, 3),
         },
         "by_grade": {},
         "by_race": {},

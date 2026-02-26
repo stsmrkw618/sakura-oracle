@@ -28,6 +28,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from ml.scraper.config import TARGET_RACES, DATA_DIR, BASE_DIR
 from ml.scraper.race_scraper import find_race_id_from_date
 from ml.scraper.entry_scraper import scrape_entries
+from ml.scraper.horse_history_scraper import build_features_from_history
 from ml.model.feature_engineering import RACE_META, get_race_base
 from ml.model.backtest_all_races import (
     _make_params_bin,
@@ -124,6 +125,7 @@ def _build_prediction_features(
     features_df: pd.DataFrame,
     race_meta: dict,
     race_id: str,
+    race_date: str = "",
 ) -> pd.DataFrame:
     """出馬表と features.csv を結合して予測用特徴量を構築する。
 
@@ -132,6 +134,7 @@ def _build_prediction_features(
         features_df: features.csv 全体
         race_meta: RACE_META から取得した {"distance", "venue", "grade", ...}
         race_id: 対象レースの race_id
+        race_date: レース開催日 (YYYYMMDD) — race_info.csvにない新規レース用フォールバック
 
     Returns:
         予測用 DataFrame（FEATURE_COLS_ALL のカラムを持つ）
@@ -145,7 +148,9 @@ def _build_prediction_features(
     if race_info_path.exists():
         ri = pd.read_csv(race_info_path, dtype={"race_id": str, "date": str})
         date_lookup = dict(zip(ri["race_id"], ri["date"]))
-    target_date = pd.to_datetime(date_lookup.get(race_id), format="%Y%m%d") if date_lookup.get(race_id) else None
+    # race_info.csvにない場合はrace_dateをフォールバックで使用
+    date_str = date_lookup.get(race_id) or race_date
+    target_date = pd.to_datetime(date_str, format="%Y%m%d", errors="coerce") if date_str else None
 
     # features.csv の馬名ベースで最新行を取得
     # race_id < 対象レース のデータのみ使用（リーケージ防止）
@@ -165,8 +170,27 @@ def _build_prediction_features(
             latest_jockey[str(jockey)] = group.iloc[-1]
 
     # field_strength 計算用: 全頭のオッズ逆数合計
-    odds_series = pd.to_numeric(entries.get("単勝オッズ"), errors="coerce").clip(lower=1.0)
+    raw_odds = entries.get("単勝オッズ")
+    if raw_odds is not None:
+        odds_series = pd.to_numeric(raw_odds, errors="coerce")
+        # 全NaN（オッズ未公開）の場合はデフォルト値を使用
+        if odds_series.notna().sum() == 0:
+            print("  ⚠️ オッズ未公開 — 均等オッズ(10.0)で仮計算")
+            odds_series = pd.Series([10.0] * len(entries))
+        else:
+            odds_series = odds_series.clip(lower=1.0)
+    else:
+        print("  ⚠️ オッズカラムなし — 均等オッズ(10.0)で仮計算")
+        odds_series = pd.Series([10.0] * len(entries))
     odds_inv_sum = (1.0 / odds_series).sum()
+
+    # 対象レース日の文字列（horse_history_scraper用）
+    target_date_str = date_lookup.get(race_id) or race_date
+
+    # 馬ページスクレイピングで補完された馬のリスト
+    scraped_horses: list[str] = []
+    # 全フォールバック（中央値）の馬のリスト
+    median_horses: list[str] = []
 
     for _, entry in entries.iterrows():
         horse_name = str(entry["馬名"])
@@ -176,14 +200,30 @@ def _build_prediction_features(
             # 過去データあり → features.csv から引き継ぎ
             row = hist.to_dict()
         else:
-            # 過去データなし → 警告 & 平均値で埋める
-            missing_horses.append(horse_name)
-            row = {}
-            for col in FEATURE_COLS_ALL:
-                if col in hist_df.columns:
-                    row[col] = hist_df[col].median()
-                else:
-                    row[col] = 0
+            # features.csv にない → 馬ページから全戦績を取得して特徴量構築
+            horse_id = str(entry.get("horse_id", ""))
+            scraped_features = None
+            if horse_id:
+                scraped_features = build_features_from_history(
+                    horse_id,
+                    target_date=target_date_str,
+                    horse_name=horse_name,
+                )
+
+            if scraped_features is not None:
+                # 馬ページから特徴量構築成功
+                row = scraped_features
+                scraped_horses.append(horse_name)
+            else:
+                # スクレイピング失敗 → 中央値フォールバック
+                missing_horses.append(horse_name)
+                median_horses.append(horse_name)
+                row = {}
+                for col in FEATURE_COLS_ALL:
+                    if col in hist_df.columns:
+                        row[col] = hist_df[col].median()
+                    else:
+                        row[col] = 0
 
         # 出馬表から上書き
         row["馬名"] = horse_name
@@ -205,7 +245,7 @@ def _build_prediction_features(
         else:
             row["field_strength"] = 1.0 / len(entries)
 
-        # 斤量 → weight
+        # 斤量 → weight（スクレイピング特徴量より出馬表の斤量を優先）
         weight_val = entry.get("斤量")
         if pd.notna(weight_val):
             row["weight"] = float(weight_val)
@@ -221,7 +261,7 @@ def _build_prediction_features(
                 elif old_weight and old_weight > 0:
                     row["weight_diff"] = w - old_weight
 
-        # 出走間隔（前回重賞→今回レースの週数）
+        # 出走間隔（features.csv経由の馬のみ従来ロジック、スクレイピング馬はrest_weeks設定済み）
         if hist is not None and target_date is not None:
             last_race_id = str(hist.get("race_id", ""))
             last_date_str = date_lookup.get(last_race_id)
@@ -239,11 +279,15 @@ def _build_prediction_features(
 
         rows.append(row)
 
-    if missing_horses:
-        print(f"\n  WARNING: features.csv に過去データがない馬 ({len(missing_horses)}頭):")
-        for h in missing_horses:
-            print(f"    - {h}")
-        print("  → 平均値で補完しました\n")
+    # 結果サマリー表示
+    if scraped_horses:
+        print(f"\n  ✅ 馬ページから特徴量補完: {len(scraped_horses)}頭")
+        for h in scraped_horses:
+            print(f"    ○ {h}")
+    if median_horses:
+        print(f"\n  ⚠️ 中央値フォールバック: {len(median_horses)}頭")
+        for h in median_horses:
+            print(f"    × {h}")
 
     pred_df = pd.DataFrame(rows)
 
@@ -256,11 +300,12 @@ def _build_prediction_features(
     return pred_df
 
 
-def predict_race(race_label: str) -> None:
+def predict_race(race_label: str, override_race_id: str | None = None) -> None:
     """メイン予測処理。
 
     Args:
         race_label: "チューリップ賞2026" のようなレースラベル
+        override_race_id: race_idを直接指定（netkeibaで自動検出できない場合）
     """
     print("=" * 60)
     print(f"SAKURA ORACLE — {race_label} 予測")
@@ -285,14 +330,20 @@ def predict_race(race_label: str) -> None:
 
     # --- 2. race_id 特定 ---
     target = _find_target_race(race_base, year)
-    if target is None:
-        print(f"ERROR: TARGET_RACES に '{race_base}{year}' が見つかりません")
-        sys.exit(1)
+    if override_race_id:
+        race_id = override_race_id
+        print(f"  race_id: {race_id}（手動指定）")
+    else:
+        if target is None:
+            print(f"ERROR: TARGET_RACES に '{race_base}{year}' が見つかりません")
+            sys.exit(1)
 
-    race_id = find_race_id_from_date(target["date"], target["keyword"], label=target["label"])
-    if race_id is None:
-        print(f"ERROR: race_id 特定失敗 (date={target['date']}, keyword={target['keyword']})")
-        sys.exit(1)
+        race_id = find_race_id_from_date(target["date"], target["keyword"], label=target["label"])
+        if race_id is None:
+            print(f"ERROR: race_id 特定失敗 (date={target['date']}, keyword={target['keyword']})")
+            print(f"  ヒント: --race-id オプションで直接指定できます")
+            print(f"  例: py ml/model/predict_race.py {race_label} --race-id 202609010411")
+            sys.exit(1)
 
     print(f"  race_id: {race_id}")
 
@@ -311,7 +362,9 @@ def predict_race(race_label: str) -> None:
     features_df = pd.read_csv(csv_path)
     print(f"  features.csv: {len(features_df)}行ロード")
 
-    pred_df = _build_prediction_features(entries, features_df, meta, race_id)
+    # target["date"] はrace_info.csvにない新規レース用のフォールバック日付
+    race_date = target["date"] if target else ""
+    pred_df = _build_prediction_features(entries, features_df, meta, race_id, race_date=race_date)
     print(f"  予測用データ: {len(pred_df)}頭 × {len(pred_df.columns)}カラム")
 
     # --- 5. Walk-Forward モデル学習 ---
@@ -612,10 +665,11 @@ def predict_race(race_label: str) -> None:
 
 def main() -> None:
     if len(sys.argv) < 2:
-        print("使い方: PYTHONIOENCODING=utf-8 py ml/model/predict_race.py <レース名+年>")
+        print("使い方: PYTHONIOENCODING=utf-8 py ml/model/predict_race.py <レース名+年> [--race-id <id>]")
         print()
         print("例:")
         print("  py ml/model/predict_race.py チューリップ賞2026")
+        print("  py ml/model/predict_race.py チューリップ賞2026 --race-id 202609010411")
         print("  py ml/model/predict_race.py フィリーズレビュー2026")
         print("  py ml/model/predict_race.py フェアリーS2026")
         print("  py ml/model/predict_race.py 桜花賞2025")
@@ -626,7 +680,13 @@ def main() -> None:
         sys.exit(1)
 
     race_label = sys.argv[1]
-    predict_race(race_label)
+    # --race-id オプション解析
+    override_race_id = None
+    if "--race-id" in sys.argv:
+        idx = sys.argv.index("--race-id")
+        if idx + 1 < len(sys.argv):
+            override_race_id = sys.argv[idx + 1]
+    predict_race(race_label, override_race_id=override_race_id)
 
 
 if __name__ == "__main__":

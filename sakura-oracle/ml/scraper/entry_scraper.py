@@ -57,11 +57,11 @@ def scrape_entries(race_id: str) -> pd.DataFrame:
     except Exception as e:
         raise RuntimeError(f"出馬表パース失敗: {e}") from e
 
-    # カラム名正規化
+    # カラム名正規化（スペース・全角を除去してマッチ）
     rename_map: dict[str, str] = {}
     for col in df.columns:
-        s = str(col).strip().replace("\u3000", "")
-        if s == "枠" or ("枠" in s and "番" in s):
+        s = str(col).strip().replace("\u3000", "").replace(" ", "")
+        if s == "枠" or s == "枠番" or ("枠" in s and "番" in s):
             rename_map[col] = "枠番"
         elif s == "馬番":
             rename_map[col] = "馬番"
@@ -75,7 +75,7 @@ def scrape_entries(race_id: str) -> pd.DataFrame:
             rename_map[col] = "騎手"
         elif "単勝" in s or "オッズ" in s:
             rename_map[col] = "単勝オッズ"
-        elif "人気" in s:
+        elif s == "人気":
             rename_map[col] = "人気"
         elif "馬体重" in s:
             rename_map[col] = "馬体重"
@@ -83,20 +83,52 @@ def scrape_entries(race_id: str) -> pd.DataFrame:
     if rename_map:
         df = df.rename(columns=rename_map)
 
-    # 馬番が数値でない行を除外（ヘッダ重複行など）
-    df["馬番"] = pd.to_numeric(df["馬番"], errors="coerce")
-    df = df.dropna(subset=["馬番"]).copy()
-    df["馬番"] = df["馬番"].astype(int)
+    # ヘッダ重複行を除外（先頭行がカラム名と同じ文字列のケース）
+    if "馬名" in df.columns:
+        df = df[df["馬名"] != "馬名"].copy()
 
-    # 枠番を数値化
+    # 馬番が存在し数値化可能なら使用、なければ連番を振る（枠順未確定時）
+    if "馬番" in df.columns:
+        df["馬番"] = pd.to_numeric(df["馬番"], errors="coerce")
+        if df["馬番"].notna().sum() > 0:
+            df = df.dropna(subset=["馬番"]).copy()
+            df["馬番"] = df["馬番"].astype(int)
+        else:
+            # 馬番が全てNaN（枠順未確定）→ 連番を振る
+            print("  ⚠️ 馬番未確定 — 仮番号を割り当て")
+            df = df[df["馬名"].notna()].copy()
+            df["馬番"] = range(1, len(df) + 1)
+    else:
+        # 馬番カラム自体がない → 連番を振る
+        print("  ⚠️ 馬番カラムなし — 仮番号を割り当て")
+        df = df[df["馬名"].notna()].copy()
+        df["馬番"] = range(1, len(df) + 1)
+
+    # 枠番を数値化（未確定なら0）
     if "枠番" in df.columns:
         df["枠番"] = pd.to_numeric(df["枠番"], errors="coerce").fillna(0).astype(int)
+    else:
+        df["枠番"] = 0
 
     # 馬名のクリーニング（改行・空白除去）
     if "馬名" in df.columns:
         df["馬名"] = df["馬名"].apply(
             lambda x: re.sub(r"\s+", "", str(x).strip()) if pd.notna(x) else x
         )
+
+    # horse_id 抽出（馬名リンクから /horse/{horse_id}/ を取得）
+    horse_id_map: dict[str, str] = {}
+    for link in soup.select('a[href*="/horse/"]'):
+        href = link.get("href", "")
+        text = re.sub(r"\s+", "", link.get_text(strip=True))
+        m = re.search(r"/horse/(\d{9,10})", href)
+        if m and text and len(text) > 1:
+            horse_id_map[text] = m.group(1)
+
+    if "馬名" in df.columns:
+        df["horse_id"] = df["馬名"].map(horse_id_map).fillna("")
+        matched = (df["horse_id"] != "").sum()
+        print(f"  horse_id マッチ: {matched}/{len(df)}頭")
 
     # オッズ・人気を数値化
     if "単勝オッズ" in df.columns:
