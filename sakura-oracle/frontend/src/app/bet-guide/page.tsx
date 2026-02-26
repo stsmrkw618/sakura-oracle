@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import OddsInput from "@/components/OddsInput";
-import { useOdds, type ComboMode } from "@/context/OddsContext";
+import { useOdds } from "@/context/OddsContext";
 import { useRace } from "@/context/RaceContext";
 
 const fadeIn = {
