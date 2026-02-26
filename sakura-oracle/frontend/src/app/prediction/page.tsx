@@ -145,23 +145,23 @@ export default function PredictionPage() {
           <dl className="space-y-2 text-xs">
             <div>
               <dt className="text-white font-bold inline">◎ 本命</dt>
-              <dd className="text-muted-foreground inline ml-1">— AIが最も勝つ可能性が高いと判断した馬</dd>
+              <dd className="text-muted-foreground inline ml-1">— AI予測確率×オッズで最も投資価値が高い馬（Kelly基準1位）</dd>
             </div>
             <div>
               <dt className="text-white font-bold inline">○ 対抗</dt>
-              <dd className="text-muted-foreground inline ml-1">— 本命に次ぐ有力馬。本命を負かす可能性あり</dd>
+              <dd className="text-muted-foreground inline ml-1">— 本命に次ぐ投資価値。勝率・オッズのバランスが良い</dd>
             </div>
             <div>
               <dt className="text-white font-bold inline">▲ 単穴</dt>
-              <dd className="text-muted-foreground inline ml-1">— 人気薄だが一発あり得る穴馬。単勝で狙う価値あり</dd>
+              <dd className="text-muted-foreground inline ml-1">— プラス期待値あり。人気薄でも狙う価値がある穴馬</dd>
             </div>
             <div>
               <dt className="text-white font-bold inline">△ 連下</dt>
-              <dd className="text-muted-foreground inline ml-1">— 1着は厳しいが2〜3着に来る可能性がある馬</dd>
+              <dd className="text-muted-foreground inline ml-1">— 勝率は高いがオッズが低く旨味が薄い。複勝・ワイド向き</dd>
             </div>
             <div>
               <dt className="text-white font-bold inline">× 消し</dt>
-              <dd className="text-muted-foreground inline ml-1">— 好走の可能性が低いとAIが判断した馬</dd>
+              <dd className="text-muted-foreground inline ml-1">— 期待値がマイナス。オッズに対して勝率が見合わない</dd>
             </div>
             <hr className="border-white/5 my-2" />
             <div>
