@@ -392,6 +392,19 @@ def generate_top_bets(
         json.dump(top_bets, f, ensure_ascii=False, indent=2)
 
     print(f"\n  💾 {output_path} 保存完了（{len(top_bets)}件）")
+
+    # スクレイピングオッズがある場合、フロントエンド用の comboKey→odds マップも保存
+    if odds_data is not None:
+        from ml.scraper.odds_scraper import to_combo_odds_map
+
+        combo_map = to_combo_odds_map(odds_data)
+        # tulip2026_top_bets.json → tulip2026_combo_odds.json
+        base = Path(output_path)
+        combo_odds_path = base.parent / base.name.replace("_top_bets.json", "_combo_odds.json")
+        with open(combo_odds_path, "w", encoding="utf-8") as f:
+            json.dump(combo_map, f, ensure_ascii=False, indent=2)
+        print(f"  💾 {combo_odds_path} 保存完了（{len(combo_map)}件）")
+
     return top_bets
 
 

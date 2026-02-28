@@ -379,7 +379,7 @@ function generateBets(
 const OddsContext = createContext<OddsContextValue | null>(null);
 
 export function OddsProvider({ children }: { children: ReactNode }) {
-  const { predictions, selectedRaceId } = useRace();
+  const { predictions, selectedRaceId, scrapedComboOdds } = useRace();
   const prevRaceIdRef = useRef(selectedRaceId);
 
   const initialOdds = useMemo(
@@ -420,12 +420,14 @@ export function OddsProvider({ children }: { children: ReactNode }) {
       try {
         const stored = localStorage.getItem(keys.combo);
         if (stored) {
+          // ユーザー手動上書き優先
           setComboOddsMap(JSON.parse(stored));
         } else {
-          setComboOddsMap({});
+          // localStorageにない → スクレイピングオッズを初期値に使用
+          setComboOddsMap(scrapedComboOdds);
         }
       } catch {
-        setComboOddsMap({});
+        setComboOddsMap(scrapedComboOdds);
       }
     } else {
       // Same race but predictions data refreshed (initial load) — sync initialOdds
@@ -446,6 +448,9 @@ export function OddsProvider({ children }: { children: ReactNode }) {
       const stored = localStorage.getItem(keys.combo);
       if (stored) {
         setComboOddsMap(JSON.parse(stored));
+      } else if (Object.keys(scrapedComboOdds).length > 0) {
+        // localStorageにない → スクレイピングオッズを初期値に使用
+        setComboOddsMap(scrapedComboOdds);
       }
     } catch { /* ignore */ }
     try {
@@ -456,6 +461,18 @@ export function OddsProvider({ children }: { children: ReactNode }) {
     } catch { /* ignore */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // scrapedComboOdds がfetch完了で更新されたら、localStorageに保存がない場合のみ反映
+  useEffect(() => {
+    if (Object.keys(scrapedComboOdds).length === 0) return;
+    const keys = storageKey(selectedRaceId);
+    try {
+      const stored = localStorage.getItem(keys.combo);
+      if (!stored) {
+        setComboOddsMap(scrapedComboOdds);
+      }
+    } catch { /* ignore */ }
+  }, [scrapedComboOdds, selectedRaceId]);
 
   // Persist to localStorage on change
   useEffect(() => {
@@ -489,10 +506,11 @@ export function OddsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resetComboOdds = useCallback(() => {
-    setComboOddsMap({});
+    // スクレイピングオッズにリセット（空ではなく）
+    setComboOddsMap(scrapedComboOdds);
     const keys = storageKey(selectedRaceId);
     try { localStorage.removeItem(keys.combo); } catch { /* ignore */ }
-  }, [selectedRaceId]);
+  }, [selectedRaceId, scrapedComboOdds]);
 
   // Compute live horses with dynamic EV, Kelly, mark, market_prob
   const liveHorses = useMemo(() => {

@@ -235,6 +235,39 @@ def scrape_combo_odds(race_id: str) -> list[dict]:
     return all_results
 
 
+# フロントエンドの comboKey プレフィックス
+TYPE_TO_PREFIX: dict[str, str] = {
+    "馬連": "quinella",
+    "ワイド": "wide",
+    "三連複": "trio",
+}
+
+
+def to_combo_odds_map(odds_list: list[dict]) -> dict[str, float]:
+    """スクレイピング結果をcomboKey→oddsマップに変換（フロントエンド用）。
+
+    馬単/三連単はフロントのBOX/軸流しで未使用のためスキップ。
+
+    Args:
+        odds_list: scrape_combo_odds() の戻り値
+            [{"type": "馬連", "horses": [5, 12], "odds": 10.6}, ...]
+
+    Returns:
+        {"quinella-5-12": 10.6, "wide-5-12": 114.2, "trio-5-9-12": 1858.3, ...}
+    """
+    result: dict[str, float] = {}
+    for entry in odds_list:
+        prefix = TYPE_TO_PREFIX.get(entry["type"])
+        if prefix is None:
+            # 馬単・三連単はフロントで未使用 → スキップ
+            continue
+        # 馬番をソートしてキー生成（フロントと同じ形式）
+        nums = sorted(entry["horses"])
+        key = f"{prefix}-{'-'.join(str(n) for n in nums)}"
+        result[key] = entry["odds"]
+    return result
+
+
 def main() -> None:
     """CLI エントリーポイント。"""
     if len(sys.argv) < 2:

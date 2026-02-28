@@ -38,6 +38,8 @@ interface RaceContextValue {
   selectRace: (id: string) => void;
   predictions: PredictionsData;
   topBets: TopBet[];
+  /** スクレイピング済み組合せオッズ（comboKey → odds） */
+  scrapedComboOdds: Record<string, number>;
   isLoading: boolean;
 }
 
@@ -51,6 +53,7 @@ export function RaceProvider({ children }: { children: ReactNode }) {
   const [selectedRaceId, setSelectedRaceId] = useState<string | null>(null);
   const [predictions, setPredictions] = useState<PredictionsData>(defaultPredictions);
   const [topBets, setTopBets] = useState<TopBet[]>([]);
+  const [scrapedComboOdds, setScrapedComboOdds] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(false);
 
   // Fetch race index on mount
@@ -81,6 +84,7 @@ export function RaceProvider({ children }: { children: ReactNode }) {
     if (!selectedRaceId || selectedRaceId === DEFAULT_RACE_ID) {
       setPredictions(defaultPredictions);
       setTopBets([]);
+      setScrapedComboOdds({});
       return;
     }
 
@@ -88,9 +92,10 @@ export function RaceProvider({ children }: { children: ReactNode }) {
     (async () => {
       setIsLoading(true);
       try {
-        const [raceRes, topBetsRes] = await Promise.all([
+        const [raceRes, topBetsRes, comboOddsRes] = await Promise.all([
           fetch(`/races/${selectedRaceId}.json`),
           fetch(`/races/${selectedRaceId}_top_bets.json`).catch(() => null),
+          fetch(`/races/${selectedRaceId}_combo_odds.json`).catch(() => null),
         ]);
         if (!raceRes.ok) throw new Error("fetch failed");
         const data: PredictionsData = await raceRes.json();
@@ -105,10 +110,21 @@ export function RaceProvider({ children }: { children: ReactNode }) {
             setTopBets([]);
           }
         }
+
+        // combo_odds.json — スクレイピング済み組合せオッズ
+        if (!cancelled) {
+          if (comboOddsRes && comboOddsRes.ok) {
+            const oddsData: Record<string, number> = await comboOddsRes.json();
+            setScrapedComboOdds(typeof oddsData === "object" && oddsData ? oddsData : {});
+          } else {
+            setScrapedComboOdds({});
+          }
+        }
       } catch {
         if (!cancelled) {
           setPredictions(defaultPredictions);
           setTopBets([]);
+          setScrapedComboOdds({});
         }
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -129,8 +145,8 @@ export function RaceProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<RaceContextValue>(
-    () => ({ races, selectedRaceId, selectRace, predictions, topBets, isLoading }),
-    [races, selectedRaceId, selectRace, predictions, topBets, isLoading],
+    () => ({ races, selectedRaceId, selectRace, predictions, topBets, scrapedComboOdds, isLoading }),
+    [races, selectedRaceId, selectRace, predictions, topBets, scrapedComboOdds, isLoading],
   );
 
   return (
