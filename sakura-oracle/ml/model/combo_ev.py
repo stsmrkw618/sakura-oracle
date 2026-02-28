@@ -23,12 +23,15 @@ from ml.scraper.config import BASE_DIR
 
 
 # --- シート名→馬券タイプのマッピング ---
+# netkeibaのExcelは「3連単」「3連複」のように数字表記
 SHEET_MAP: dict[str, str] = {
     "馬連": "馬連",
     "ワイド": "ワイド",
     "三連複": "三連複",
+    "3連複": "三連複",
     "馬単": "馬単",
     "三連単": "三連単",
+    "3連単": "三連単",
 }
 
 
@@ -71,6 +74,13 @@ def _parse_horse_numbers(val: str | float) -> list[int]:
 def _load_excel_odds(excel_path: str | Path) -> list[dict]:
     """Excelファイルから全シートの組合せオッズを読み込む。
 
+    netkeiba形式:
+        - 馬番は「1頭目」「2頭目」「3頭目」列に分離
+        - オッズは「オッズ」列
+        - NaN行（空行）が交互に挟まる
+        - 0行目がサブヘッダー（「馬番」「馬名」等）の場合あり
+        - 「単勝・複勝」シートはスキップ
+
     Returns:
         [{"type": "馬連", "horses": [3, 12], "odds": 201.1}, ...]
     """
@@ -78,6 +88,11 @@ def _load_excel_odds(excel_path: str | Path) -> list[dict]:
     results = []
 
     for sheet_name in xls.sheet_names:
+        # 単勝・複勝シートは組合せ馬券ではないのでスキップ
+        if "単勝" in sheet_name or "複勝" in sheet_name:
+            print(f"  📌 {sheet_name}: スキップ（単勝・複勝は別処理）")
+            continue
+
         # シート名からタイプを判定
         bet_type = None
         for key, val in SHEET_MAP.items():
@@ -92,39 +107,61 @@ def _load_excel_odds(excel_path: str | Path) -> list[dict]:
         if df.empty:
             continue
 
-        # カラム名の正規化（最初の2列が馬番組合せ+オッズの想定）
-        # netkeibaのExcelは「組合せ」「オッズ」のような列名
         cols = list(df.columns)
 
-        # 組合せ列とオッズ列を特定
-        combo_col = None
+        # --- 馬番列を特定（「1頭目」「2頭目」「3頭目」） ---
+        horse_cols: list[str] = []
+        for c in cols:
+            c_str = str(c).strip()
+            if "頭目" in c_str:
+                horse_cols.append(c)
+
+        # --- オッズ列を特定 ---
         odds_col = None
         for c in cols:
             c_str = str(c).strip()
-            if "組" in c_str or "番" in c_str or "馬" in c_str:
-                combo_col = c
-            elif "オッズ" in c_str or "odds" in c_str.lower() or "倍" in c_str:
+            if "オッズ" in c_str:
                 odds_col = c
+                break
 
-        # カラム名で見つからない場合は位置ベースで推定
-        if combo_col is None and len(cols) >= 1:
-            combo_col = cols[0]
-        if odds_col is None and len(cols) >= 2:
-            odds_col = cols[1]
+        # フォールバック: 位置ベース推定
+        if not horse_cols and odds_col is None:
+            # netkeiba形式: [人気, 選択, 組み合わせ, オッズ, 1頭目, _, 2頭目, _, 3頭目, _]
+            if len(cols) >= 4:
+                odds_col = cols[3]  # 「オッズ」
+            # 馬番列は4番目以降の偶数インデックス
+            for i in range(4, len(cols), 2):
+                horse_cols.append(cols[i])
 
-        if combo_col is None or odds_col is None:
-            print(f"  ⚠️ {sheet_name}: カラム特定失敗（スキップ）")
+        if odds_col is None:
+            print(f"  ⚠️ {sheet_name}: オッズ列特定失敗（スキップ）")
             continue
 
+        sheet_count = 0
         for _, row in df.iterrows():
-            combo_val = row[combo_col]
+            # オッズ値取得
             odds_val = row[odds_col]
-
-            if pd.isna(combo_val) or pd.isna(odds_val):
+            if pd.isna(odds_val):
                 continue
 
-            horses = _parse_horse_numbers(str(combo_val))
+            # 馬番を個別列から収集
+            horses: list[int] = []
+            for hc in horse_cols:
+                v = row[hc]
+                if pd.notna(v):
+                    try:
+                        num = int(float(v))
+                        if 1 <= num <= 18:
+                            horses.append(num)
+                    except (ValueError, TypeError):
+                        continue
+
             if not horses:
+                continue
+
+            # 必要な馬番数を馬券タイプで検証
+            required = {"馬連": 2, "ワイド": 2, "馬単": 2, "三連複": 3, "三連単": 3}
+            if len(horses) < required.get(bet_type, 2):
                 continue
 
             # オッズ変換（ワイドはレンジ表記対応）
@@ -144,8 +181,11 @@ def _load_excel_odds(excel_path: str | Path) -> list[dict]:
                 "horses": horses,
                 "odds": odds,
             })
+            sheet_count += 1
 
-    print(f"  Excel読込: {len(results)}件のオッズデータ")
+        print(f"  📊 {sheet_name}: {sheet_count}件")
+
+    print(f"  Excel読込合計: {len(results)}件のオッズデータ")
     return results
 
 
