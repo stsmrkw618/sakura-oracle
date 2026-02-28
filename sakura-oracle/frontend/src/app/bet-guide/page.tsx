@@ -230,15 +230,38 @@ export default function BetGuidePage() {
         {topBets.length > 0 && (
           <motion.section {...fadeIn} transition={{ delay: 0.08 }}>
             <div className="bg-card rounded-xl p-4 border border-gold/20">
-              <h2 className="text-sm font-bold text-gold mb-3">
+              <h2 className="text-sm font-bold text-gold mb-1">
                 🏆 AI推奨 TOP10
               </h2>
-              <p className="text-[10px] text-muted-foreground mb-3">
-                netkeibaオッズ × AI確率から算出したEV上位の買い目。予算スライダーに連動して配分額が変わります。
+              <p className="text-[10px] text-muted-foreground mb-4">
+                netkeibaオッズ × AI勝率からEV(期待値)上位を抽出。Kelly基準で期待値が高い買い目ほど多く配分します。
               </p>
 
+              {/* 予算スライダー（TOP10専用） */}
+              <div className="mb-4">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-muted-foreground">予算</span>
+                  <span className="font-mono text-gold text-lg font-bold">
+                    ¥{budget.toLocaleString()}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={1000}
+                  max={30000}
+                  step={500}
+                  value={budget}
+                  onChange={(e) => setBudget(Number(e.target.value))}
+                  className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer accent-gold"
+                />
+                <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                  <span>¥1,000</span>
+                  <span>¥30,000</span>
+                </div>
+              </div>
+
               {(() => {
-                // Kelly配分ロジック（liveBetsと同じ2パスアルゴリズム）
+                // Kelly配分ロジック: 各買い目のkelly値に比例して予算を配分
                 const weights = topBets.map((b) =>
                   b.kelly > 0 && b.ev >= 1.0 ? b.kelly : 0
                 );
@@ -249,7 +272,7 @@ export default function BetGuidePage() {
                   return Math.max(100, Math.round((w / totalWeight) * budget / 100) * 100);
                 });
 
-                // 合計調整
+                // 合計 = 予算 になるよう調整
                 let total = amounts.reduce((s, a) => s + a, 0);
                 if (totalWeight > 0) {
                   const maxIdx = weights.indexOf(Math.max(...weights));
@@ -284,48 +307,71 @@ export default function BetGuidePage() {
 
                 return (
                   <>
-                    <div className="space-y-2 mb-4">
-                      {topBets.map((bet, i) => (
-                        <div
-                          key={`top-${i}`}
-                          className={`flex items-center gap-2 text-xs ${
-                            amounts[i] === 0 ? "opacity-40" : ""
-                          }`}
-                        >
-                          <span className="text-sakura-pink font-bold w-12 shrink-0">
-                            {bet.type}
-                          </span>
-                          <span className="text-white font-mono w-16 shrink-0">
-                            {bet.targets}
-                          </span>
-                          <span className="text-muted-foreground truncate flex-1 text-[10px]">
-                            {bet.names}
-                          </span>
-                          <span className="font-mono text-[10px] text-muted-foreground w-10 text-right shrink-0">
-                            {bet.odds.toFixed(1)}
-                          </span>
-                          <span
-                            className={`font-mono text-[10px] w-10 text-right shrink-0 ${
-                              bet.ev >= 2.0
-                                ? "text-gold font-bold"
-                                : bet.ev >= 1.0
-                                  ? "text-green-400"
-                                  : "text-red-400"
+                    {/* ヘッダー */}
+                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground mb-1 px-0.5">
+                      <span className="w-12 shrink-0">券種</span>
+                      <span className="w-16 shrink-0">馬番</span>
+                      <span className="flex-1">馬名</span>
+                      <span className="w-12 text-right shrink-0">オッズ</span>
+                      <span className="w-8 text-right shrink-0">EV</span>
+                      <span className="w-16 text-right shrink-0">配分</span>
+                      <span className="w-16 text-right shrink-0">的中時</span>
+                    </div>
+
+                    <div className="space-y-1 mb-4">
+                      {topBets.map((bet, i) => {
+                        const hitReturn = amounts[i] > 0 ? Math.round(amounts[i] * bet.odds) : 0;
+                        return (
+                          <div
+                            key={`top-${i}`}
+                            className={`flex items-center gap-1 text-xs rounded-lg px-0.5 py-1 ${
+                              amounts[i] === 0
+                                ? "opacity-30"
+                                : i === 0
+                                  ? "bg-gold/10 border border-gold/20"
+                                  : "hover:bg-white/5"
                             }`}
                           >
-                            {bet.ev.toFixed(1)}
-                          </span>
-                          <span className="font-mono text-gold font-bold w-14 text-right shrink-0">
-                            {amounts[i] > 0
-                              ? `¥${amounts[i].toLocaleString()}`
-                              : "---"}
-                          </span>
-                        </div>
-                      ))}
+                            <span className="text-sakura-pink font-bold w-12 shrink-0">
+                              {bet.type}
+                            </span>
+                            <span className="text-white font-mono w-16 shrink-0">
+                              {bet.targets}
+                            </span>
+                            <span className="text-muted-foreground truncate flex-1 text-[10px]">
+                              {bet.names}
+                            </span>
+                            <span className="font-mono text-[10px] text-muted-foreground w-12 text-right shrink-0">
+                              {bet.odds.toFixed(1)}
+                            </span>
+                            <span
+                              className={`font-mono text-[10px] w-8 text-right shrink-0 font-bold ${
+                                bet.ev >= 2.0
+                                  ? "text-gold"
+                                  : bet.ev >= 1.5
+                                    ? "text-green-400"
+                                    : "text-green-400/70"
+                              }`}
+                            >
+                              {bet.ev.toFixed(1)}
+                            </span>
+                            <span className="font-mono text-gold font-bold w-16 text-right shrink-0">
+                              {amounts[i] > 0
+                                ? `¥${amounts[i].toLocaleString()}`
+                                : "---"}
+                            </span>
+                            <span className="font-mono text-[10px] text-green-400 w-16 text-right shrink-0">
+                              {hitReturn > 0
+                                ? `¥${hitReturn.toLocaleString()}`
+                                : "---"}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
 
                     {/* KPI */}
-                    <div className="grid grid-cols-3 gap-2 text-center border-t border-white/10 pt-3">
+                    <div className="grid grid-cols-3 gap-2 text-center border-t border-white/10 pt-3 mb-3">
                       <div>
                         <p className="text-[10px] text-muted-foreground">合計投資</p>
                         <p className="font-mono text-sm font-bold">
@@ -349,6 +395,20 @@ export default function BetGuidePage() {
                           {topRoi.toFixed(0)}%
                         </p>
                       </div>
+                    </div>
+
+                    {/* 配分戦略の説明 */}
+                    <div className="bg-navy/50 rounded-lg p-3 text-[10px] text-muted-foreground leading-relaxed space-y-1">
+                      <p>
+                        <span className="text-gold font-bold">配分ロジック:</span>{" "}
+                        Kelly基準（1/4 Kelly）に基づき、期待値が高い買い目ほど多く配分。
+                        EV &lt; 1.0（マイナス期待値）の買い目には配分しません。
+                      </p>
+                      <p>
+                        <span className="text-green-400 font-bold">的中時:</span>{" "}
+                        その買い目が的中した場合の払い戻し額（= 配分額 × オッズ）。
+                        1つでも的中すれば大幅プラスになる構成です。
+                      </p>
                     </div>
                   </>
                 );
@@ -374,7 +434,7 @@ export default function BetGuidePage() {
               <input
                 type="range"
                 min={1000}
-                max={10000}
+                max={30000}
                 step={500}
                 value={budget}
                 onChange={(e) => setBudget(Number(e.target.value))}
@@ -382,7 +442,7 @@ export default function BetGuidePage() {
               />
               <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
                 <span>¥1,000</span>
-                <span>¥10,000</span>
+                <span>¥30,000</span>
               </div>
             </div>
 
