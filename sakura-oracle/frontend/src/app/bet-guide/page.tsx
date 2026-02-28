@@ -220,7 +220,7 @@ export default function BetGuidePage() {
             </div>
             <p className="text-[10px] text-muted-foreground">
               {comboMode === "box"
-                ? "BOX: 上位馬の全組合せを均等に購入。的中率が高く安定した回収。"
+                ? "BOX: 上位馬の全組合せを購入。Kelly基準で期待値の高い組合せに傾斜配分。"
                 : "◎軸流し: AI本命◎を軸に固定し、相手を広く取る。点数を絞って高配当を狙う戦略。"}
             </p>
           </div>
