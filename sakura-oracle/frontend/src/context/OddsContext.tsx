@@ -462,7 +462,7 @@ export function OddsProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // scrapedComboOdds がfetch完了で更新されたら、localStorageに保存がない場合のみ反映
+  // scrapedComboOdds がfetch完了で更新されたら、localStorageにユーザー入力がない場合のみ反映
   useEffect(() => {
     if (Object.keys(scrapedComboOdds).length === 0) return;
     const keys = storageKey(selectedRaceId);
@@ -470,6 +470,12 @@ export function OddsProvider({ children }: { children: ReactNode }) {
       const stored = localStorage.getItem(keys.combo);
       if (!stored) {
         setComboOddsMap(scrapedComboOdds);
+      } else {
+        // 空オブジェクト "{}" が保存されている場合もスクレイピングデータで上書き
+        const parsed = JSON.parse(stored);
+        if (Object.keys(parsed).length === 0) {
+          setComboOddsMap(scrapedComboOdds);
+        }
       }
     } catch { /* ignore */ }
   }, [scrapedComboOdds, selectedRaceId]);
@@ -481,6 +487,8 @@ export function OddsProvider({ children }: { children: ReactNode }) {
   }, [oddsMap, selectedRaceId]);
 
   useEffect(() => {
+    // 空のcomboOddsMapは保存しない（scrapedComboOdds到着前の初期状態を上書きしないため）
+    if (Object.keys(comboOddsMap).length === 0) return;
     const keys = storageKey(selectedRaceId);
     try { localStorage.setItem(keys.combo, JSON.stringify(comboOddsMap)); } catch { /* ignore */ }
   }, [comboOddsMap, selectedRaceId]);
