@@ -130,6 +130,22 @@ function calcMark(
   return "×";
 }
 
+/** Kelly値に基づいて予算を傾斜配分する（最低100円、100円単位） */
+function allocateByKelly(bets: Bet[], totalAmount: number): void {
+  if (bets.length === 0) return;
+  const totalKelly = bets.reduce((s, b) => s + b.kelly, 0);
+  if (totalKelly <= 0) {
+    // Kelly全ゼロ → 均等配分
+    const perBet = Math.max(100, Math.round(totalAmount / bets.length / 100) * 100);
+    for (const b of bets) b.amount = perBet;
+    return;
+  }
+  for (const b of bets) {
+    const weight = b.kelly / totalKelly;
+    b.amount = Math.max(100, Math.round((totalAmount * weight) / 100) * 100);
+  }
+}
+
 // --- Bet generation (Kelly-based — mirrors predictor.py) ---
 
 function generateBets(
@@ -187,15 +203,15 @@ function generateBets(
 
   // 馬連: BOX=上位3頭のBOX(3通り) / nagashi=◎軸→2-5位(4通り)
   if (comboMode === "box") {
-    // BOX: 上位2-3頭の全組合せ
+    // BOX: 上位2-3頭の全組合せ（Kelly傾斜配分）
     if (topHorses.length >= 2) {
       const slice = topHorses.slice(0, 3);
       const n = slice.length;
       const numCombs = comb(n, 2);
       const avgKelly = slice.reduce((s, h) => s + h.kelly_win, 0) / slice.length;
       const totalAmount = Math.max(100 * numCombs, Math.round((budget * avgKelly) / 100) * 100);
-      const perCombo = Math.max(100, Math.round(totalAmount / numCombs / 100) * 100);
 
+      const quinellaBets: Bet[] = [];
       for (let i = 0; i < slice.length; i++) {
         for (let j = i + 1; j < slice.length; j++) {
           const a = slice[i], b = slice[j];
@@ -206,11 +222,11 @@ function generateBets(
           const ev = comboOdds ? Math.round(prob * comboOdds * 100) / 100 : 0;
           const kelly = comboOdds ? calcKelly(prob, comboOdds) : avgKelly;
 
-          bets.push({
+          quinellaBets.push({
             type: "馬連",
             targets: `${nums[0]}-${nums[1]}`,
             description: `${a.horse_name}と${b.horse_name}が1着2着（順不問）`,
-            amount: perCombo,
+            amount: 0,
             ev,
             evReliable: comboOdds !== null,
             odds: comboOdds,
@@ -221,9 +237,11 @@ function generateBets(
           });
         }
       }
+      allocateByKelly(quinellaBets, totalAmount);
+      bets.push(...quinellaBets);
     }
   } else {
-    // nagashi馬連: 勝率1位を軸 → 勝率2-5位への4通り
+    // nagashi馬連: 勝率1位を軸 → 勝率2-5位への4通り（Kelly傾斜配分）
     // 軸は「来る確率が最も高い馬」であるべき（Kelly=投資価値とは別）
     const byProb = [...horses].sort((a, b) => b.win_prob - a.win_prob);
     if (byProb.length >= 2) {
@@ -232,8 +250,8 @@ function generateBets(
       const avgKelly = [pivot, ...partners].reduce((s, h) => s + h.kelly_win, 0) / (partners.length + 1);
       const numCombs = partners.length;
       const totalAmount = Math.max(100 * numCombs, Math.round((budget * avgKelly) / 100) * 100);
-      const perCombo = Math.max(100, Math.round(totalAmount / numCombs / 100) * 100);
 
+      const nagashiBets: Bet[] = [];
       for (const partner of partners) {
         const nums = [pivot.horse_number, partner.horse_number].sort((x, y) => x - y);
         const comboKey = `quinella-${nums[0]}-${nums[1]}`;
@@ -242,11 +260,11 @@ function generateBets(
         const ev = comboOdds ? Math.round(prob * comboOdds * 100) / 100 : 0;
         const kelly = comboOdds ? calcKelly(prob, comboOdds) : avgKelly;
 
-        bets.push({
+        nagashiBets.push({
           type: "馬連",
           targets: `${nums[0]}-${nums[1]}`,
           description: `${pivot.horse_name}と${partner.horse_name}が1着2着（順不問）`,
-          amount: perCombo,
+          amount: 0,
           ev,
           evReliable: comboOdds !== null,
           odds: comboOdds,
@@ -256,6 +274,8 @@ function generateBets(
           comboKey,
         });
       }
+      allocateByKelly(nagashiBets, totalAmount);
+      bets.push(...nagashiBets);
     }
   }
 
@@ -287,7 +307,7 @@ function generateBets(
 
   // 三連複: BOX=上位5頭(10通り) / nagashi=◎軸+2-5位から2頭(6通り)
   if (comboMode === "box") {
-    // BOX(5): 上位5頭から全10通り
+    // BOX(5): 上位5頭から全10通り（Kelly傾斜配分）
     const top5 = sorted
       .filter((h) => h.win_prob > 0)
       .slice(0, 5);
@@ -296,8 +316,8 @@ function generateBets(
       const numCombs = comb(n, 3);
       const avgKelly = top5.reduce((s, h) => s + h.kelly_win, 0) / top5.length;
       const totalAmount = Math.max(100 * numCombs, Math.round((budget * avgKelly * 0.5) / 100) * 100);
-      const perCombo = Math.max(100, Math.round(totalAmount / numCombs / 100) * 100);
 
+      const trioBets: Bet[] = [];
       for (let i = 0; i < top5.length; i++) {
         for (let j = i + 1; j < top5.length; j++) {
           for (let k = j + 1; k < top5.length; k++) {
@@ -309,11 +329,11 @@ function generateBets(
             const ev = comboOdds ? Math.round(prob * comboOdds * 100) / 100 : 0;
             const kelly = comboOdds ? calcKelly(prob, comboOdds) : avgKelly;
 
-            bets.push({
+            trioBets.push({
               type: "三連複",
               targets: `${nums[0]}-${nums[1]}-${nums[2]}`,
               description: `${a.horse_name}・${b.horse_name}・${c.horse_name}が1-2-3着（順不問）`,
-              amount: perCombo,
+              amount: 0,
               ev,
               evReliable: comboOdds !== null,
               odds: comboOdds,
@@ -325,9 +345,11 @@ function generateBets(
           }
         }
       }
+      allocateByKelly(trioBets, totalAmount);
+      bets.push(...trioBets);
     }
   } else {
-    // nagashi三連複: 勝率1位を軸 + 勝率2-5位から2頭 = 4C2 = 6通り
+    // nagashi三連複: 勝率1位を軸 + 勝率2-5位から2頭 = 4C2 = 6通り（Kelly傾斜配分）
     const byProb5 = [...horses]
       .filter((h) => h.win_prob > 0)
       .sort((a, b) => b.win_prob - a.win_prob)
@@ -338,8 +360,8 @@ function generateBets(
       const avgKelly = byProb5.reduce((s, h) => s + h.kelly_win, 0) / byProb5.length;
       const numCombs = comb(partners.length, 2);
       const totalAmount = Math.max(100 * numCombs, Math.round((budget * avgKelly * 0.5) / 100) * 100);
-      const perCombo = Math.max(100, Math.round(totalAmount / numCombs / 100) * 100);
 
+      const nagashiTrioBets: Bet[] = [];
       for (let i = 0; i < partners.length; i++) {
         for (let j = i + 1; j < partners.length; j++) {
           const b = partners[i], c = partners[j];
@@ -350,11 +372,11 @@ function generateBets(
           const ev = comboOdds ? Math.round(prob * comboOdds * 100) / 100 : 0;
           const kelly = comboOdds ? calcKelly(prob, comboOdds) : avgKelly;
 
-          bets.push({
+          nagashiTrioBets.push({
             type: "三連複",
             targets: `${nums[0]}-${nums[1]}-${nums[2]}`,
             description: `${pivot.horse_name}・${b.horse_name}・${c.horse_name}が1-2-3着（順不問）`,
-            amount: perCombo,
+            amount: 0,
             ev,
             evReliable: comboOdds !== null,
             odds: comboOdds,
@@ -365,6 +387,8 @@ function generateBets(
           });
         }
       }
+      allocateByKelly(nagashiTrioBets, totalAmount);
+      bets.push(...nagashiTrioBets);
     }
   }
 
