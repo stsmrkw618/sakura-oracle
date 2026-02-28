@@ -229,7 +229,7 @@ def scrape_entries(race_id: str) -> pd.DataFrame:
     if "人気" in df.columns:
         df["人気"] = pd.to_numeric(df["人気"], errors="coerce")
 
-    # shutubaページでオッズが取れない場合、オッズページから補完
+    # shutubaページでオッズが取れない場合、オッズページ/キャッシュから補完
     odds_missing = (
         "単勝オッズ" not in df.columns
         or df["単勝オッズ"].notna().sum() == 0
@@ -248,6 +248,20 @@ def scrape_entries(race_id: str) -> pd.DataFrame:
             if odds_count > 0:
                 df["単勝オッズ"] = pd.to_numeric(df["単勝オッズ"], errors="coerce")
                 print(f"  ✅ オッズページからオッズ取得: {odds_count}/{len(df)}頭")
+
+    # 複勝オッズをキャッシュから補完（"X.X - Y.Y" レンジ形式は平均値に変換済み）
+    if waku_map is None:
+        waku_map = _scrape_waku_from_odds(race_id)
+    if waku_map:
+        show_count = 0
+        for idx, row in df.iterrows():
+            name = row.get("馬名", "")
+            if name in waku_map and "複勝オッズ" in waku_map[name]:
+                df.at[idx, "複勝オッズ"] = waku_map[name]["複勝オッズ"]
+                show_count += 1
+        if show_count > 0:
+            df["複勝オッズ"] = pd.to_numeric(df["複勝オッズ"], errors="coerce")
+            print(f"  ✅ 複勝オッズ取得: {show_count}/{len(df)}頭")
 
     # 斤量を数値化
     if "斤量" in df.columns:

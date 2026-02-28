@@ -29,6 +29,7 @@ from ml.scraper.config import TARGET_RACES, DATA_DIR, BASE_DIR
 from ml.scraper.race_scraper import find_race_id_from_date
 from ml.scraper.entry_scraper import scrape_entries
 from ml.scraper.horse_history_scraper import build_features_from_history
+from ml.scraper.horse_photo_scraper import download_horse_photo
 from ml.model.feature_engineering import RACE_META, get_race_base
 from ml.model.backtest_all_races import (
     _make_params_bin,
@@ -236,6 +237,8 @@ def _build_prediction_features(
         # オッズ
         odds_val = pd.to_numeric(entry.get("単勝オッズ"), errors="coerce")
         row["odds"] = float(odds_val) if pd.notna(odds_val) else 10.0
+        show_odds_val = pd.to_numeric(entry.get("複勝オッズ"), errors="coerce")
+        row["show_odds"] = float(show_odds_val) if pd.notna(show_odds_val) else None
         pop_val = pd.to_numeric(entry.get("人気"), errors="coerce")
         row["popularity"] = float(pop_val) if pd.notna(pop_val) else 9.0
 
@@ -352,6 +355,30 @@ def predict_race(race_label: str, override_race_id: str | None = None) -> None:
     entries = scrape_entries(race_id)
     print(f"  {len(entries)}頭の出走馬を取得")
 
+    # --- 3.5. 馬写真ダウンロード ---
+    print("\n--- 馬写真ダウンロード ---")
+    photo_dir = BASE_DIR / "frontend" / "public" / "images" / "horses"
+    photo_dir.mkdir(parents=True, exist_ok=True)
+    # horse_id → 画像パス（JSONに埋め込む用）
+    horse_image_map: dict[str, str] = {}
+    photo_ok = 0
+    photo_skip = 0
+    for _, entry_row in entries.iterrows():
+        hid = str(entry_row.get("horse_id", ""))
+        hname = str(entry_row.get("馬名", ""))
+        if not hid:
+            continue
+        result_path = download_horse_photo(hid, save_dir=photo_dir)
+        if result_path and result_path.exists():
+            horse_image_map[hname] = f"/images/horses/{hid}.jpg"
+            if result_path.stat().st_size > 0:
+                photo_ok += 1
+            else:
+                photo_skip += 1
+        else:
+            photo_skip += 1
+    print(f"  写真取得: {photo_ok}頭成功 / {photo_skip}頭スキップ")
+
     # --- 4. features.csv ロード & 特徴量構築 ---
     print("\n--- 特徴量構築 ---")
     csv_path = DATA_DIR / "features.csv"
@@ -433,16 +460,21 @@ def predict_race(race_label: str, override_race_id: str | None = None) -> None:
 
     pred_df["pred_b_win"] = pred_b_win
 
+    # 複勝オッズ: 実データがあればそのまま使用、なければ単勝×0.3で概算
+    pred_df["_show_odds"] = pred_df["show_odds"].where(
+        pred_df["show_odds"].notna(), pred_df["odds"] * 0.3
+    )
+
     # 期待値
     pred_df["ev_win"] = pred_df["pred_win"] * pred_df["odds"]
-    pred_df["ev_show"] = pred_df["pred_show"] * (pred_df["odds"] * 0.3)
+    pred_df["ev_show"] = pred_df["pred_show"] * pred_df["_show_odds"]
 
     # Kelly fraction
     pred_df["kelly_win"] = pred_df.apply(
         lambda row: calc_kelly(row["pred_win"], row["odds"]), axis=1
     )
     pred_df["kelly_show"] = pred_df.apply(
-        lambda row: calc_kelly(row["pred_show"], row["odds"] * 0.3), axis=1
+        lambda row: calc_kelly(row["pred_show"], row["_show_odds"]), axis=1
     )
 
     # 印
@@ -501,11 +533,12 @@ def predict_race(race_label: str, override_race_id: str | None = None) -> None:
             "last3_results": last3,
             "odds": {
                 "win": round(float(row["odds"]), 1),
-                "show": round(float(row["odds"]) * 0.3, 1),
+                "show": round(float(row["_show_odds"]), 1),
             },
             "sire": sire_lookup.get(str(row["馬名"]), "不明"),
             "jockey": str(row.get("騎手", "不明")),
             "frame_number": int(row["frame_number"]),
+            **({"image": horse_image_map[str(row["馬名"])]} if str(row["馬名"]) in horse_image_map else {}),
         })
 
     # 印順でソート
