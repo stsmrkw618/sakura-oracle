@@ -144,6 +144,8 @@ const comboHitRates = (backtestAll as Record<string, unknown>).combo_hit_rates a
   | {
       quinella_box3: number; wide_top2: number; trio_box3: number; trio_box5: number;
       quinella_box3_roi?: number; wide_top2_roi?: number; trio_box3_roi?: number; trio_box5_roi?: number;
+      ev_trio_top5?: number; ev_trio_top5_roi?: number;
+      ev_quinella_top3?: number; ev_quinella_top3_roi?: number;
     }
   | undefined;
 
@@ -633,6 +635,8 @@ export default function AnalysisPage() {
                   { label: "ワイド(◎-○)", rate: comboHitRates.wide_top2, roi: comboHitRates.wide_top2_roi, desc: "上位2頭が両方3着以内", cost: "1通り×100円" },
                   { label: "三連複BOX(3)", rate: comboHitRates.trio_box3, roi: comboHitRates.trio_box3_roi, desc: "上位3頭が全員3着以内", cost: "1通り×100円" },
                   { label: "三連複BOX(5)", rate: comboHitRates.trio_box5, roi: comboHitRates.trio_box5_roi, desc: "上位5頭のうち3頭が3着以内", cost: "10通り×100円" },
+                  ...(comboHitRates.ev_trio_top5 != null ? [{ label: "三連複 EV Top5", rate: comboHitRates.ev_trio_top5, roi: comboHitRates.ev_trio_top5_roi, desc: "Harville EV比率上位5通り", cost: "5通り×100円" }] : []),
+                  ...(comboHitRates.ev_quinella_top3 != null ? [{ label: "馬連 EV Top3", rate: comboHitRates.ev_quinella_top3, roi: comboHitRates.ev_quinella_top3_roi, desc: "Harville EV比率上位3通り", cost: "3通り×100円" }] : []),
                 ].map((item) => (
                   <div key={item.label}>
                     <div className="flex justify-between text-xs mb-1">

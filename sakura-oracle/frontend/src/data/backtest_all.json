@@ -39,7 +39,11 @@
     "quinella_nagashi": 0.36,
     "trio_nagashi": 0.28,
     "quinella_nagashi_roi": 4.515,
-    "trio_nagashi_roi": 5.89
+    "trio_nagashi_roi": 5.89,
+    "ev_trio_top5": 0.02,
+    "ev_trio_top5_roi": 4.045,
+    "ev_quinella_top3": 0.1,
+    "ev_quinella_top3_roi": 4.761
   },
   "by_grade": {
     "G1": {

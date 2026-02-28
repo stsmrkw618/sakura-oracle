@@ -8,6 +8,7 @@ SAKURA ORACLE — 全重賞Walk-Forwardバックテスト
     PYTHONIOENCODING=utf-8 py ml/model/backtest_all_races.py
 """
 
+import itertools
 import json
 import pickle
 import re
@@ -159,6 +160,49 @@ def _load_payouts() -> dict:
         with open(payout_path, "r", encoding="utf-8") as f:
             return json.load(f)
     return {}
+
+
+def _normalize_probs(values: dict[int, float]) -> dict[int, float]:
+    """確率を正規化して合計=1.0にする"""
+    total = sum(values.values())
+    if total <= 0:
+        return values
+    return {k: v / total for k, v in values.items()}
+
+
+def _harville_exacta(probs: dict[int, float], a: int, b: int) -> float:
+    """P(A 1着, B 2着) = p_A × p_B / (1 - p_A)"""
+    pa = probs.get(a, 0)
+    pb = probs.get(b, 0)
+    denom = 1 - pa
+    if denom <= 0:
+        return 0.0
+    return pa * pb / denom
+
+
+def _harville_quinella(probs: dict[int, float], a: int, b: int) -> float:
+    """馬連: exacta(a,b) + exacta(b,a)"""
+    return _harville_exacta(probs, a, b) + _harville_exacta(probs, b, a)
+
+
+def _harville_trifecta(probs: dict[int, float], a: int, b: int, c: int) -> float:
+    """P(A 1着, B 2着, C 3着) = p_A × p_B/(1-p_A) × p_C/(1-p_A-p_B)"""
+    pa = probs.get(a, 0)
+    pb = probs.get(b, 0)
+    pc = probs.get(c, 0)
+    d1 = 1 - pa
+    d2 = 1 - pa - pb
+    if d1 <= 0 or d2 <= 0:
+        return 0.0
+    return pa * (pb / d1) * (pc / d2)
+
+
+def _harville_trio(probs: dict[int, float], a: int, b: int, c: int) -> float:
+    """三連複: 6順列のtrifectaの合計"""
+    total = 0.0
+    for perm in itertools.permutations([a, b, c]):
+        total += _harville_trifecta(probs, perm[0], perm[1], perm[2])
+    return total
 
 
 def _find_payout(payouts_for_race: dict, bet_type: str, combo_set: set[int]) -> int:
@@ -705,6 +749,60 @@ def run_walk_forward(df: pd.DataFrame) -> tuple[list[dict], dict]:
                 payout = _find_payout(race_payouts, "trio", actual_top3_nums)
                 trio_nagashi_roi = payout / 600.0
 
+        # --- EV Top-5 戦略（Harville × 市場オッズ比） ---
+        # AI上位8頭に限定して候補生成（極端な穴馬混じりのノイズを排除）
+        ai_top8 = sorted(
+            test_df.nlargest(8, "pred_win")["horse_number"].astype(int).values
+        )
+        # AI確率: pred_winを正規化（全頭で正規化）
+        ai_probs = _normalize_probs({
+            int(r.horse_number): float(r.pred_win)
+            for _, r in test_df.iterrows()
+        })
+        # 市場確率: 1/oddsを正規化（オーバーラウンド除去）
+        market_probs = _normalize_probs({
+            int(r.horse_number): 1.0 / max(float(r.odds), 1.01)
+            for _, r in test_df.iterrows()
+        })
+
+        # 三連複: AI上位8頭の8C3=56通りからEV比率Top-5
+        all_trios = []
+        for i, j, k in itertools.combinations(ai_top8, 3):
+            ai_p = _harville_trio(ai_probs, int(i), int(j), int(k))
+            mkt_p = _harville_trio(market_probs, int(i), int(j), int(k))
+            ev_ratio = ai_p / mkt_p if mkt_p > 0 else 0
+            all_trios.append((frozenset({int(i), int(j), int(k)}), ev_ratio))
+        all_trios.sort(key=lambda x: x[1], reverse=True)
+        top5_trio_sets = [t[0] for t in all_trios[:5]]
+
+        # 的中判定 + ROI
+        actual_top3_int = frozenset(int(x) for x in actual_top3_nums)
+        ev_trio_hit = int(actual_top3_int in top5_trio_sets)
+        ev_trio_roi = 0.0
+        if ev_trio_hit and race_payouts:
+            payout = _find_payout(race_payouts, "trio", actual_top3_nums)
+            ev_trio_roi = payout / 500.0  # 5通り×¥100
+
+        # 馬連: AI上位6頭の6C2=15通りからEV比率Top-3
+        ai_top6 = sorted(
+            test_df.nlargest(6, "pred_win")["horse_number"].astype(int).values
+        )
+        all_quins = []
+        for i, j in itertools.combinations(ai_top6, 2):
+            ai_p = _harville_quinella(ai_probs, int(i), int(j))
+            mkt_p = _harville_quinella(market_probs, int(i), int(j))
+            ev_ratio = ai_p / mkt_p if mkt_p > 0 else 0
+            all_quins.append((frozenset({int(i), int(j)}), ev_ratio))
+        all_quins.sort(key=lambda x: x[1], reverse=True)
+        top3_quin_sets = [q[0] for q in all_quins[:3]]
+
+        actual_top2_int = frozenset(int(x) for x in actual_top2_nums)
+        ev_quinella_hit = int(actual_top2_int in top3_quin_sets)
+        ev_quinella_roi = 0.0
+        if ev_quinella_hit and race_payouts:
+            payout = _find_payout(race_payouts, "quinella", actual_top2_nums)
+            ev_quinella_roi = payout / 300.0  # 3通り×¥100
+
         # Kelly return (1/4 Kelly): AI本命馬の単勝Kelly
         ai_odds = float(top1["odds"])
         ai_prob = float(top1["pred_win"])
@@ -751,6 +849,10 @@ def run_walk_forward(df: pd.DataFrame) -> tuple[list[dict], dict]:
             "trio_nagashi_hit": trio_nagashi_hit,
             "quinella_nagashi_roi": quinella_nagashi_roi,
             "trio_nagashi_roi": trio_nagashi_roi,
+            "ev_trio_top5_hit": ev_trio_hit,
+            "ev_trio_top5_roi": ev_trio_roi,
+            "ev_quinella_top3_hit": ev_quinella_hit,
+            "ev_quinella_top3_roi": ev_quinella_roi,
         })
 
     # --- キャリブレーター生成 & pickle保存 ---
@@ -828,6 +930,17 @@ def print_summary(
     t_nagashi_return = sum(r.get("trio_nagashi_roi", 0) * 600 for r in results)
     t_nagashi_roi = t_nagashi_return / t_nagashi_invest if t_nagashi_invest > 0 else 0
 
+    # EV Top-5
+    ev_trio_top5_hits = sum(r.get("ev_trio_top5_hit", 0) for r in results)
+    ev_trio_top5_invest = n * 500  # 5通り×100円
+    ev_trio_top5_return = sum(r.get("ev_trio_top5_roi", 0) * 500 for r in results)
+    ev_trio_top5_roi = ev_trio_top5_return / ev_trio_top5_invest if ev_trio_top5_invest > 0 else 0
+
+    ev_quinella_top3_hits = sum(r.get("ev_quinella_top3_hit", 0) for r in results)
+    ev_quinella_top3_invest = n * 300  # 3通り×100円
+    ev_quinella_top3_return = sum(r.get("ev_quinella_top3_roi", 0) * 300 for r in results)
+    ev_quinella_top3_roi = ev_quinella_top3_return / ev_quinella_top3_invest if ev_quinella_top3_invest > 0 else 0
+
     print(f"\n平均出走頭数: {avg_horses:.1f}頭")
     print(f"\n{'':>20} {'AI':>10} {'1番人気':>10} {'ランダム':>10}")
     print("-" * 55)
@@ -844,6 +957,8 @@ def print_summary(
     print(f"  三連複BOX(3):      {trio3_hits:>2}/{n} ({trio3_hits/n:>4.0%})  {trio3_roi:>6.0%}   ¥100")
     print(f"  三連複BOX(5):      {trio5_hits:>2}/{n} ({trio5_hits/n:>4.0%})  {trio5_roi:>6.0%}  ¥1000")
     print(f"  三連複◎軸流し(6): {trio_nagashi_hits:>2}/{n} ({trio_nagashi_hits/n:>4.0%})  {t_nagashi_roi:>6.0%}   ¥600")
+    print(f"  三連複EV Top5:     {ev_trio_top5_hits:>2}/{n} ({ev_trio_top5_hits/n:>4.0%})  {ev_trio_top5_roi:>6.0%}   ¥500")
+    print(f"  馬連EV Top3:       {ev_quinella_top3_hits:>2}/{n} ({ev_quinella_top3_hits/n:>4.0%})  {ev_quinella_top3_roi:>6.0%}   ¥300")
 
     # --- グレード別 ---
     print(f"\n{'='*65}")
@@ -1041,6 +1156,10 @@ def print_summary(
             "trio_nagashi": round(trio_nagashi_hits / n, 3) if n > 0 else 0,
             "quinella_nagashi_roi": round(q_nagashi_roi, 3),
             "trio_nagashi_roi": round(t_nagashi_roi, 3),
+            "ev_trio_top5": round(ev_trio_top5_hits / n, 3) if n > 0 else 0,
+            "ev_trio_top5_roi": round(ev_trio_top5_roi, 3),
+            "ev_quinella_top3": round(ev_quinella_top3_hits / n, 3) if n > 0 else 0,
+            "ev_quinella_top3_roi": round(ev_quinella_top3_roi, 3),
         },
         "by_grade": {},
         "by_race": {},
