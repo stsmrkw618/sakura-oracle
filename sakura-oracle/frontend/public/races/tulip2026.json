@@ -5,7 +5,7 @@
     "course": "阪神 芝1600m",
     "going": "TBD",
     "weather": "TBD",
-    "updated_at": "2026-03-01T01:58:22.380968"
+    "updated_at": "2026-03-01T02:09:40.585226"
   },
   "predictions": [
     {
@@ -289,6 +289,41 @@
       "image": "/images/horses/2023107046.jpg"
     },
     {
+      "horse_number": 10,
+      "horse_name": "コニーアイランド",
+      "mark": "△",
+      "win_prob": 0.0833,
+      "show_prob": 0.1763,
+      "ev_win": 0.56,
+      "ev_show": 0.44,
+      "kelly_win": 0.0,
+      "kelly_show": 0.0,
+      "speed_index": 53.0,
+      "radar": {
+        "speed": 91,
+        "stamina": 25,
+        "instant": 67,
+        "pedigree": 50,
+        "jockey": 100,
+        "course_fit": 0
+      },
+      "comment": "前走4着。上がり34.8秒は平均的。",
+      "risk": "キャリアが浅い。阪神未経験",
+      "last3_results": [
+        "4着",
+        "-",
+        "-"
+      ],
+      "odds": {
+        "win": 6.7,
+        "show": 2.5
+      },
+      "sire": "不明",
+      "jockey": "川田",
+      "frame_number": 6,
+      "image": "/images/horses/2023107283.jpg"
+    },
+    {
       "horse_number": 13,
       "horse_name": "タイセイボーグ",
       "mark": "△",
@@ -357,41 +392,6 @@
       "jockey": "吉村",
       "frame_number": 3,
       "image": "/images/horses/2023107079.jpg"
-    },
-    {
-      "horse_number": 10,
-      "horse_name": "コニーアイランド",
-      "mark": "×",
-      "win_prob": 0.0833,
-      "show_prob": 0.1763,
-      "ev_win": 0.56,
-      "ev_show": 0.44,
-      "kelly_win": 0.0,
-      "kelly_show": 0.0,
-      "speed_index": 53.0,
-      "radar": {
-        "speed": 91,
-        "stamina": 25,
-        "instant": 67,
-        "pedigree": 50,
-        "jockey": 100,
-        "course_fit": 0
-      },
-      "comment": "前走4着。上がり34.8秒は平均的。",
-      "risk": "キャリアが浅い。阪神未経験",
-      "last3_results": [
-        "4着",
-        "-",
-        "-"
-      ],
-      "odds": {
-        "win": 6.7,
-        "show": 2.5
-      },
-      "sire": "不明",
-      "jockey": "川田",
-      "frame_number": 6,
-      "image": "/images/horses/2023107283.jpg"
     },
     {
       "horse_number": 1,

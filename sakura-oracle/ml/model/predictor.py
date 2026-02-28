@@ -298,7 +298,10 @@ def get_mark(row: pd.Series, df: pd.DataFrame) -> str:
         return "○"  # 上位3位 & エッジあり
     elif kelly_rank[idx] <= 8 and kelly > 0.002:
         return "▲"  # 上位8位以内 & Kelly正だが控えめ
-    elif row["pred_show"] >= 0.2:
+    # △: AI複勝50% + 市場複勝50%のブレンドで判定
+    # LightGBMの分解能不足で同一show_probが多発 → 市場情報で差別化
+    blended = row.get("_blended_show", row["pred_show"])
+    if blended >= 0.2:
         return "△"  # 複勝候補（3着以内の可能性が高い）
     else:
         return "×"  # エッジなし
@@ -413,6 +416,19 @@ def generate_predictions_json(
     race_df["kelly_show"] = race_df.apply(
         lambda row: calc_kelly(row["pred_show"], row["odds"] * 0.3), axis=1
     )
+
+    # △判定用のブレンドshow確率（AI 50% + 市場 50%）
+    # LightGBMの分解能不足で同一show_probが多発 → 市場情報で差別化
+    _show_odds_approx = (race_df["odds"] * 0.3).clip(lower=1.01)
+    _market_show_raw = 1.0 / _show_odds_approx
+    _market_show_sum = _market_show_raw.sum()
+    if _market_show_sum > 0:
+        race_df["_blended_show"] = (
+            0.5 * race_df["pred_show"]
+            + 0.5 * _market_show_raw * (3.0 / _market_show_sum)
+        )
+    else:
+        race_df["_blended_show"] = race_df["pred_show"]
 
     # 印（Kelly基準）
     race_df["mark"] = race_df.apply(lambda row: get_mark(row, race_df), axis=1)

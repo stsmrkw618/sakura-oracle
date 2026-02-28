@@ -485,6 +485,18 @@ def predict_race(
         lambda row: calc_kelly(row["pred_show"], row["_show_odds"]), axis=1
     )
 
+    # △判定用のブレンドshow確率（AI 50% + 市場 50%）
+    # LightGBMの分解能不足で同一show_probが多発 → 市場情報で差別化
+    _market_show_raw = 1.0 / pred_df["_show_odds"].clip(lower=1.01)
+    _market_show_sum = _market_show_raw.sum()
+    if _market_show_sum > 0:
+        pred_df["_blended_show"] = (
+            0.5 * pred_df["pred_show"]
+            + 0.5 * _market_show_raw * (3.0 / _market_show_sum)
+        )
+    else:
+        pred_df["_blended_show"] = pred_df["pred_show"]
+
     # 印
     pred_df["mark"] = pred_df.apply(lambda row: get_mark(row, pred_df), axis=1)
 

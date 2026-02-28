@@ -42,6 +42,8 @@ interface LiveHorse {
   odds_show: number;
   /** market implied probability (overround-normalized) */
   market_prob: number;
+  /** AI複勝50% + 市場複勝50%のブレンド（△判定用） */
+  blendedShow: number;
   /** original values from predictions.json */
   orig_ev_win: number;
   orig_ev_show: number;
@@ -115,18 +117,20 @@ function calcKelly(prob: number, odds: number, fraction = 0.25): number {
 // --- Mark calculation (mirrors predictor.py get_mark — Kelly-based) ---
 
 function calcMark(
-  horse: { kelly_win: number; show_prob: number },
+  horse: { kelly_win: number; show_prob: number; blendedShow: number },
   allHorses: { kelly_win: number }[]
 ): string {
   const kelly = horse.kelly_win;
-  // rank by kelly descending (1 = highest)
+  // Kelly降順ランク（1 = 最大）
   const kellyRank =
     allHorses.filter((h) => h.kelly_win > kelly).length + 1;
 
   if (kellyRank === 1 && kelly > 0.01) return "◎";
   if (kellyRank <= 3 && kelly > 0.005) return "○";
   if (kellyRank <= 8 && kelly > 0.002) return "▲";
-  if (horse.show_prob >= 0.2) return "△";
+  // △: AI複勝50% + 市場複勝50%のブレンドで判定
+  // LightGBMの分解能不足で同一show_probが多発 → 市場情報で差別化
+  if (horse.blendedShow >= 0.2) return "△";
   return "×";
 }
 
@@ -546,12 +550,19 @@ export function OddsProvider({ children }: { children: ReactNode }) {
 
   // Compute live horses with dynamic EV, Kelly, mark, market_prob
   const liveHorses = useMemo(() => {
-    // Market implied probability: 1/odds normalized by overround
+    // 市場勝率（1/win_odds 正規化）
     const rawImplied = predictions.predictions.map((h) => {
       const odds = oddsMap[h.horse_number] || { win: h.odds.win, show: h.odds.show };
       return 1 / Math.max(odds.win, 1.01);
     });
     const totalImplied = rawImplied.reduce((s, v) => s + v, 0);
+
+    // 市場複勝確率（1/show_odds 正規化 → 合計3.0）— △判定用ブレンドに使用
+    const marketShowRaw = predictions.predictions.map((h) => {
+      const odds = oddsMap[h.horse_number] || { win: h.odds.win, show: h.odds.show };
+      return 1 / Math.max(odds.show, 1.01);
+    });
+    const marketShowSum = marketShowRaw.reduce((s, v) => s + v, 0);
 
     const horses = predictions.predictions.map((h, idx) => {
       const odds = oddsMap[h.horse_number] || { win: h.odds.win, show: h.odds.show };
@@ -562,6 +573,11 @@ export function OddsProvider({ children }: { children: ReactNode }) {
       const oddsChanged =
         odds.win !== h.odds.win || odds.show !== h.odds.show;
       const market_prob = totalImplied > 0 ? rawImplied[idx] / totalImplied : 0;
+      // AI複勝50% + 市場複勝50%のブレンド（△判定用）
+      const marketShowProb = marketShowSum > 0
+        ? marketShowRaw[idx] * 3.0 / marketShowSum
+        : h.show_prob;
+      const blendedShow = 0.5 * h.show_prob + 0.5 * marketShowProb;
       return {
         horse_number: h.horse_number,
         horse_name: h.horse_name,
@@ -571,10 +587,11 @@ export function OddsProvider({ children }: { children: ReactNode }) {
         ev_show,
         kelly_win,
         kelly_show,
-        mark: "", // will be computed below
+        mark: "", // 後で計算
         odds_win: odds.win,
         odds_show: odds.show,
         market_prob,
+        blendedShow,
         orig_ev_win: h.ev_win,
         orig_ev_show: h.ev_show,
         orig_mark: h.mark,
@@ -582,7 +599,7 @@ export function OddsProvider({ children }: { children: ReactNode }) {
       };
     });
 
-    // Recalculate marks based on Kelly
+    // Kelly基準で印を再計算
     for (const h of horses) {
       h.mark = calcMark(h, horses);
     }
