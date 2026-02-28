@@ -49,7 +49,7 @@ export default function HorseCard({
           <div className="flex items-center gap-3 mb-3">
             <MarkBadge mark={displayMark} />
             <span
-              className={`w-7 h-7 rounded-sm flex items-center justify-center text-xs font-bold ${frame.bg} ${frame.text}`}
+              className={`w-7 h-7 rounded-sm flex items-center justify-center text-xs font-bold border border-white/20 ${frame.bg} ${frame.text}`}
             >
               {horse.horse_number}
             </span>

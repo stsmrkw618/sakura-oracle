@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import OddsInput from "@/components/OddsInput";
@@ -27,6 +27,13 @@ function ComboOddsInput({
     currentValue != null ? String(currentValue) : ""
   );
 
+  // 外部からの変更（モード切替時など）を同期
+  useEffect(() => {
+    if (currentValue != null) {
+      setLocalValue(String(currentValue));
+    }
+  }, [currentValue]);
+
   return (
     <input
       type="number"
@@ -47,7 +54,7 @@ function ComboOddsInput({
 }
 
 export default function BetGuidePage() {
-  const { predictions } = useRace();
+  const { predictions, topBets } = useRace();
   const {
     liveHorses,
     liveBets,
@@ -219,6 +226,137 @@ export default function BetGuidePage() {
           </div>
         </motion.section>
 
+        {/* AI推奨 TOP10（Excelオッズから生成されたデータがある場合のみ表示） */}
+        {topBets.length > 0 && (
+          <motion.section {...fadeIn} transition={{ delay: 0.08 }}>
+            <div className="bg-card rounded-xl p-4 border border-gold/20">
+              <h2 className="text-sm font-bold text-gold mb-3">
+                🏆 AI推奨 TOP10
+              </h2>
+              <p className="text-[10px] text-muted-foreground mb-3">
+                netkeibaオッズ × AI確率から算出したEV上位の買い目。予算スライダーに連動して配分額が変わります。
+              </p>
+
+              {(() => {
+                // Kelly配分ロジック（liveBetsと同じ2パスアルゴリズム）
+                const weights = topBets.map((b) =>
+                  b.kelly > 0 && b.ev >= 1.0 ? b.kelly : 0
+                );
+                const totalWeight = weights.reduce((s, w) => s + w, 0);
+
+                const amounts = weights.map((w) => {
+                  if (w === 0 || totalWeight === 0) return 0;
+                  return Math.max(100, Math.round((w / totalWeight) * budget / 100) * 100);
+                });
+
+                // 合計調整
+                let total = amounts.reduce((s, a) => s + a, 0);
+                if (totalWeight > 0) {
+                  const maxIdx = weights.indexOf(Math.max(...weights));
+                  if (total < budget && maxIdx >= 0) {
+                    amounts[maxIdx] += budget - total;
+                    total = budget;
+                  }
+                  while (total > budget) {
+                    let reduced = false;
+                    const ascending = weights
+                      .map((w, i) => ({ w, i }))
+                      .filter((x) => x.w > 0)
+                      .sort((a, b) => a.w - b.w);
+                    for (const { i } of ascending) {
+                      if (amounts[i] > 100) {
+                        amounts[i] -= 100;
+                        total -= 100;
+                        reduced = true;
+                        break;
+                      }
+                    }
+                    if (!reduced) break;
+                  }
+                }
+
+                const totalInv = amounts.reduce((s, a) => s + a, 0);
+                const expReturn = topBets.reduce(
+                  (s, b, i) => s + amounts[i] * b.ev,
+                  0
+                );
+                const topRoi = totalInv > 0 ? (expReturn / totalInv - 1) * 100 : 0;
+
+                return (
+                  <>
+                    <div className="space-y-2 mb-4">
+                      {topBets.map((bet, i) => (
+                        <div
+                          key={`top-${i}`}
+                          className={`flex items-center gap-2 text-xs ${
+                            amounts[i] === 0 ? "opacity-40" : ""
+                          }`}
+                        >
+                          <span className="text-sakura-pink font-bold w-12 shrink-0">
+                            {bet.type}
+                          </span>
+                          <span className="text-white font-mono w-16 shrink-0">
+                            {bet.targets}
+                          </span>
+                          <span className="text-muted-foreground truncate flex-1 text-[10px]">
+                            {bet.names}
+                          </span>
+                          <span className="font-mono text-[10px] text-muted-foreground w-10 text-right shrink-0">
+                            {bet.odds.toFixed(1)}
+                          </span>
+                          <span
+                            className={`font-mono text-[10px] w-10 text-right shrink-0 ${
+                              bet.ev >= 2.0
+                                ? "text-gold font-bold"
+                                : bet.ev >= 1.0
+                                  ? "text-green-400"
+                                  : "text-red-400"
+                            }`}
+                          >
+                            {bet.ev.toFixed(1)}
+                          </span>
+                          <span className="font-mono text-gold font-bold w-14 text-right shrink-0">
+                            {amounts[i] > 0
+                              ? `¥${amounts[i].toLocaleString()}`
+                              : "---"}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* KPI */}
+                    <div className="grid grid-cols-3 gap-2 text-center border-t border-white/10 pt-3">
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">合計投資</p>
+                        <p className="font-mono text-sm font-bold">
+                          ¥{totalInv.toLocaleString()}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">期待リターン</p>
+                        <p className="font-mono text-sm font-bold text-gold">
+                          ¥{Math.round(expReturn).toLocaleString()}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">期待ROI</p>
+                        <p
+                          className={`font-mono text-lg font-bold ${
+                            topRoi >= 0 ? "text-green-400" : "text-red-400"
+                          }`}
+                        >
+                          {topRoi >= 0 ? "+" : ""}
+                          {topRoi.toFixed(0)}%
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          </motion.section>
+        )}
+
         {/* Investment Simulator */}
         <motion.section {...fadeIn} transition={{ delay: 0.1 }}>
           <div className="bg-card rounded-xl p-4 border border-white/5">
@@ -343,14 +481,14 @@ export default function BetGuidePage() {
                   .filter((b) => b.scaledAmount > 0)
                   .map((bet, i) => (
                     <div
-                      key={`summary-${i}`}
+                      key={`summary-${bet.type}-${bet.targets}-${i}`}
                       className="flex items-center justify-between text-sm"
                     >
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <span className="text-sakura-pink font-bold shrink-0">
                           {bet.type}
                         </span>
-                        <span className="text-muted-foreground truncate text-xs">
+                        <span className="text-white font-mono shrink-0 text-xs">
                           {bet.targets}
                         </span>
                       </div>
@@ -411,9 +549,9 @@ export default function BetGuidePage() {
                 : "BT実績: 的中28% / 回収589% — ◎軸固定 + 2-5位から2頭選択"}
             </p>
             <div className="space-y-3">
-              {trioBets.map((bet, i) => (
+              {trioBets.map((bet) => (
                 <ComboBetCard
-                  key={`trio-${i}`}
+                  key={bet.comboKey || `trio-${bet.targets}`}
                   bet={bet}
                   comboOddsMap={comboOddsMap}
                   updateComboOdds={updateComboOdds}
@@ -437,9 +575,9 @@ export default function BetGuidePage() {
                 : "BT実績: 的中36% / 回収452% — ◎軸→2-5位"}
             </p>
             <div className="space-y-3">
-              {quinellaBets.map((bet, i) => (
+              {quinellaBets.map((bet) => (
                 <ComboBetCard
-                  key={`quinella-${i}`}
+                  key={bet.comboKey || `quinella-${bet.targets}`}
                   bet={bet}
                   comboOddsMap={comboOddsMap}
                   updateComboOdds={updateComboOdds}
@@ -459,9 +597,9 @@ export default function BetGuidePage() {
               BT実績: 的中30% / 回収465%
             </p>
             <div className="space-y-3">
-              {wideBets.map((bet, i) => (
+              {wideBets.map((bet) => (
                 <ComboBetCard
-                  key={`wide-${i}`}
+                  key={bet.comboKey || `wide-${bet.targets}`}
                   bet={bet}
                   comboOddsMap={comboOddsMap}
                   updateComboOdds={updateComboOdds}

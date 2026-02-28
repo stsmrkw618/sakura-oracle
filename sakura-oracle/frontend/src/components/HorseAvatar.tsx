@@ -43,7 +43,7 @@ export default function HorseAvatar({
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
           <div className="flex items-center gap-2">
             <span
-              className={`w-8 h-8 rounded-md flex items-center justify-center text-sm font-bold ${frame.bg} ${frame.text}`}
+              className={`w-8 h-8 rounded-md flex items-center justify-center text-sm font-bold border border-white/20 ${frame.bg} ${frame.text}`}
             >
               {horseNumber}
             </span>
@@ -93,7 +93,7 @@ export default function HorseAvatar({
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
         <div className="flex items-center gap-2">
           <span
-            className={`w-8 h-8 rounded-md flex items-center justify-center text-sm font-bold ${frame.bg} ${frame.text}`}
+            className={`w-8 h-8 rounded-md flex items-center justify-center text-sm font-bold border border-white/20 ${frame.bg} ${frame.text}`}
           >
             {horseNumber}
           </span>

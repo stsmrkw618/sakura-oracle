@@ -48,6 +48,7 @@ from ml.model.predictor import (
     normalize_0_100,
     RADAR_FEATURES,
 )
+from ml.model.combo_ev import generate_top_bets
 
 
 RACE_SLUG: dict[str, str] = {
@@ -303,7 +304,11 @@ def _build_prediction_features(
     return pred_df
 
 
-def predict_race(race_label: str, override_race_id: str | None = None) -> None:
+def predict_race(
+    race_label: str,
+    override_race_id: str | None = None,
+    excel_path: str | None = None,
+) -> None:
     """メイン予測処理。
 
     Args:
@@ -696,16 +701,28 @@ def predict_race(race_label: str, override_race_id: str | None = None) -> None:
     print(f"  出走馬: {len(predictions)}頭")
     marks = {m: sum(1 for p in predictions if p["mark"] == m) for m in ["◎", "○", "▲", "△", "×"]}
     print(f"  印: ◎{marks['◎']} ○{marks['○']} ▲{marks['▲']} △{marks['△']} ×{marks['×']}")
+
+    # --- Excelオッズ → AI推奨TOP10買い目 ---
+    if excel_path:
+        from pathlib import Path as _P
+        if _P(excel_path).exists():
+            print(f"\n--- AI推奨買い目生成 ---")
+            top_bets_path = races_dir / f"{race_file_id}_top_bets.json"
+            generate_top_bets(excel_path, race_json_path, top_bets_path)
+        else:
+            print(f"\n  ⚠️ Excelファイルが見つかりません: {excel_path}")
+
     print("\n完了!")
 
 
 def main() -> None:
     if len(sys.argv) < 2:
-        print("使い方: PYTHONIOENCODING=utf-8 py ml/model/predict_race.py <レース名+年> [--race-id <id>]")
+        print("使い方: PYTHONIOENCODING=utf-8 py ml/model/predict_race.py <レース名+年> [--race-id <id>] [--excel <path>]")
         print()
         print("例:")
         print("  py ml/model/predict_race.py チューリップ賞2026")
         print("  py ml/model/predict_race.py チューリップ賞2026 --race-id 202609010411")
+        print("  py ml/model/predict_race.py チューリップ賞2026 --excel チューリップ.xlsx")
         print("  py ml/model/predict_race.py フィリーズレビュー2026")
         print("  py ml/model/predict_race.py フェアリーS2026")
         print("  py ml/model/predict_race.py 桜花賞2025")
@@ -722,7 +739,13 @@ def main() -> None:
         idx = sys.argv.index("--race-id")
         if idx + 1 < len(sys.argv):
             override_race_id = sys.argv[idx + 1]
-    predict_race(race_label, override_race_id=override_race_id)
+    # --excel オプション解析
+    excel_path = None
+    if "--excel" in sys.argv:
+        idx = sys.argv.index("--excel")
+        if idx + 1 < len(sys.argv):
+            excel_path = sys.argv[idx + 1]
+    predict_race(race_label, override_race_id=override_race_id, excel_path=excel_path)
 
 
 if __name__ == "__main__":

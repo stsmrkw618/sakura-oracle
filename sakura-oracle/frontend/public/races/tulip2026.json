@@ -5,7 +5,7 @@
     "course": "阪神 芝1600m",
     "going": "TBD",
     "weather": "TBD",
-    "updated_at": "2026-02-28T15:47:40.969486"
+    "updated_at": "2026-02-28T16:27:18.150900"
   },
   "predictions": [
     {
@@ -15,9 +15,9 @@
       "win_prob": 0.128,
       "show_prob": 0.2662,
       "ev_win": 2.32,
-      "ev_show": 1.45,
+      "ev_show": 0.99,
       "kelly_win": 0.0193,
-      "kelly_show": 0.0252,
+      "kelly_show": 0.0,
       "speed_index": 63.0,
       "radar": {
         "speed": 98,
@@ -36,11 +36,12 @@
       ],
       "odds": {
         "win": 18.1,
-        "show": 5.4
+        "show": 3.7
       },
       "sire": "不明",
       "jockey": "松山",
-      "frame_number": 5
+      "frame_number": 5,
+      "image": "/images/horses/2023102615.jpg"
     },
     {
       "horse_number": 3,
@@ -49,9 +50,9 @@
       "win_prob": 0.0423,
       "show_prob": 0.1566,
       "ev_win": 4.29,
-      "ev_show": 4.77,
+      "ev_show": 3.18,
       "kelly_win": 0.0082,
-      "kelly_show": 0.032,
+      "kelly_show": 0.0282,
       "speed_index": 44.0,
       "radar": {
         "speed": 85,
@@ -70,11 +71,12 @@
       ],
       "odds": {
         "win": 101.6,
-        "show": 30.5
+        "show": 20.3
       },
       "sire": "不明",
       "jockey": "団野",
-      "frame_number": 2
+      "frame_number": 2,
+      "image": "/images/horses/2023103797.jpg"
     },
     {
       "horse_number": 2,
@@ -83,9 +85,9 @@
       "win_prob": 0.0423,
       "show_prob": 0.1754,
       "ev_win": 4.35,
-      "ev_show": 5.41,
+      "ev_show": 4.56,
       "kelly_win": 0.0082,
-      "kelly_show": 0.0369,
+      "kelly_show": 0.0356,
       "speed_index": 48.0,
       "radar": {
         "speed": 88,
@@ -104,11 +106,12 @@
       ],
       "odds": {
         "win": 102.8,
-        "show": 30.8
+        "show": 26.0
       },
       "sire": "不明",
       "jockey": "岩田望",
-      "frame_number": 2
+      "frame_number": 2,
+      "image": "/images/horses/2023105336.jpg"
     },
     {
       "horse_number": 5,
@@ -117,7 +120,7 @@
       "win_prob": 0.1384,
       "show_prob": 0.2662,
       "ev_win": 1.11,
-      "ev_show": 0.64,
+      "ev_show": 0.85,
       "kelly_win": 0.0038,
       "kelly_show": 0.0,
       "speed_index": 58.0,
@@ -138,11 +141,12 @@
       ],
       "odds": {
         "win": 8.0,
-        "show": 2.4
+        "show": 3.2
       },
       "sire": "不明",
       "jockey": "浜中",
-      "frame_number": 3
+      "frame_number": 3,
+      "image": "/images/horses/2023102806.jpg"
     },
     {
       "horse_number": 8,
@@ -151,9 +155,9 @@
       "win_prob": 0.0423,
       "show_prob": 0.1566,
       "ev_win": 1.31,
-      "ev_show": 1.46,
+      "ev_show": 1.07,
       "kelly_win": 0.0026,
-      "kelly_show": 0.0138,
+      "kelly_show": 0.0028,
       "speed_index": 52.0,
       "radar": {
         "speed": 91,
@@ -172,11 +176,12 @@
       ],
       "odds": {
         "win": 31.1,
-        "show": 9.3
+        "show": 6.8
       },
       "sire": "不明",
       "jockey": "池添",
-      "frame_number": 5
+      "frame_number": 5,
+      "image": "/images/horses/2023102996.jpg"
     },
     {
       "horse_number": 15,
@@ -185,9 +190,9 @@
       "win_prob": 0.0423,
       "show_prob": 0.1628,
       "ev_win": 4.05,
-      "ev_show": 4.68,
+      "ev_show": 2.75,
       "kelly_win": 0.008,
-      "kelly_show": 0.0332,
+      "kelly_show": 0.0275,
       "speed_index": 10.0,
       "radar": {
         "speed": 63,
@@ -206,11 +211,12 @@
       ],
       "odds": {
         "win": 95.9,
-        "show": 28.8
+        "show": 16.9
       },
       "sire": "不明",
       "jockey": "森田",
-      "frame_number": 8
+      "frame_number": 8,
+      "image": "/images/horses/2023106127.jpg"
     },
     {
       "horse_number": 11,
@@ -219,9 +225,9 @@
       "win_prob": 0.0423,
       "show_prob": 0.1566,
       "ev_win": 3.0,
-      "ev_show": 3.34,
+      "ev_show": 1.93,
       "kelly_win": 0.0071,
-      "kelly_show": 0.0288,
+      "kelly_show": 0.0205,
       "speed_index": 43.0,
       "radar": {
         "speed": 85,
@@ -240,11 +246,12 @@
       ],
       "odds": {
         "win": 71.0,
-        "show": 21.3
+        "show": 12.3
       },
       "sire": "不明",
       "jockey": "北村友",
-      "frame_number": 6
+      "frame_number": 6,
+      "image": "/images/horses/2023103886.jpg"
     },
     {
       "horse_number": 12,
@@ -253,7 +260,7 @@
       "win_prob": 0.1552,
       "show_prob": 0.2662,
       "ev_win": 0.37,
-      "ev_show": 0.19,
+      "ev_show": 0.35,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 64.0,
@@ -274,11 +281,12 @@
       ],
       "odds": {
         "win": 2.4,
-        "show": 0.7
+        "show": 1.3
       },
       "sire": "エピファネイア",
       "jockey": "武豊",
-      "frame_number": 7
+      "frame_number": 7,
+      "image": "/images/horses/2023107046.jpg"
     },
     {
       "horse_number": 10,
@@ -287,7 +295,7 @@
       "win_prob": 0.0833,
       "show_prob": 0.1763,
       "ev_win": 0.56,
-      "ev_show": 0.35,
+      "ev_show": 0.44,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 53.0,
@@ -308,11 +316,12 @@
       ],
       "odds": {
         "win": 6.7,
-        "show": 2.0
+        "show": 2.5
       },
       "sire": "不明",
       "jockey": "川田",
-      "frame_number": 6
+      "frame_number": 6,
+      "image": "/images/horses/2023107283.jpg"
     },
     {
       "horse_number": 13,
@@ -321,7 +330,7 @@
       "win_prob": 0.071,
       "show_prob": 0.2662,
       "ev_win": 0.45,
-      "ev_show": 0.5,
+      "ev_show": 0.43,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 66.0,
@@ -342,11 +351,12 @@
       ],
       "odds": {
         "win": 6.3,
-        "show": 1.9
+        "show": 1.6
       },
       "sire": "インディチャンプ",
       "jockey": "西村淳",
-      "frame_number": 7
+      "frame_number": 7,
+      "image": "/images/horses/2023106900.jpg"
     },
     {
       "horse_number": 1,
@@ -355,9 +365,9 @@
       "win_prob": 0.0429,
       "show_prob": 0.1824,
       "ev_win": 0.52,
-      "ev_show": 0.66,
+      "ev_show": 1.13,
       "kelly_win": 0.0,
-      "kelly_show": 0.0,
+      "kelly_show": 0.0063,
       "speed_index": 26.0,
       "radar": {
         "speed": 74,
@@ -376,11 +386,12 @@
       ],
       "odds": {
         "win": 12.1,
-        "show": 3.6
+        "show": 6.2
       },
       "sire": "不明",
       "jockey": "坂井",
-      "frame_number": 1
+      "frame_number": 1,
+      "image": "/images/horses/2023106399.jpg"
     },
     {
       "horse_number": 14,
@@ -389,7 +400,7 @@
       "win_prob": 0.0429,
       "show_prob": 0.1575,
       "ev_win": 0.68,
-      "ev_show": 0.75,
+      "ev_show": 0.74,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 50.0,
@@ -414,7 +425,8 @@
       },
       "sire": "不明",
       "jockey": "田口",
-      "frame_number": 8
+      "frame_number": 8,
+      "image": "/images/horses/2023106227.jpg"
     },
     {
       "horse_number": 6,
@@ -423,9 +435,9 @@
       "win_prob": 0.0423,
       "show_prob": 0.1808,
       "ev_win": 1.18,
-      "ev_show": 1.51,
+      "ev_show": 1.3,
       "kelly_win": 0.0016,
-      "kelly_show": 0.0173,
+      "kelly_show": 0.0122,
       "speed_index": 54.0,
       "radar": {
         "speed": 92,
@@ -444,11 +456,12 @@
       ],
       "odds": {
         "win": 27.8,
-        "show": 8.3
+        "show": 7.2
       },
       "sire": "不明",
       "jockey": "高杉",
-      "frame_number": 4
+      "frame_number": 4,
+      "image": "/images/horses/2023104373.jpg"
     },
     {
       "horse_number": 7,
@@ -457,7 +470,7 @@
       "win_prob": 0.0423,
       "show_prob": 0.1636,
       "ev_win": 0.82,
-      "ev_show": 0.96,
+      "ev_show": 0.82,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": -85.0,
@@ -478,11 +491,12 @@
       ],
       "odds": {
         "win": 19.5,
-        "show": 5.8
+        "show": 5.0
       },
       "sire": "不明",
       "jockey": "飛田愛",
-      "frame_number": 4
+      "frame_number": 4,
+      "image": "/images/horses/2023104470.jpg"
     },
     {
       "horse_number": 4,
@@ -491,9 +505,9 @@
       "win_prob": 0.0423,
       "show_prob": 0.2662,
       "ev_win": 0.96,
-      "ev_show": 1.82,
+      "ev_show": 1.12,
       "kelly_win": 0.0,
-      "kelly_show": 0.0351,
+      "kelly_show": 0.0092,
       "speed_index": 56.0,
       "radar": {
         "speed": 93,
@@ -512,11 +526,12 @@
       ],
       "odds": {
         "win": 22.8,
-        "show": 6.8
+        "show": 4.2
       },
       "sire": "不明",
       "jockey": "吉村",
-      "frame_number": 3
+      "frame_number": 3,
+      "image": "/images/horses/2023107079.jpg"
     }
   ],
   "recommendations": {

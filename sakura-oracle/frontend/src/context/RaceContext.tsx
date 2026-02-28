@@ -22,11 +22,22 @@ export interface RaceIndexEntry {
 
 export type PredictionsData = typeof defaultPredictions;
 
+export interface TopBet {
+  type: string;
+  targets: string;
+  names: string;
+  odds: number;
+  prob: number;
+  ev: number;
+  kelly: number;
+}
+
 interface RaceContextValue {
   races: RaceIndexEntry[];
   selectedRaceId: string | null;
   selectRace: (id: string) => void;
   predictions: PredictionsData;
+  topBets: TopBet[];
   isLoading: boolean;
 }
 
@@ -39,6 +50,7 @@ export function RaceProvider({ children }: { children: ReactNode }) {
   const [races, setRaces] = useState<RaceIndexEntry[]>([]);
   const [selectedRaceId, setSelectedRaceId] = useState<string | null>(null);
   const [predictions, setPredictions] = useState<PredictionsData>(defaultPredictions);
+  const [topBets, setTopBets] = useState<TopBet[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Fetch race index on mount
@@ -68,6 +80,7 @@ export function RaceProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!selectedRaceId || selectedRaceId === DEFAULT_RACE_ID) {
       setPredictions(defaultPredictions);
+      setTopBets([]);
       return;
     }
 
@@ -75,12 +88,28 @@ export function RaceProvider({ children }: { children: ReactNode }) {
     (async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(`/races/${selectedRaceId}.json`);
-        if (!res.ok) throw new Error("fetch failed");
-        const data: PredictionsData = await res.json();
+        const [raceRes, topBetsRes] = await Promise.all([
+          fetch(`/races/${selectedRaceId}.json`),
+          fetch(`/races/${selectedRaceId}_top_bets.json`).catch(() => null),
+        ]);
+        if (!raceRes.ok) throw new Error("fetch failed");
+        const data: PredictionsData = await raceRes.json();
         if (!cancelled) setPredictions(data);
+
+        // top_bets.json は404でも正常（未生成の場合）
+        if (!cancelled) {
+          if (topBetsRes && topBetsRes.ok) {
+            const betsData: TopBet[] = await topBetsRes.json();
+            setTopBets(Array.isArray(betsData) ? betsData : []);
+          } else {
+            setTopBets([]);
+          }
+        }
       } catch {
-        if (!cancelled) setPredictions(defaultPredictions);
+        if (!cancelled) {
+          setPredictions(defaultPredictions);
+          setTopBets([]);
+        }
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -100,8 +129,8 @@ export function RaceProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<RaceContextValue>(
-    () => ({ races, selectedRaceId, selectRace, predictions, isLoading }),
-    [races, selectedRaceId, selectRace, predictions, isLoading],
+    () => ({ races, selectedRaceId, selectRace, predictions, topBets, isLoading }),
+    [races, selectedRaceId, selectRace, predictions, topBets, isLoading],
   );
 
   return (
