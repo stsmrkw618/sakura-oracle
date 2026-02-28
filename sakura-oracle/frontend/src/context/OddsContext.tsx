@@ -245,12 +245,10 @@ function generateBets(
       bets.push(...quinellaBets);
     }
   } else {
-    // nagashi馬連: 勝率1位を軸 → 勝率2-5位への4通り（Kelly傾斜配分）
-    // 軸は「来る確率が最も高い馬」であるべき（Kelly=投資価値とは別）
-    const byProb = [...horses].sort((a, b) => b.win_prob - a.win_prob);
-    if (byProb.length >= 2) {
-      const pivot = byProb[0]; // 勝率1位（軸）
-      const partners = byProb.slice(1, 5); // 勝率2-5位
+    // nagashi馬連: ◎(Kelly1位)を軸 → Kelly2-5位への4通り（Kelly傾斜配分）
+    if (sorted.length >= 2) {
+      const pivot = sorted[0]; // ◎（Kelly最大 = 最もエッジが高い馬）
+      const partners = sorted.slice(1, 5); // Kelly2-5位
       const avgKelly = [pivot, ...partners].reduce((s, h) => s + h.kelly_win, 0) / (partners.length + 1);
       const numCombs = partners.length;
       const totalAmount = Math.max(100 * numCombs, Math.round((budget * avgKelly) / 100) * 100);
@@ -353,15 +351,14 @@ function generateBets(
       bets.push(...trioBets);
     }
   } else {
-    // nagashi三連複: 勝率1位を軸 + 勝率2-5位から2頭 = 4C2 = 6通り（Kelly傾斜配分）
-    const byProb5 = [...horses]
-      .filter((h) => h.win_prob > 0)
-      .sort((a, b) => b.win_prob - a.win_prob)
+    // nagashi三連複: ◎(Kelly1位)を軸 + Kelly2-5位から2頭 = 4C2=6通り（Kelly傾斜配分）
+    const top5 = sorted
+      .filter((h) => h.kelly_win > 0 || h.win_prob > 0)
       .slice(0, 5);
-    if (byProb5.length >= 3) {
-      const pivot = byProb5[0]; // 勝率1位（軸）
-      const partners = byProb5.slice(1); // 勝率2-5位
-      const avgKelly = byProb5.reduce((s, h) => s + h.kelly_win, 0) / byProb5.length;
+    if (top5.length >= 3) {
+      const pivot = top5[0]; // ◎（Kelly最大）
+      const partners = top5.slice(1); // Kelly2-5位
+      const avgKelly = top5.reduce((s, h) => s + h.kelly_win, 0) / top5.length;
       const numCombs = comb(partners.length, 2);
       const totalAmount = Math.max(100 * numCombs, Math.round((budget * avgKelly * 0.5) / 100) * 100);
 
