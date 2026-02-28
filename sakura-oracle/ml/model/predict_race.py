@@ -48,7 +48,7 @@ from ml.model.predictor import (
     normalize_0_100,
     RADAR_FEATURES,
 )
-from ml.model.combo_ev import generate_top_bets
+from ml.model.combo_ev import generate_top_bets, generate_top_bets_from_scrape
 
 
 RACE_SLUG: dict[str, str] = {
@@ -308,12 +308,15 @@ def predict_race(
     race_label: str,
     override_race_id: str | None = None,
     excel_path: str | None = None,
+    scrape_odds: bool = False,
 ) -> None:
     """メイン予測処理。
 
     Args:
         race_label: "チューリップ賞2026" のようなレースラベル
         override_race_id: race_idを直接指定（netkeibaで自動検出できない場合）
+        excel_path: netkeibaオッズExcelのパス
+        scrape_odds: Trueならオッズを自動スクレイピングしてtop_bets.json生成
     """
     print("=" * 60)
     print(f"SAKURA ORACLE — {race_label} 予測")
@@ -702,27 +705,32 @@ def predict_race(
     marks = {m: sum(1 for p in predictions if p["mark"] == m) for m in ["◎", "○", "▲", "△", "×"]}
     print(f"  印: ◎{marks['◎']} ○{marks['○']} ▲{marks['▲']} △{marks['△']} ×{marks['×']}")
 
-    # --- Excelオッズ → AI推奨TOP10買い目 ---
+    # --- オッズ → AI推奨TOP10買い目 ---
+    # 優先順位: --excel > --scrape-odds
+    top_bets_path = races_dir / f"{race_file_id}_top_bets.json"
     if excel_path:
         from pathlib import Path as _P
         if _P(excel_path).exists():
-            print(f"\n--- AI推奨買い目生成 ---")
-            top_bets_path = races_dir / f"{race_file_id}_top_bets.json"
+            print(f"\n--- AI推奨買い目生成（Excel） ---")
             generate_top_bets(excel_path, race_json_path, top_bets_path)
         else:
             print(f"\n  ⚠️ Excelファイルが見つかりません: {excel_path}")
+    elif scrape_odds:
+        print(f"\n--- AI推奨買い目生成（スクレイピング） ---")
+        generate_top_bets_from_scrape(race_id, race_json_path, top_bets_path)
 
     print("\n完了!")
 
 
 def main() -> None:
     if len(sys.argv) < 2:
-        print("使い方: PYTHONIOENCODING=utf-8 py ml/model/predict_race.py <レース名+年> [--race-id <id>] [--excel <path>]")
+        print("使い方: PYTHONIOENCODING=utf-8 py ml/model/predict_race.py <レース名+年> [--race-id <id>] [--excel <path>] [--scrape-odds]")
         print()
         print("例:")
         print("  py ml/model/predict_race.py チューリップ賞2026")
         print("  py ml/model/predict_race.py チューリップ賞2026 --race-id 202609010411")
         print("  py ml/model/predict_race.py チューリップ賞2026 --excel チューリップ.xlsx")
+        print("  py ml/model/predict_race.py チューリップ賞2026 --race-id 202609010411 --scrape-odds")
         print("  py ml/model/predict_race.py フィリーズレビュー2026")
         print("  py ml/model/predict_race.py フェアリーS2026")
         print("  py ml/model/predict_race.py 桜花賞2025")
@@ -745,7 +753,14 @@ def main() -> None:
         idx = sys.argv.index("--excel")
         if idx + 1 < len(sys.argv):
             excel_path = sys.argv[idx + 1]
-    predict_race(race_label, override_race_id=override_race_id, excel_path=excel_path)
+    # --scrape-odds フラグ解析
+    scrape_odds = "--scrape-odds" in sys.argv
+    predict_race(
+        race_label,
+        override_race_id=override_race_id,
+        excel_path=excel_path,
+        scrape_odds=scrape_odds,
+    )
 
 
 if __name__ == "__main__":

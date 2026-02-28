@@ -1,11 +1,14 @@
 """
-SAKURA ORACLE — ExcelオッズからAI推奨TOP10買い目を生成
+SAKURA ORACLE — 組合せオッズからAI推奨TOP10買い目を生成
 
-netkeibaから取得したExcel（シート別に馬連・ワイド・三連複・馬単・三連単のTOP50オッズ）を
-読み込み、AI確率×実オッズでEVを算出し、上位10件をJSONに出力する。
+netkeibaから取得したExcel、またはスクレイピングで取得したオッズデータから
+AI確率×実オッズでEVを算出し、上位10件をJSONに出力する。
 
 使い方:
+    # Excelから
     PYTHONIOENCODING=utf-8 py ml/model/combo_ev.py --excel チューリップ.xlsx --race tulip2026
+    # スクレイピングから
+    PYTHONIOENCODING=utf-8 py ml/model/combo_ev.py --scrape --race tulip2026 --race-id 202609010411
 """
 
 import json
@@ -284,14 +287,16 @@ def generate_top_bets(
     race_json_path: str | Path,
     output_path: Optional[str | Path] = None,
     top_n: int = 10,
+    odds_data: Optional[list[dict]] = None,
 ) -> list[dict]:
-    """ExcelオッズとAI確率からEV上位の買い目を生成する。
+    """オッズデータとAI確率からEV上位の買い目を生成する。
 
     Args:
-        excel_path: netkeibaオッズExcelのパス
+        excel_path: netkeibaオッズExcelのパス（odds_data指定時は無視）
         race_json_path: races/{slug}{year}.json のパス
         output_path: 出力先パス（Noneの場合はrace_json_pathの横に _top_bets.json）
         top_n: 上位何件を出力するか
+        odds_data: スクレイピング等で取得済みのオッズデータ（指定時はExcel読込をスキップ）
 
     Returns:
         上位N件の買い目リスト
@@ -320,8 +325,12 @@ def generate_top_bets(
 
     print(f"  AI確率: {len(norm_probs)}頭ロード済み")
 
-    # --- Excelオッズ読込 ---
-    all_odds = _load_excel_odds(excel_path)
+    # --- オッズ読込（odds_data優先、なければExcel） ---
+    if odds_data is not None:
+        all_odds = odds_data
+        print(f"  スクレイピングオッズ: {len(all_odds)}件")
+    else:
+        all_odds = _load_excel_odds(excel_path)
 
     if not all_odds:
         print("  ⚠️ オッズデータが空です")
@@ -386,18 +395,62 @@ def generate_top_bets(
     return top_bets
 
 
+def generate_top_bets_from_scrape(
+    race_id: str,
+    race_json_path: str | Path,
+    output_path: Optional[str | Path] = None,
+    top_n: int = 10,
+) -> list[dict]:
+    """スクレイピングでオッズを取得し、AI推奨買い目を生成する。
+
+    内部で odds_scraper.scrape_combo_odds() を呼び、
+    generate_top_bets() と同じEVロジックで処理する。
+
+    Args:
+        race_id: netkeibaのrace_id（12桁）
+        race_json_path: races/{slug}{year}.json のパス
+        output_path: 出力先パス
+        top_n: 上位何件を出力するか
+
+    Returns:
+        上位N件の買い目リスト
+    """
+    from ml.scraper.odds_scraper import scrape_combo_odds
+
+    odds_data = scrape_combo_odds(race_id)
+    if not odds_data:
+        print("  ⚠️ スクレイピングでオッズを取得できませんでした")
+        return []
+
+    return generate_top_bets(
+        excel_path="",  # odds_data指定時は不使用
+        race_json_path=race_json_path,
+        output_path=output_path,
+        top_n=top_n,
+        odds_data=odds_data,
+    )
+
+
 def main() -> None:
     """CLI エントリーポイント。"""
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="ExcelオッズからAI推奨TOP10買い目を生成"
+        description="組合せオッズからAI推奨TOP10買い目を生成"
+    )
+    # Excel or スクレイピング（どちらか必須）
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument(
+        "--excel", help="netkeibaオッズExcelのパス"
+    )
+    source.add_argument(
+        "--scrape", action="store_true", help="netkeibaからオッズをスクレイピング"
     )
     parser.add_argument(
-        "--excel", required=True, help="netkeibaオッズExcelのパス"
+        "--race", required=True, help="レースファイルID（例: tulip2026）"
     )
     parser.add_argument(
-        "--race", required=True, help="レースID（例: tulip2026）"
+        "--race-id", help="netkeibaのrace_id（--scrape時に必須）"
     )
     parser.add_argument(
         "--top", type=int, default=10, help="出力件数（デフォルト: 10）"
@@ -412,18 +465,37 @@ def main() -> None:
         print(f"  先に predict_race.py を実行してください")
         sys.exit(1)
 
-    if not Path(args.excel).exists():
-        print(f"ERROR: {args.excel} が見つかりません")
-        sys.exit(1)
-
-    print("=" * 60)
-    print(f"SAKURA ORACLE — AI推奨買い目生成")
-    print(f"  Excel: {args.excel}")
-    print(f"  Race: {args.race}")
-    print("=" * 60)
-
     output_path = races_dir / f"{args.race}_top_bets.json"
-    generate_top_bets(args.excel, race_json_path, output_path, top_n=args.top)
+
+    if args.scrape:
+        # スクレイピングモード
+        if not args.race_id:
+            print("ERROR: --scrape には --race-id が必要です")
+            print("  例: py ml/model/combo_ev.py --scrape --race tulip2026 --race-id 202609010411")
+            sys.exit(1)
+
+        print("=" * 60)
+        print(f"SAKURA ORACLE — AI推奨買い目生成（スクレイピング）")
+        print(f"  Race: {args.race}")
+        print(f"  race_id: {args.race_id}")
+        print("=" * 60)
+
+        generate_top_bets_from_scrape(
+            args.race_id, race_json_path, output_path, top_n=args.top
+        )
+    else:
+        # Excelモード
+        if not Path(args.excel).exists():
+            print(f"ERROR: {args.excel} が見つかりません")
+            sys.exit(1)
+
+        print("=" * 60)
+        print(f"SAKURA ORACLE — AI推奨買い目生成（Excel）")
+        print(f"  Excel: {args.excel}")
+        print(f"  Race: {args.race}")
+        print("=" * 60)
+
+        generate_top_bets(args.excel, race_json_path, output_path, top_n=args.top)
 
     print("\n完了!")
 
