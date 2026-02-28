@@ -8,6 +8,7 @@ const tabs = [
   { href: "/prediction", label: "予測", icon: "📊" },
   { href: "/bet-guide", label: "買い目", icon: "💰" },
   { href: "/analysis", label: "分析", icon: "📈" },
+  { href: "/how-to", label: "使い方", icon: "📖" },
 ];
 
 export default function Navbar() {
@@ -25,7 +26,7 @@ export default function Navbar() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`flex flex-col items-center gap-0.5 px-3 py-2 transition-colors ${
+              className={`flex flex-col items-center gap-0.5 px-2 py-2 transition-colors ${
                 isActive ? "text-sakura-pink" : "text-muted-foreground"
               }`}
             >
