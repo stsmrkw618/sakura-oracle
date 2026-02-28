@@ -125,8 +125,8 @@ function calcMark(
 
   if (kellyRank === 1 && kelly > 0.01) return "◎";
   if (kellyRank <= 3 && kelly > 0.005) return "○";
-  if (kelly > 0.002) return "▲";
-  if (horse.show_prob >= 0.2 && kelly > 0) return "△";
+  if (kellyRank <= 8 && kelly > 0.002) return "▲";
+  if (horse.show_prob >= 0.2) return "△";
   return "×";
 }
 

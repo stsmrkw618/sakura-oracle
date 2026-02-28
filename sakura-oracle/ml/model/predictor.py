@@ -298,8 +298,8 @@ def get_mark(row: pd.Series, df: pd.DataFrame) -> str:
         return "○"  # 上位3位 & エッジあり
     elif kelly_rank[idx] <= 8 and kelly > 0.002:
         return "▲"  # 上位8位以内 & Kelly正だが控えめ
-    elif row["pred_show"] >= 0.2 and kelly > 0:
-        return "△"  # 複勝候補（Kelly微小だが複勝圏）
+    elif row["pred_show"] >= 0.2:
+        return "△"  # 複勝候補（3着以内の可能性が高い）
     else:
         return "×"  # エッジなし
 

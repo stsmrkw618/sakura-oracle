@@ -5,7 +5,7 @@
     "course": "阪神 芝1600m",
     "going": "TBD",
     "weather": "TBD",
-    "updated_at": "2026-03-01T01:13:20.461034"
+    "updated_at": "2026-03-01T01:58:22.380968"
   },
   "predictions": [
     {
@@ -256,7 +256,7 @@
     {
       "horse_number": 12,
       "horse_name": "アランカール",
-      "mark": "×",
+      "mark": "△",
       "win_prob": 0.1552,
       "show_prob": 0.2662,
       "ev_win": 0.37,
@@ -287,6 +287,76 @@
       "jockey": "武豊",
       "frame_number": 7,
       "image": "/images/horses/2023107046.jpg"
+    },
+    {
+      "horse_number": 13,
+      "horse_name": "タイセイボーグ",
+      "mark": "△",
+      "win_prob": 0.071,
+      "show_prob": 0.2662,
+      "ev_win": 0.45,
+      "ev_show": 0.43,
+      "kelly_win": 0.0,
+      "kelly_show": 0.0,
+      "speed_index": 66.0,
+      "radar": {
+        "speed": 100,
+        "stamina": 12,
+        "instant": 73,
+        "pedigree": 50,
+        "jockey": 20,
+        "course_fit": 0
+      },
+      "comment": "前走3着。上がり33.7秒は優秀。安定した成績。",
+      "risk": "キャリアが浅い。阪神未経験。馬体重増が大きい",
+      "last3_results": [
+        "3着",
+        "4着",
+        "3着"
+      ],
+      "odds": {
+        "win": 6.3,
+        "show": 1.6
+      },
+      "sire": "インディチャンプ",
+      "jockey": "西村淳",
+      "frame_number": 7,
+      "image": "/images/horses/2023106900.jpg"
+    },
+    {
+      "horse_number": 4,
+      "horse_name": "スマートプリエール",
+      "mark": "△",
+      "win_prob": 0.0423,
+      "show_prob": 0.2662,
+      "ev_win": 0.96,
+      "ev_show": 1.12,
+      "kelly_win": 0.0,
+      "kelly_show": 0.0092,
+      "speed_index": 56.0,
+      "radar": {
+        "speed": 93,
+        "stamina": 62,
+        "instant": 80,
+        "pedigree": 50,
+        "jockey": 0,
+        "course_fit": 50
+      },
+      "comment": "前走3着。阪神1走経験あり。安定した成績。",
+      "risk": "特に目立つリスクなし",
+      "last3_results": [
+        "3着",
+        "-",
+        "-"
+      ],
+      "odds": {
+        "win": 22.8,
+        "show": 4.2
+      },
+      "sire": "不明",
+      "jockey": "吉村",
+      "frame_number": 3,
+      "image": "/images/horses/2023107079.jpg"
     },
     {
       "horse_number": 10,
@@ -322,41 +392,6 @@
       "jockey": "川田",
       "frame_number": 6,
       "image": "/images/horses/2023107283.jpg"
-    },
-    {
-      "horse_number": 13,
-      "horse_name": "タイセイボーグ",
-      "mark": "×",
-      "win_prob": 0.071,
-      "show_prob": 0.2662,
-      "ev_win": 0.45,
-      "ev_show": 0.43,
-      "kelly_win": 0.0,
-      "kelly_show": 0.0,
-      "speed_index": 66.0,
-      "radar": {
-        "speed": 100,
-        "stamina": 12,
-        "instant": 73,
-        "pedigree": 50,
-        "jockey": 20,
-        "course_fit": 0
-      },
-      "comment": "前走3着。上がり33.7秒は優秀。安定した成績。",
-      "risk": "キャリアが浅い。阪神未経験。馬体重増が大きい",
-      "last3_results": [
-        "3着",
-        "4着",
-        "3着"
-      ],
-      "odds": {
-        "win": 6.3,
-        "show": 1.6
-      },
-      "sire": "インディチャンプ",
-      "jockey": "西村淳",
-      "frame_number": 7,
-      "image": "/images/horses/2023106900.jpg"
     },
     {
       "horse_number": 1,
@@ -497,41 +532,6 @@
       "jockey": "飛田愛",
       "frame_number": 4,
       "image": "/images/horses/2023104470.jpg"
-    },
-    {
-      "horse_number": 4,
-      "horse_name": "スマートプリエール",
-      "mark": "×",
-      "win_prob": 0.0423,
-      "show_prob": 0.2662,
-      "ev_win": 0.96,
-      "ev_show": 1.12,
-      "kelly_win": 0.0,
-      "kelly_show": 0.0092,
-      "speed_index": 56.0,
-      "radar": {
-        "speed": 93,
-        "stamina": 62,
-        "instant": 80,
-        "pedigree": 50,
-        "jockey": 0,
-        "course_fit": 50
-      },
-      "comment": "前走3着。阪神1走経験あり。安定した成績。",
-      "risk": "特に目立つリスクなし",
-      "last3_results": [
-        "3着",
-        "-",
-        "-"
-      ],
-      "odds": {
-        "win": 22.8,
-        "show": 4.2
-      },
-      "sire": "不明",
-      "jockey": "吉村",
-      "frame_number": 3,
-      "image": "/images/horses/2023107079.jpg"
     }
   ],
   "recommendations": {
