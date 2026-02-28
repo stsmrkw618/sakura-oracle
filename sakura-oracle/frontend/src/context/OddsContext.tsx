@@ -392,10 +392,28 @@ function generateBets(
     }
   }
 
-  // ROI降順でソート（三連複→馬連→ワイド→単勝）
-  bets.sort((a, b) => b.backtestRoi - a.backtestRoi);
+  // --- 期待値最大化フィルター ---
+  // 組合せ馬券をEV上位に絞り込み、予算を集中させる
+  const winBets = bets.filter((b) => b.type === "単勝");
+  const comboBets = bets.filter((b) => b.type !== "単勝" && b.ev > 0);
 
-  return bets;
+  // EV降順でソートし上位5件に絞る（少数に集中 = EV最大化）
+  comboBets.sort((a, b) => b.ev - a.ev);
+  const MAX_COMBOS = 5;
+  const topCombos = comboBets.slice(0, MAX_COMBOS);
+
+  // 絞り込み後の組合せ予算を再配分
+  if (topCombos.length > 0) {
+    const comboTotal = topCombos.reduce((s, b) => s + b.amount, 0);
+    const minTotal = 100 * topCombos.length;
+    allocateByKelly(topCombos, Math.max(minTotal, comboTotal));
+  }
+
+  // ROI降順でソート（三連複→馬連→ワイド→単勝）
+  const result = [...winBets, ...topCombos];
+  result.sort((a, b) => b.backtestRoi - a.backtestRoi);
+
+  return result;
 }
 
 // --- Context ---
