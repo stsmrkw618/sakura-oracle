@@ -222,12 +222,6 @@ def scrape_combo_odds(race_id: str) -> list[dict]:
 
         results = _parse_api_odds(api_data, odds_type, bet_type)
 
-        # 三連複・三連単は人気順上位50件のみ
-        if bet_type in ("三連複", "三連単") and len(results) > 50:
-            # 人気順（オッズ昇順）でソートして上位50件
-            results.sort(key=lambda x: x["odds"])
-            results = results[:50]
-
         print(f"     → {len(results)}件")
         all_results.extend(results)
 
