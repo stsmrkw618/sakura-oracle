@@ -5,52 +5,120 @@
     "course": "阪神 芝1600m",
     "going": "TBD",
     "weather": "TBD",
-    "updated_at": "2026-02-26T22:51:45.084942"
+    "updated_at": "2026-02-28T15:47:40.969486"
   },
   "predictions": [
     {
-      "horse_number": 1,
-      "horse_name": "アランカール",
-      "mark": "○",
-      "win_prob": 0.1372,
-      "show_prob": 0.2659,
-      "ev_win": 1.37,
-      "ev_show": 0.8,
-      "kelly_win": 0.0103,
-      "kelly_show": 0.0,
-      "speed_index": 64.0,
+      "horse_number": 9,
+      "horse_name": "ホワイトオーキッド",
+      "mark": "◎",
+      "win_prob": 0.128,
+      "show_prob": 0.2662,
+      "ev_win": 2.32,
+      "ev_show": 1.45,
+      "kelly_win": 0.0193,
+      "kelly_show": 0.0252,
+      "speed_index": 63.0,
       "radar": {
-        "speed": 99,
-        "stamina": 0,
-        "instant": 57,
+        "speed": 98,
+        "stamina": 25,
+        "instant": 47,
         "pedigree": 50,
-        "jockey": 34,
-        "course_fit": 0
+        "jockey": 0,
+        "course_fit": 100
       },
-      "comment": "前走5着。上がり34.5秒は平均的。",
-      "risk": "キャリアが浅い。阪神未経験",
+      "comment": "前走7着。阪神2走経験あり。",
+      "risk": "キャリアが浅い。前走着順が振るわない",
       "last3_results": [
-        "5着",
-        "4着",
-        "3着"
+        "7着",
+        "-",
+        "-"
       ],
       "odds": {
-        "win": 10.0,
-        "show": 3.0
+        "win": 18.1,
+        "show": 5.4
       },
-      "sire": "エピファネイア",
-      "jockey": "武豊",
-      "frame_number": 0
+      "sire": "不明",
+      "jockey": "松山",
+      "frame_number": 5
     },
     {
-      "horse_number": 10,
-      "horse_name": "ソルパッサーレ",
+      "horse_number": 3,
+      "horse_name": "アンディムジーク",
       "mark": "○",
-      "win_prob": 0.1372,
-      "show_prob": 0.2659,
-      "ev_win": 1.37,
-      "ev_show": 0.8,
-      "kelly_win": 0.0103,
+      "win_prob": 0.0423,
+      "show_prob": 0.1566,
+      "ev_win": 4.29,
+      "ev_show": 4.77,
+      "kelly_win": 0.0082,
+      "kelly_show": 0.032,
+      "speed_index": 44.0,
+      "radar": {
+        "speed": 85,
+        "stamina": 62,
+        "instant": 100,
+        "pedigree": 50,
+        "jockey": 15,
+        "course_fit": 100
+      },
+      "comment": "前走8着。阪神2走経験あり。安定した成績。",
+      "risk": "前走着順が振るわない",
+      "last3_results": [
+        "8着",
+        "-",
+        "-"
+      ],
+      "odds": {
+        "win": 101.6,
+        "show": 30.5
+      },
+      "sire": "不明",
+      "jockey": "団野",
+      "frame_number": 2
+    },
+    {
+      "horse_number": 2,
+      "horse_name": "グレースジェンヌ",
+      "mark": "○",
+      "win_prob": 0.0423,
+      "show_prob": 0.1754,
+      "ev_win": 4.35,
+      "ev_show": 5.41,
+      "kelly_win": 0.0082,
+      "kelly_show": 0.0369,
+      "speed_index": 48.0,
+      "radar": {
+        "speed": 88,
+        "stamina": 25,
+        "instant": 20,
+        "pedigree": 50,
+        "jockey": 20,
+        "course_fit": 0
+      },
+      "comment": "前走7着。",
+      "risk": "キャリアが浅い。阪神未経験。前走着順が振るわない",
+      "last3_results": [
+        "7着",
+        "-",
+        "-"
+      ],
+      "odds": {
+        "win": 102.8,
+        "show": 30.8
+      },
+      "sire": "不明",
+      "jockey": "岩田望",
+      "frame_number": 2
+    },
+    {
+      "horse_number": 5,
+      "horse_name": "ソルパッサーレ",
+      "mark": "▲",
+      "win_prob": 0.1384,
+      "show_prob": 0.2662,
+      "ev_win": 1.11,
+      "ev_show": 0.64,
+      "kelly_win": 0.0038,
       "kelly_show": 0.0,
       "speed_index": 58.0,
       "radar": {
@@ -69,55 +137,157 @@
         "-"
       ],
       "odds": {
-        "win": 10.0,
-        "show": 3.0
+        "win": 8.0,
+        "show": 2.4
       },
       "sire": "不明",
       "jockey": "浜中",
-      "frame_number": 0
+      "frame_number": 3
+    },
+    {
+      "horse_number": 8,
+      "horse_name": "エイズルブルーム",
+      "mark": "▲",
+      "win_prob": 0.0423,
+      "show_prob": 0.1566,
+      "ev_win": 1.31,
+      "ev_show": 1.46,
+      "kelly_win": 0.0026,
+      "kelly_show": 0.0138,
+      "speed_index": 52.0,
+      "radar": {
+        "speed": 91,
+        "stamina": 38,
+        "instant": 57,
+        "pedigree": 50,
+        "jockey": 18,
+        "course_fit": 50
+      },
+      "comment": "前走6着。上がり34.4秒は平均的。阪神1走経験あり。安定した成績。",
+      "risk": "前走着順が振るわない",
+      "last3_results": [
+        "6着",
+        "-",
+        "-"
+      ],
+      "odds": {
+        "win": 31.1,
+        "show": 9.3
+      },
+      "sire": "不明",
+      "jockey": "池添",
+      "frame_number": 5
+    },
+    {
+      "horse_number": 15,
+      "horse_name": "ダンシングドール",
+      "mark": "▲",
+      "win_prob": 0.0423,
+      "show_prob": 0.1628,
+      "ev_win": 4.05,
+      "ev_show": 4.68,
+      "kelly_win": 0.008,
+      "kelly_show": 0.0332,
+      "speed_index": 10.0,
+      "radar": {
+        "speed": 63,
+        "stamina": 75,
+        "instant": 63,
+        "pedigree": 50,
+        "jockey": 0,
+        "course_fit": 0
+      },
+      "comment": "前走4着。",
+      "risk": "阪神未経験",
+      "last3_results": [
+        "4着",
+        "-",
+        "-"
+      ],
+      "odds": {
+        "win": 95.9,
+        "show": 28.8
+      },
+      "sire": "不明",
+      "jockey": "森田",
+      "frame_number": 8
     },
     {
       "horse_number": 11,
-      "horse_name": "タイセイボーグ",
-      "mark": "○",
-      "win_prob": 0.1372,
-      "show_prob": 0.2659,
-      "ev_win": 1.37,
-      "ev_show": 0.8,
-      "kelly_win": 0.0103,
-      "kelly_show": 0.0,
-      "speed_index": 66.0,
+      "horse_name": "ダンデノン",
+      "mark": "▲",
+      "win_prob": 0.0423,
+      "show_prob": 0.1566,
+      "ev_win": 3.0,
+      "ev_show": 3.34,
+      "kelly_win": 0.0071,
+      "kelly_show": 0.0288,
+      "speed_index": 43.0,
       "radar": {
-        "speed": 100,
-        "stamina": 12,
-        "instant": 73,
+        "speed": 85,
+        "stamina": 25,
+        "instant": 60,
         "pedigree": 50,
-        "jockey": 20,
+        "jockey": 0,
         "course_fit": 0
       },
-      "comment": "前走3着。上がり33.7秒は優秀。安定した成績。",
-      "risk": "キャリアが浅い。阪神未経験。馬体重増が大きい",
+      "comment": "前走1着。",
+      "risk": "キャリアが浅い。阪神未経験",
       "last3_results": [
-        "3着",
+        "1着",
+        "-",
+        "-"
+      ],
+      "odds": {
+        "win": 71.0,
+        "show": 21.3
+      },
+      "sire": "不明",
+      "jockey": "北村友",
+      "frame_number": 6
+    },
+    {
+      "horse_number": 12,
+      "horse_name": "アランカール",
+      "mark": "×",
+      "win_prob": 0.1552,
+      "show_prob": 0.2662,
+      "ev_win": 0.37,
+      "ev_show": 0.19,
+      "kelly_win": 0.0,
+      "kelly_show": 0.0,
+      "speed_index": 64.0,
+      "radar": {
+        "speed": 99,
+        "stamina": 0,
+        "instant": 57,
+        "pedigree": 50,
+        "jockey": 34,
+        "course_fit": 0
+      },
+      "comment": "前走5着。上がり34.5秒は平均的。",
+      "risk": "キャリアが浅い。阪神未経験",
+      "last3_results": [
+        "5着",
         "4着",
         "3着"
       ],
       "odds": {
-        "win": 10.0,
-        "show": 3.0
+        "win": 2.4,
+        "show": 0.7
       },
-      "sire": "インディチャンプ",
-      "jockey": "西村淳",
-      "frame_number": 0
+      "sire": "エピファネイア",
+      "jockey": "武豊",
+      "frame_number": 7
     },
     {
-      "horse_number": 7,
+      "horse_number": 10,
       "horse_name": "コニーアイランド",
       "mark": "×",
-      "win_prob": 0.0826,
-      "show_prob": 0.176,
-      "ev_win": 0.83,
-      "ev_show": 0.53,
+      "win_prob": 0.0833,
+      "show_prob": 0.1763,
+      "ev_win": 0.56,
+      "ev_show": 0.35,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 53.0,
@@ -137,157 +307,55 @@
         "-"
       ],
       "odds": {
-        "win": 10.0,
-        "show": 3.0
+        "win": 6.7,
+        "show": 2.0
       },
       "sire": "不明",
       "jockey": "川田",
-      "frame_number": 0
+      "frame_number": 6
     },
     {
-      "horse_number": 15,
-      "horse_name": "ホワイトオーキッド",
+      "horse_number": 13,
+      "horse_name": "タイセイボーグ",
       "mark": "×",
-      "win_prob": 0.0704,
-      "show_prob": 0.2659,
-      "ev_win": 0.7,
-      "ev_show": 0.8,
+      "win_prob": 0.071,
+      "show_prob": 0.2662,
+      "ev_win": 0.45,
+      "ev_show": 0.5,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
-      "speed_index": 63.0,
+      "speed_index": 66.0,
       "radar": {
-        "speed": 98,
-        "stamina": 25,
-        "instant": 47,
+        "speed": 100,
+        "stamina": 12,
+        "instant": 73,
         "pedigree": 50,
-        "jockey": 0,
-        "course_fit": 100
+        "jockey": 20,
+        "course_fit": 0
       },
-      "comment": "前走7着。阪神2走経験あり。",
-      "risk": "キャリアが浅い。前走着順が振るわない",
-      "last3_results": [
-        "7着",
-        "-",
-        "-"
-      ],
-      "odds": {
-        "win": 10.0,
-        "show": 3.0
-      },
-      "sire": "不明",
-      "jockey": "松山",
-      "frame_number": 0
-    },
-    {
-      "horse_number": 9,
-      "horse_name": "スマートプリエール",
-      "mark": "×",
-      "win_prob": 0.0522,
-      "show_prob": 0.2659,
-      "ev_win": 0.52,
-      "ev_show": 0.8,
-      "kelly_win": 0.0,
-      "kelly_show": 0.0,
-      "speed_index": 56.0,
-      "radar": {
-        "speed": 93,
-        "stamina": 62,
-        "instant": 80,
-        "pedigree": 50,
-        "jockey": 0,
-        "course_fit": 50
-      },
-      "comment": "前走3着。阪神1走経験あり。安定した成績。",
-      "risk": "特に目立つリスクなし",
+      "comment": "前走3着。上がり33.7秒は優秀。安定した成績。",
+      "risk": "キャリアが浅い。阪神未経験。馬体重増が大きい",
       "last3_results": [
         "3着",
-        "-",
-        "-"
+        "4着",
+        "3着"
       ],
       "odds": {
-        "win": 10.0,
-        "show": 3.0
+        "win": 6.3,
+        "show": 1.9
       },
-      "sire": "不明",
-      "jockey": "吉村",
-      "frame_number": 0
+      "sire": "インディチャンプ",
+      "jockey": "西村淳",
+      "frame_number": 7
     },
     {
-      "horse_number": 2,
-      "horse_name": "アンディムジーク",
-      "mark": "×",
-      "win_prob": 0.0426,
-      "show_prob": 0.1573,
-      "ev_win": 0.43,
-      "ev_show": 0.47,
-      "kelly_win": 0.0,
-      "kelly_show": 0.0,
-      "speed_index": 44.0,
-      "radar": {
-        "speed": 85,
-        "stamina": 62,
-        "instant": 100,
-        "pedigree": 50,
-        "jockey": 15,
-        "course_fit": 100
-      },
-      "comment": "前走8着。阪神2走経験あり。安定した成績。",
-      "risk": "前走着順が振るわない",
-      "last3_results": [
-        "8着",
-        "-",
-        "-"
-      ],
-      "odds": {
-        "win": 10.0,
-        "show": 3.0
-      },
-      "sire": "不明",
-      "jockey": "団野",
-      "frame_number": 0
-    },
-    {
-      "horse_number": 3,
-      "horse_name": "エイズルブルーム",
-      "mark": "×",
-      "win_prob": 0.0426,
-      "show_prob": 0.1573,
-      "ev_win": 0.43,
-      "ev_show": 0.47,
-      "kelly_win": 0.0,
-      "kelly_show": 0.0,
-      "speed_index": 52.0,
-      "radar": {
-        "speed": 91,
-        "stamina": 38,
-        "instant": 57,
-        "pedigree": 50,
-        "jockey": 18,
-        "course_fit": 50
-      },
-      "comment": "前走6着。上がり34.4秒は平均的。阪神1走経験あり。安定した成績。",
-      "risk": "前走着順が振るわない",
-      "last3_results": [
-        "6着",
-        "-",
-        "-"
-      ],
-      "odds": {
-        "win": 10.0,
-        "show": 3.0
-      },
-      "sire": "不明",
-      "jockey": "池添",
-      "frame_number": 0
-    },
-    {
-      "horse_number": 4,
+      "horse_number": 1,
       "horse_name": "エレガンスアスク",
       "mark": "×",
-      "win_prob": 0.0426,
-      "show_prob": 0.1822,
-      "ev_win": 0.43,
-      "ev_show": 0.55,
+      "win_prob": 0.0429,
+      "show_prob": 0.1824,
+      "ev_win": 0.52,
+      "ev_show": 0.66,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 26.0,
@@ -307,191 +375,21 @@
         "-"
       ],
       "odds": {
-        "win": 10.0,
-        "show": 3.0
+        "win": 12.1,
+        "show": 3.6
       },
       "sire": "不明",
       "jockey": "坂井",
-      "frame_number": 0
-    },
-    {
-      "horse_number": 5,
-      "horse_name": "グランドオーパス",
-      "mark": "×",
-      "win_prob": 0.0426,
-      "show_prob": 0.1806,
-      "ev_win": 0.43,
-      "ev_show": 0.54,
-      "kelly_win": 0.0,
-      "kelly_show": 0.0,
-      "speed_index": 54.0,
-      "radar": {
-        "speed": 92,
-        "stamina": 50,
-        "instant": 70,
-        "pedigree": 50,
-        "jockey": 0,
-        "course_fit": 50
-      },
-      "comment": "前走4着。阪神1走経験あり。",
-      "risk": "特に目立つリスクなし",
-      "last3_results": [
-        "4着",
-        "-",
-        "-"
-      ],
-      "odds": {
-        "win": 10.0,
-        "show": 3.0
-      },
-      "sire": "不明",
-      "jockey": "高杉",
-      "frame_number": 0
-    },
-    {
-      "horse_number": 6,
-      "horse_name": "グレースジェンヌ",
-      "mark": "×",
-      "win_prob": 0.0426,
-      "show_prob": 0.176,
-      "ev_win": 0.43,
-      "ev_show": 0.53,
-      "kelly_win": 0.0,
-      "kelly_show": 0.0,
-      "speed_index": 48.0,
-      "radar": {
-        "speed": 88,
-        "stamina": 25,
-        "instant": 20,
-        "pedigree": 50,
-        "jockey": 20,
-        "course_fit": 0
-      },
-      "comment": "前走7着。",
-      "risk": "キャリアが浅い。阪神未経験。前走着順が振るわない",
-      "last3_results": [
-        "7着",
-        "-",
-        "-"
-      ],
-      "odds": {
-        "win": 10.0,
-        "show": 3.0
-      },
-      "sire": "不明",
-      "jockey": "岩田望",
-      "frame_number": 0
-    },
-    {
-      "horse_number": 8,
-      "horse_name": "サキドリトッケン",
-      "mark": "×",
-      "win_prob": 0.0426,
-      "show_prob": 0.1634,
-      "ev_win": 0.43,
-      "ev_show": 0.49,
-      "kelly_win": 0.0,
-      "kelly_show": 0.0,
-      "speed_index": -85.0,
-      "radar": {
-        "speed": 0,
-        "stamina": 100,
-        "instant": 0,
-        "pedigree": 50,
-        "jockey": 0,
-        "course_fit": 0
-      },
-      "comment": "前走1着。安定した成績。",
-      "risk": "阪神未経験",
-      "last3_results": [
-        "1着",
-        "-",
-        "-"
-      ],
-      "odds": {
-        "win": 10.0,
-        "show": 3.0
-      },
-      "sire": "不明",
-      "jockey": "飛田愛",
-      "frame_number": 0
-    },
-    {
-      "horse_number": 12,
-      "horse_name": "ダンシングドール",
-      "mark": "×",
-      "win_prob": 0.0426,
-      "show_prob": 0.1634,
-      "ev_win": 0.43,
-      "ev_show": 0.49,
-      "kelly_win": 0.0,
-      "kelly_show": 0.0,
-      "speed_index": 10.0,
-      "radar": {
-        "speed": 63,
-        "stamina": 75,
-        "instant": 63,
-        "pedigree": 50,
-        "jockey": 0,
-        "course_fit": 0
-      },
-      "comment": "前走4着。",
-      "risk": "阪神未経験",
-      "last3_results": [
-        "4着",
-        "-",
-        "-"
-      ],
-      "odds": {
-        "win": 10.0,
-        "show": 3.0
-      },
-      "sire": "不明",
-      "jockey": "森田",
-      "frame_number": 0
-    },
-    {
-      "horse_number": 13,
-      "horse_name": "ダンデノン",
-      "mark": "×",
-      "win_prob": 0.0426,
-      "show_prob": 0.1573,
-      "ev_win": 0.43,
-      "ev_show": 0.47,
-      "kelly_win": 0.0,
-      "kelly_show": 0.0,
-      "speed_index": 43.0,
-      "radar": {
-        "speed": 85,
-        "stamina": 25,
-        "instant": 60,
-        "pedigree": 50,
-        "jockey": 0,
-        "course_fit": 0
-      },
-      "comment": "前走1着。",
-      "risk": "キャリアが浅い。阪神未経験",
-      "last3_results": [
-        "1着",
-        "-",
-        "-"
-      ],
-      "odds": {
-        "win": 10.0,
-        "show": 3.0
-      },
-      "sire": "不明",
-      "jockey": "北村友",
-      "frame_number": 0
+      "frame_number": 1
     },
     {
       "horse_number": 14,
       "horse_name": "ナムラコスモス",
       "mark": "×",
-      "win_prob": 0.0426,
-      "show_prob": 0.1573,
-      "ev_win": 0.43,
-      "ev_show": 0.47,
+      "win_prob": 0.0429,
+      "show_prob": 0.1575,
+      "ev_win": 0.68,
+      "ev_show": 0.75,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 50.0,
@@ -511,12 +409,114 @@
         "-"
       ],
       "odds": {
-        "win": 10.0,
-        "show": 3.0
+        "win": 15.8,
+        "show": 4.7
       },
       "sire": "不明",
       "jockey": "田口",
-      "frame_number": 0
+      "frame_number": 8
+    },
+    {
+      "horse_number": 6,
+      "horse_name": "グランドオーパス",
+      "mark": "×",
+      "win_prob": 0.0423,
+      "show_prob": 0.1808,
+      "ev_win": 1.18,
+      "ev_show": 1.51,
+      "kelly_win": 0.0016,
+      "kelly_show": 0.0173,
+      "speed_index": 54.0,
+      "radar": {
+        "speed": 92,
+        "stamina": 50,
+        "instant": 70,
+        "pedigree": 50,
+        "jockey": 0,
+        "course_fit": 50
+      },
+      "comment": "前走4着。阪神1走経験あり。",
+      "risk": "特に目立つリスクなし",
+      "last3_results": [
+        "4着",
+        "-",
+        "-"
+      ],
+      "odds": {
+        "win": 27.8,
+        "show": 8.3
+      },
+      "sire": "不明",
+      "jockey": "高杉",
+      "frame_number": 4
+    },
+    {
+      "horse_number": 7,
+      "horse_name": "サキドリトッケン",
+      "mark": "×",
+      "win_prob": 0.0423,
+      "show_prob": 0.1636,
+      "ev_win": 0.82,
+      "ev_show": 0.96,
+      "kelly_win": 0.0,
+      "kelly_show": 0.0,
+      "speed_index": -85.0,
+      "radar": {
+        "speed": 0,
+        "stamina": 100,
+        "instant": 0,
+        "pedigree": 50,
+        "jockey": 0,
+        "course_fit": 0
+      },
+      "comment": "前走1着。安定した成績。",
+      "risk": "阪神未経験",
+      "last3_results": [
+        "1着",
+        "-",
+        "-"
+      ],
+      "odds": {
+        "win": 19.5,
+        "show": 5.8
+      },
+      "sire": "不明",
+      "jockey": "飛田愛",
+      "frame_number": 4
+    },
+    {
+      "horse_number": 4,
+      "horse_name": "スマートプリエール",
+      "mark": "×",
+      "win_prob": 0.0423,
+      "show_prob": 0.2662,
+      "ev_win": 0.96,
+      "ev_show": 1.82,
+      "kelly_win": 0.0,
+      "kelly_show": 0.0351,
+      "speed_index": 56.0,
+      "radar": {
+        "speed": 93,
+        "stamina": 62,
+        "instant": 80,
+        "pedigree": 50,
+        "jockey": 0,
+        "course_fit": 50
+      },
+      "comment": "前走3着。阪神1走経験あり。安定した成績。",
+      "risk": "特に目立つリスクなし",
+      "last3_results": [
+        "3着",
+        "-",
+        "-"
+      ],
+      "odds": {
+        "win": 22.8,
+        "show": 6.8
+      },
+      "sire": "不明",
+      "jockey": "吉村",
+      "frame_number": 3
     }
   ],
   "recommendations": {
@@ -524,54 +524,94 @@
     "bets": [
       {
         "type": "単勝",
-        "targets": "1番 アランカール",
+        "targets": "9番 ホワイトオーキッド",
         "amount": 100,
-        "ev": 1.37,
-        "odds": 10.0,
-        "kelly": 0.0103
+        "ev": 2.32,
+        "odds": 18.1,
+        "kelly": 0.0193
       },
       {
         "type": "単勝",
-        "targets": "10番 ソルパッサーレ",
+        "targets": "3番 アンディムジーク",
         "amount": 100,
-        "ev": 1.37,
-        "odds": 10.0,
-        "kelly": 0.0103
+        "ev": 4.29,
+        "odds": 101.6,
+        "kelly": 0.0082
       },
       {
         "type": "単勝",
-        "targets": "11番 タイセイボーグ",
+        "targets": "2番 グレースジェンヌ",
         "amount": 100,
-        "ev": 1.37,
-        "odds": 10.0,
-        "kelly": 0.0103
+        "ev": 4.35,
+        "odds": 102.8,
+        "kelly": 0.0082
+      },
+      {
+        "type": "単勝",
+        "targets": "5番 ソルパッサーレ",
+        "amount": 100,
+        "ev": 1.11,
+        "odds": 8.0,
+        "kelly": 0.0038
+      },
+      {
+        "type": "単勝",
+        "targets": "8番 エイズルブルーム",
+        "amount": 100,
+        "ev": 1.31,
+        "odds": 31.1,
+        "kelly": 0.0026
+      },
+      {
+        "type": "単勝",
+        "targets": "15番 ダンシングドール",
+        "amount": 100,
+        "ev": 4.05,
+        "odds": 95.9,
+        "kelly": 0.008
+      },
+      {
+        "type": "単勝",
+        "targets": "11番 ダンデノン",
+        "amount": 100,
+        "ev": 3.0,
+        "odds": 71.0,
+        "kelly": 0.0071
+      },
+      {
+        "type": "単勝",
+        "targets": "6番 グランドオーパス",
+        "amount": 100,
+        "ev": 1.18,
+        "odds": 27.8,
+        "kelly": 0.0016
       },
       {
         "type": "馬連BOX",
-        "targets": "1-10-11",
+        "targets": "9-3-2",
         "amount": 100,
-        "ev": 1.37,
+        "ev": 3.65,
         "odds": null,
-        "kelly": 0.0103
+        "kelly": 0.0119
       },
       {
         "type": "三連複BOX",
-        "targets": "1-10-11",
+        "targets": "9-3-2-5-8",
         "amount": 100,
-        "ev": 1.37,
+        "ev": 2.68,
         "odds": null,
-        "kelly": 0.0103
+        "kelly": 0.0084
       },
       {
         "type": "ワイド",
-        "targets": "1-10",
+        "targets": "9-3",
         "amount": 100,
-        "ev": 1.37,
+        "ev": 3.3,
         "odds": null,
-        "kelly": 0.0103
+        "kelly": 0.0138
       }
     ],
-    "total_investment": 600,
-    "expected_return": 822
+    "total_investment": 1100,
+    "expected_return": 3124
   }
 }

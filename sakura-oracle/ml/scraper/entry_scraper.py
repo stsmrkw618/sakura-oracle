@@ -8,6 +8,7 @@ netkeibaの出馬表ページ（shutuba.html）から出走馬情報を取得す
     df = scrape_entries("202509040811")
 """
 
+import json
 import re
 import sys
 from io import StringIO
@@ -18,6 +19,77 @@ from bs4 import BeautifulSoup
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from ml.scraper.race_scraper import safe_request
+
+# プロジェクトルート
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+
+
+def _scrape_waku_from_odds(race_id: str) -> dict[str, dict[str, int]] | None:
+    """オッズページから枠番・馬番マッピングを取得する。
+
+    shutubaページでJS描画のため枠番/馬番が取得できない場合のフォールバック。
+    1. ローカルキャッシュ（data/odds_cache/{race_id}.json）を優先
+    2. なければオッズページの静的HTMLから取得
+
+    Returns:
+        {馬名: {"枠番": int, "馬番": int, "単勝オッズ"?: float}} の辞書。失敗時はNone。
+    """
+    # ローカルキャッシュを優先（JS描画でWeb取得できないオッズもここに保存できる）
+    cache_path = _PROJECT_ROOT / "data" / "odds_cache" / f"{race_id}.json"
+    if cache_path.exists():
+        with open(cache_path, encoding="utf-8") as f:
+            cached = json.load(f)
+        if cached:
+            print(f"  ✅ ローカルキャッシュからオッズ読み込み: {cache_path.name}")
+            return cached
+
+    url = f"https://race.netkeiba.com/odds/index.html?race_id={race_id}&type=b1"
+    content = safe_request(url)
+    if content is None:
+        return None
+
+    soup = BeautifulSoup(content, "lxml")
+    odds_div = soup.find("div", id="odds_view_form")
+    if odds_div is None:
+        return None
+
+    table = odds_div.find("table")
+    if table is None:
+        return None
+
+    # 手動パース（pd.read_htmlはカラム名の空白問題があるため）
+    result: dict[str, dict[str, int]] = {}
+    odds_map: dict[str, float] = {}
+    for row in table.find_all("tr"):
+        tds = row.find_all("td")
+        if len(tds) < 5:
+            continue
+
+        # td[0]=枠番, td[1]=馬番, td[4]=馬名, td[5]=オッズ
+        waku_text = tds[0].get_text(strip=True)
+        umaban_text = tds[1].get_text(strip=True)
+        name_text = re.sub(r"\s+", "", tds[4].get_text(strip=True))
+
+        waku = int(waku_text) if waku_text.isdigit() else 0
+        umaban = int(umaban_text) if umaban_text.isdigit() else 0
+
+        if name_text and umaban > 0:
+            result[name_text] = {"枠番": waku, "馬番": umaban}
+
+        # オッズも取得（利用可能な場合）
+        if len(tds) > 5:
+            odds_text = tds[5].get_text(strip=True)
+            odds_val = pd.to_numeric(odds_text, errors="coerce")
+            if pd.notna(odds_val) and odds_val > 0:
+                odds_map[name_text] = float(odds_val)
+
+    if odds_map:
+        # オッズが取得できた場合、resultに追加
+        for name, odds in odds_map.items():
+            if name in result:
+                result[name]["単勝オッズ"] = odds
+
+    return result if result else None
 
 
 def scrape_entries(race_id: str) -> pd.DataFrame:
@@ -87,22 +159,43 @@ def scrape_entries(race_id: str) -> pd.DataFrame:
     if "馬名" in df.columns:
         df = df[df["馬名"] != "馬名"].copy()
 
-    # 馬番が存在し数値化可能なら使用、なければ連番を振る（枠順未確定時）
+    # 馬番が存在し数値化可能なら使用、なければオッズページから取得
+    umaban_resolved = False
+    waku_map: dict[str, dict] | None = None
     if "馬番" in df.columns:
         df["馬番"] = pd.to_numeric(df["馬番"], errors="coerce")
         if df["馬番"].notna().sum() > 0:
             df = df.dropna(subset=["馬番"]).copy()
             df["馬番"] = df["馬番"].astype(int)
-        else:
-            # 馬番が全てNaN（枠順未確定）→ 連番を振る
-            print("  ⚠️ 馬番未確定 — 仮番号を割り当て")
-            df = df[df["馬名"].notna()].copy()
-            df["馬番"] = range(1, len(df) + 1)
-    else:
-        # 馬番カラム自体がない → 連番を振る
-        print("  ⚠️ 馬番カラムなし — 仮番号を割り当て")
+            umaban_resolved = True
+
+    if not umaban_resolved:
+        # shutubaページで馬番が取れない場合、オッズページから取得
         df = df[df["馬名"].notna()].copy()
-        df["馬番"] = range(1, len(df) + 1)
+        waku_map = _scrape_waku_from_odds(race_id)
+        if waku_map:
+            # 馬名のクリーニング（マッチ用に先に実施）
+            df["馬名"] = df["馬名"].apply(
+                lambda x: re.sub(r"\s+", "", str(x).strip()) if pd.notna(x) else x
+            )
+            matched = 0
+            for idx, row in df.iterrows():
+                name = row["馬名"]
+                if name in waku_map:
+                    df.at[idx, "馬番"] = waku_map[name]["馬番"]
+                    df.at[idx, "枠番"] = waku_map[name]["枠番"]
+                    matched += 1
+            if matched > 0:
+                df["馬番"] = df["馬番"].astype(int)
+                df["枠番"] = df["枠番"].astype(int)
+                print(f"  ✅ オッズページから枠番・馬番取得: {matched}/{len(df)}頭")
+                umaban_resolved = True
+            else:
+                print("  ⚠️ オッズページの馬名マッチ失敗 — 仮番号を割り当て")
+                df["馬番"] = range(1, len(df) + 1)
+        else:
+            print("  ⚠️ 馬番未確定 — 仮番号を割り当て")
+            df["馬番"] = range(1, len(df) + 1)
 
     # 枠番を数値化（未確定なら0）
     if "枠番" in df.columns:
@@ -135,6 +228,26 @@ def scrape_entries(race_id: str) -> pd.DataFrame:
         df["単勝オッズ"] = pd.to_numeric(df["単勝オッズ"], errors="coerce")
     if "人気" in df.columns:
         df["人気"] = pd.to_numeric(df["人気"], errors="coerce")
+
+    # shutubaページでオッズが取れない場合、オッズページから補完
+    odds_missing = (
+        "単勝オッズ" not in df.columns
+        or df["単勝オッズ"].notna().sum() == 0
+    )
+    if odds_missing:
+        # オッズページを取得（枠番取得時に既にwaku_mapがあれば再利用）
+        if waku_map is None:
+            waku_map = _scrape_waku_from_odds(race_id)
+        if waku_map:
+            odds_count = 0
+            for idx, row in df.iterrows():
+                name = row.get("馬名", "")
+                if name in waku_map and "単勝オッズ" in waku_map[name]:
+                    df.at[idx, "単勝オッズ"] = waku_map[name]["単勝オッズ"]
+                    odds_count += 1
+            if odds_count > 0:
+                df["単勝オッズ"] = pd.to_numeric(df["単勝オッズ"], errors="coerce")
+                print(f"  ✅ オッズページからオッズ取得: {odds_count}/{len(df)}頭")
 
     # 斤量を数値化
     if "斤量" in df.columns:
