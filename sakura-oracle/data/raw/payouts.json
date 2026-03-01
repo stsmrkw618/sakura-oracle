@@ -1538,5 +1538,845 @@
         "payout": 4190
       }
     ]
+  },
+  "202009020611": {
+    "quinella": [
+      {
+        "combo": "9-17",
+        "payout": 1110
+      }
+    ],
+    "wide": [
+      {
+        "combo": "9-17",
+        "payout": 490
+      },
+      {
+        "combo": "3-9",
+        "payout": 2880
+      },
+      {
+        "combo": "3-17",
+        "payout": 2480
+      }
+    ],
+    "trio": [
+      {
+        "combo": "3-9-17",
+        "payout": 12590
+      }
+    ]
+  },
+  "202009010311": {
+    "quinella": [
+      {
+        "combo": "1-13",
+        "payout": 2680
+      }
+    ],
+    "wide": [
+      {
+        "combo": "1-13",
+        "payout": 540
+      },
+      {
+        "combo": "4-13",
+        "payout": 250
+      },
+      {
+        "combo": "1-4",
+        "payout": 170
+      }
+    ],
+    "trio": [
+      {
+        "combo": "1-4-13",
+        "payout": 740
+      }
+    ]
+  },
+  "202009010611": {
+    "quinella": [
+      {
+        "combo": "5-7",
+        "payout": 3020
+      }
+    ],
+    "wide": [
+      {
+        "combo": "5-7",
+        "payout": 760
+      },
+      {
+        "combo": "5-6",
+        "payout": 4270
+      },
+      {
+        "combo": "6-7",
+        "payout": 2480
+      }
+    ],
+    "trio": [
+      {
+        "combo": "5-6-7",
+        "payout": 22190
+      }
+    ]
+  },
+  "202005010511": {
+    "quinella": [
+      {
+        "combo": "1-9",
+        "payout": 960
+      }
+    ],
+    "wide": [
+      {
+        "combo": "1-9",
+        "payout": 390
+      },
+      {
+        "combo": "1-5",
+        "payout": 8390
+      },
+      {
+        "combo": "5-9",
+        "payout": 9620
+      }
+    ],
+    "trio": [
+      {
+        "combo": "1-5-9",
+        "payout": 39360
+      }
+    ]
+  },
+  "202006010511": {
+    "quinella": [
+      {
+        "combo": "1-8",
+        "payout": 4510
+      }
+    ],
+    "wide": [
+      {
+        "combo": "1-8",
+        "payout": 1380
+      },
+      {
+        "combo": "1-5",
+        "payout": 1510
+      },
+      {
+        "combo": "5-8",
+        "payout": 2160
+      }
+    ],
+    "trio": [
+      {
+        "combo": "1-5-8",
+        "payout": 15040
+      }
+    ]
+  },
+  "202007020411": {
+    "quinella": [
+      {
+        "combo": "1-13",
+        "payout": 29960
+      }
+    ],
+    "wide": [
+      {
+        "combo": "1-13",
+        "payout": 8060
+      },
+      {
+        "combo": "1-8",
+        "payout": 3580
+      },
+      {
+        "combo": "8-13",
+        "payout": 19380
+      }
+    ],
+    "trio": [
+      {
+        "combo": "1-8-13",
+        "payout": 211480
+      }
+    ]
+  },
+  "202006040111": {
+    "quinella": [
+      {
+        "combo": "10-18",
+        "payout": 13320
+      }
+    ],
+    "wide": [
+      {
+        "combo": "10-18",
+        "payout": 4220
+      },
+      {
+        "combo": "10-16",
+        "payout": 1140
+      },
+      {
+        "combo": "16-18",
+        "payout": 2570
+      }
+    ],
+    "trio": [
+      {
+        "combo": "10-16-18",
+        "payout": 21370
+      }
+    ]
+  },
+  "202008040411": {
+    "quinella": [
+      {
+        "combo": "12-13",
+        "payout": 2670
+      }
+    ],
+    "wide": [
+      {
+        "combo": "12-13",
+        "payout": 940
+      },
+      {
+        "combo": "8-13",
+        "payout": 750
+      },
+      {
+        "combo": "8-12",
+        "payout": 9310
+      }
+    ],
+    "trio": [
+      {
+        "combo": "8-12-13",
+        "payout": 17920
+      }
+    ]
+  },
+  "201909020611": {
+    "quinella": [
+      {
+        "combo": "8-16",
+        "payout": 4410
+      }
+    ],
+    "wide": [
+      {
+        "combo": "8-16",
+        "payout": 1280
+      },
+      {
+        "combo": "4-8",
+        "payout": 420
+      },
+      {
+        "combo": "4-16",
+        "payout": 1410
+      }
+    ],
+    "trio": [
+      {
+        "combo": "4-8-16",
+        "payout": 5990
+      }
+    ]
+  },
+  "201909010311": {
+    "quinella": [
+      {
+        "combo": "1-13",
+        "payout": 1080
+      }
+    ],
+    "wide": [
+      {
+        "combo": "1-13",
+        "payout": 460
+      },
+      {
+        "combo": "1-7",
+        "payout": 490
+      },
+      {
+        "combo": "7-13",
+        "payout": 2850
+      }
+    ],
+    "trio": [
+      {
+        "combo": "1-7-13",
+        "payout": 4330
+      }
+    ]
+  },
+  "201909010611": {
+    "quinella": [
+      {
+        "combo": "1-6",
+        "payout": 14320
+      }
+    ],
+    "wide": [
+      {
+        "combo": "1-6",
+        "payout": 3400
+      },
+      {
+        "combo": "1-15",
+        "payout": 7390
+      },
+      {
+        "combo": "6-15",
+        "payout": 1230
+      }
+    ],
+    "trio": [
+      {
+        "combo": "1-6-15",
+        "payout": 60300
+      }
+    ]
+  },
+  "201905010511": {
+    "quinella": [
+      {
+        "combo": "6-9",
+        "payout": 260
+      }
+    ],
+    "wide": [
+      {
+        "combo": "6-9",
+        "payout": 160
+      },
+      {
+        "combo": "4-9",
+        "payout": 790
+      },
+      {
+        "combo": "4-6",
+        "payout": 780
+      }
+    ],
+    "trio": [
+      {
+        "combo": "4-6-9",
+        "payout": 1820
+      }
+    ]
+  },
+  "201906010311": {
+    "quinella": [
+      {
+        "combo": "1-8",
+        "payout": 2890
+      }
+    ],
+    "wide": [
+      {
+        "combo": "1-8",
+        "payout": 1000
+      },
+      {
+        "combo": "1-13",
+        "payout": 1360
+      },
+      {
+        "combo": "8-13",
+        "payout": 1510
+      }
+    ],
+    "trio": [
+      {
+        "combo": "1-8-13",
+        "payout": 9490
+      }
+    ]
+  },
+  "201809050411": {
+    "quinella": [
+      {
+        "combo": "9-13",
+        "payout": 640
+      }
+    ],
+    "wide": [
+      {
+        "combo": "9-13",
+        "payout": 270
+      },
+      {
+        "combo": "11-13",
+        "payout": 320
+      },
+      {
+        "combo": "9-11",
+        "payout": 430
+      }
+    ],
+    "trio": [
+      {
+        "combo": "9-11-13",
+        "payout": 1310
+      }
+    ]
+  },
+  "201805040811": {
+    "quinella": [
+      {
+        "combo": "3-11",
+        "payout": 5420
+      }
+    ],
+    "wide": [
+      {
+        "combo": "3-11",
+        "payout": 1940
+      },
+      {
+        "combo": "3-8",
+        "payout": 1170
+      },
+      {
+        "combo": "8-11",
+        "payout": 730
+      }
+    ],
+    "trio": [
+      {
+        "combo": "3-8-11",
+        "payout": 7640
+      }
+    ]
+  },
+  "201808050111": {
+    "quinella": [
+      {
+        "combo": "1-4",
+        "payout": 700
+      }
+    ],
+    "wide": [
+      {
+        "combo": "1-4",
+        "payout": 270
+      },
+      {
+        "combo": "3-4",
+        "payout": 400
+      },
+      {
+        "combo": "1-3",
+        "payout": 1310
+      }
+    ],
+    "trio": [
+      {
+        "combo": "1-3-4",
+        "payout": 2370
+      }
+    ]
+  },
+  "201909040411": {
+    "quinella": [
+      {
+        "combo": "4-11",
+        "payout": 1600
+      }
+    ],
+    "wide": [
+      {
+        "combo": "4-11",
+        "payout": 560
+      },
+      {
+        "combo": "4-8",
+        "payout": 260
+      },
+      {
+        "combo": "8-11",
+        "payout": 900
+      }
+    ],
+    "trio": [
+      {
+        "combo": "4-8-11",
+        "payout": 2250
+      }
+    ]
+  },
+  "201906040111": {
+    "quinella": [
+      {
+        "combo": "6-15",
+        "payout": 3040
+      }
+    ],
+    "wide": [
+      {
+        "combo": "6-15",
+        "payout": 840
+      },
+      {
+        "combo": "14-15",
+        "payout": 300
+      },
+      {
+        "combo": "6-14",
+        "payout": 590
+      }
+    ],
+    "trio": [
+      {
+        "combo": "6-14-15",
+        "payout": 2400
+      }
+    ]
+  },
+  "201908040411": {
+    "quinella": [
+      {
+        "combo": "5-8",
+        "payout": 2180
+      }
+    ],
+    "wide": [
+      {
+        "combo": "5-8",
+        "payout": 710
+      },
+      {
+        "combo": "5-14",
+        "payout": 2120
+      },
+      {
+        "combo": "8-14",
+        "payout": 2170
+      }
+    ],
+    "trio": [
+      {
+        "combo": "5-8-14",
+        "payout": 15170
+      }
+    ]
+  },
+  "201809020611": {
+    "quinella": [
+      {
+        "combo": "1-13",
+        "payout": 480
+      }
+    ],
+    "wide": [
+      {
+        "combo": "1-13",
+        "payout": 230
+      },
+      {
+        "combo": "9-13",
+        "payout": 430
+      },
+      {
+        "combo": "1-9",
+        "payout": 230
+      }
+    ],
+    "trio": [
+      {
+        "combo": "1-9-13",
+        "payout": 830
+      }
+    ]
+  },
+  "201809010311": {
+    "quinella": [
+      {
+        "combo": "4-5",
+        "payout": 750
+      }
+    ],
+    "wide": [
+      {
+        "combo": "4-5",
+        "payout": 230
+      },
+      {
+        "combo": "5-9",
+        "payout": 120
+      },
+      {
+        "combo": "4-9",
+        "payout": 290
+      }
+    ],
+    "trio": [
+      {
+        "combo": "4-5-9",
+        "payout": 410
+      }
+    ]
+  },
+  "201809010611": {
+    "quinella": [
+      {
+        "combo": "9-10",
+        "payout": 4080
+      }
+    ],
+    "wide": [
+      {
+        "combo": "9-10",
+        "payout": 1370
+      },
+      {
+        "combo": "2-10",
+        "payout": 2440
+      },
+      {
+        "combo": "2-9",
+        "payout": 1060
+      }
+    ],
+    "trio": [
+      {
+        "combo": "2-9-10",
+        "payout": 9140
+      }
+    ]
+  },
+  "201805010611": {
+    "quinella": [
+      {
+        "combo": "2-6",
+        "payout": 4010
+      }
+    ],
+    "wide": [
+      {
+        "combo": "2-6",
+        "payout": 1320
+      },
+      {
+        "combo": "6-9",
+        "payout": 1450
+      },
+      {
+        "combo": "2-9",
+        "payout": 2230
+      }
+    ],
+    "trio": [
+      {
+        "combo": "2-6-9",
+        "payout": 15560
+      }
+    ]
+  },
+  "201806010211": {
+    "quinella": [
+      {
+        "combo": "10-14",
+        "payout": 3230
+      }
+    ],
+    "wide": [
+      {
+        "combo": "10-14",
+        "payout": 1170
+      },
+      {
+        "combo": "13-14",
+        "payout": 1100
+      },
+      {
+        "combo": "10-13",
+        "payout": 2420
+      }
+    ],
+    "trio": [
+      {
+        "combo": "10-13-14",
+        "payout": 10370
+      }
+    ]
+  },
+  "201709050411": {
+    "quinella": [
+      {
+        "combo": "7-11",
+        "payout": 920
+      }
+    ],
+    "wide": [
+      {
+        "combo": "7-11",
+        "payout": 390
+      },
+      {
+        "combo": "4-11",
+        "payout": 560
+      },
+      {
+        "combo": "4-7",
+        "payout": 800
+      }
+    ],
+    "trio": [
+      {
+        "combo": "4-7-11",
+        "payout": 2160
+      }
+    ]
+  },
+  "201705040811": {
+    "quinella": [
+      {
+        "combo": "6-13",
+        "payout": 25700
+      }
+    ],
+    "wide": [
+      {
+        "combo": "6-13",
+        "payout": 6680
+      },
+      {
+        "combo": "2-13",
+        "payout": 910
+      },
+      {
+        "combo": "2-6",
+        "payout": 7920
+      }
+    ],
+    "trio": [
+      {
+        "combo": "2-6-13",
+        "payout": 57400
+      }
+    ]
+  },
+  "201708050111": {
+    "quinella": [
+      {
+        "combo": "8-9",
+        "payout": 2630
+      }
+    ],
+    "wide": [
+      {
+        "combo": "8-9",
+        "payout": 890
+      },
+      {
+        "combo": "9-10",
+        "payout": 630
+      },
+      {
+        "combo": "8-10",
+        "payout": 390
+      }
+    ],
+    "trio": [
+      {
+        "combo": "8-9-10",
+        "payout": 2580
+      }
+    ]
+  },
+  "201809040411": {
+    "quinella": [
+      {
+        "combo": "5-13",
+        "payout": 2530
+      }
+    ],
+    "wide": [
+      {
+        "combo": "5-13",
+        "payout": 940
+      },
+      {
+        "combo": "4-13",
+        "payout": 8250
+      },
+      {
+        "combo": "4-5",
+        "payout": 5020
+      }
+    ],
+    "trio": [
+      {
+        "combo": "4-5-13",
+        "payout": 50880
+      }
+    ]
+  },
+  "201806040111": {
+    "quinella": [
+      {
+        "combo": "1-14",
+        "payout": 680
+      }
+    ],
+    "wide": [
+      {
+        "combo": "1-14",
+        "payout": 290
+      },
+      {
+        "combo": "8-14",
+        "payout": 1130
+      },
+      {
+        "combo": "1-8",
+        "payout": 960
+      }
+    ],
+    "trio": [
+      {
+        "combo": "1-8-14",
+        "payout": 3400
+      }
+    ]
+  },
+  "201808040511": {
+    "quinella": [
+      {
+        "combo": "11-13",
+        "payout": 880
+      }
+    ],
+    "wide": [
+      {
+        "combo": "11-13",
+        "payout": 420
+      },
+      {
+        "combo": "2-11",
+        "payout": 340
+      },
+      {
+        "combo": "2-13",
+        "payout": 1500
+      }
+    ],
+    "trio": [
+      {
+        "combo": "2-11-13",
+        "payout": 2360
+      }
+    ]
   }
 }

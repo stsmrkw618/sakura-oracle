@@ -1,232 +1,349 @@
 {
   "summary": {
-    "n_races": 50,
-    "win_hit_rate": 0.46,
-    "show_hit_rate": 0.507,
-    "win_roi": 2.652,
-    "show_roi": 1.488,
-    "fav_win_rate": 0.26,
-    "fav_show_rate": 0.48,
+    "n_races": 61,
+    "win_hit_rate": 0.344,
+    "show_hit_rate": 0.552,
+    "win_roi": 2.044,
+    "show_roi": 1.129,
+    "fav_win_rate": 0.328,
+    "fav_show_rate": 0.574,
     "confidence": {
       "win_hit_rate_ci": [
-        0.32,
-        0.6
+        0.23,
+        0.459
       ],
       "win_roi_ci": [
-        1.636,
-        3.866
+        1.213,
+        3.011
       ],
       "show_hit_rate_ci": [
-        0.433,
-        0.58
+        0.492,
+        0.612
       ],
       "show_roi_ci": [
-        1.055,
-        2.002
+        0.902,
+        1.408
       ],
-      "win_roi_pvalue": 0.0001
+      "win_roi_pvalue": 0.0052
     }
   },
   "combo_hit_rates": {
-    "quinella_box3": 0.32,
-    "wide_top2": 0.3,
-    "trio_box3": 0.06,
-    "trio_box5": 0.34,
-    "quinella_box3_roi": 5.501,
-    "wide_top2_roi": 4.646,
-    "trio_box3_roi": 1.262,
-    "trio_box5_roi": 4.742,
-    "quinella_nagashi": 0.36,
-    "trio_nagashi": 0.28,
-    "quinella_nagashi_roi": 4.515,
-    "trio_nagashi_roi": 5.89,
-    "ev_trio_top5": 0.02,
-    "ev_trio_top5_roi": 4.045,
-    "ev_quinella_top3": 0.1,
-    "ev_quinella_top3_roi": 4.761
+    "quinella_box3": 0.262,
+    "wide_top2": 0.328,
+    "trio_box3": 0.148,
+    "trio_box5": 0.262,
+    "quinella_box3_roi": 1.225,
+    "wide_top2_roi": 1.708,
+    "trio_box3_roi": 1.028,
+    "trio_box5_roi": 1.255,
+    "quinella_nagashi": 0.295,
+    "trio_nagashi": 0.23,
+    "quinella_nagashi_roi": 2.187,
+    "trio_nagashi_roi": 1.98,
+    "ev_trio_top5": 0.0,
+    "ev_trio_top5_roi": 0.0,
+    "ev_quinella_top3": 0.082,
+    "ev_quinella_top3_roi": 2.602
   },
   "portfolio": {
     "box": {
-      "total_inv": 87500,
-      "total_ret": 306090.0,
-      "roi": 3.498,
-      "n_hit": 9
+      "total_inv": 121800,
+      "total_ret": 201910.0,
+      "roi": 1.658,
+      "n_hit": 18
     },
     "nagashi": {
-      "total_inv": 72500,
-      "total_ret": 128700.0,
-      "roi": 1.775,
-      "n_hit": 9
+      "total_inv": 105100,
+      "total_ret": 211080.0,
+      "roi": 2.008,
+      "n_hit": 18
     }
   },
   "by_grade": {
     "G1": {
-      "n": 15,
-      "win_rate": 0.6,
-      "show_rate": 0.6,
-      "win_roi": 2.347,
-      "show_roi": 1.701
+      "n": 18,
+      "win_rate": 0.5,
+      "show_rate": 0.574,
+      "win_roi": 1.822,
+      "show_roi": 1.088
     },
     "G2": {
-      "n": 13,
-      "win_rate": 0.231,
-      "show_rate": 0.462,
-      "win_roi": 1.223,
-      "show_roi": 1.096
+      "n": 17,
+      "win_rate": 0.235,
+      "show_rate": 0.49,
+      "win_roi": 2.447,
+      "show_roi": 1.059
     },
     "G3": {
-      "n": 22,
-      "win_rate": 0.5,
-      "show_rate": 0.47,
-      "win_roi": 3.705,
-      "show_roi": 1.575
+      "n": 26,
+      "win_rate": 0.308,
+      "show_rate": 0.577,
+      "win_roi": 1.935,
+      "show_roi": 1.202
     }
   },
   "by_race": {
     "アルテミスS": {
       "n": 5,
       "grade": "G3",
-      "win_rate": 0.4,
-      "show_rate": 0.533,
-      "win_roi": 5.16,
-      "show_roi": 2.032
+      "win_rate": 0.0,
+      "show_rate": 0.733,
+      "win_roi": 0.0,
+      "show_roi": 2.24
     },
     "クイーンC": {
-      "n": 5,
+      "n": 6,
       "grade": "G3",
-      "win_rate": 1.0,
-      "show_rate": 0.533,
-      "win_roi": 5.54,
-      "show_roi": 0.94
+      "win_rate": 0.333,
+      "show_rate": 0.722,
+      "win_roi": 1.083,
+      "show_roi": 1.083
     },
     "チューリップ賞": {
-      "n": 3,
-      "grade": "G2",
-      "win_rate": 0.0,
-      "show_rate": 0.556,
-      "win_roi": 0.533,
-      "show_roi": 1.463
-    },
-    "ファンタジーS": {
-      "n": 5,
-      "grade": "G3",
-      "win_rate": 0.0,
-      "show_rate": 0.333,
-      "win_roi": 0.0,
-      "show_roi": 1.978
-    },
-    "フィリーズレビュー": {
       "n": 5,
       "grade": "G2",
       "win_rate": 0.2,
       "show_rate": 0.467,
-      "win_roi": 1.34,
-      "show_roi": 1.266
+      "win_roi": 3.38,
+      "show_roi": 0.74
+    },
+    "ファンタジーS": {
+      "n": 6,
+      "grade": "G3",
+      "win_rate": 0.0,
+      "show_rate": 0.5,
+      "win_roi": 0.0,
+      "show_roi": 0.872
+    },
+    "フィリーズレビュー": {
+      "n": 6,
+      "grade": "G2",
+      "win_rate": 0.167,
+      "show_rate": 0.5,
+      "win_roi": 2.3,
+      "show_roi": 1.373
     },
     "フェアリーS": {
-      "n": 3,
-      "grade": "G3",
-      "win_rate": 0.667,
-      "show_rate": 0.667,
-      "win_roi": 5.633,
-      "show_roi": 2.623
-    },
-    "ローズS": {
-      "n": 5,
-      "grade": "G2",
-      "win_rate": 0.4,
-      "show_rate": 0.4,
-      "win_roi": 1.52,
-      "show_roi": 0.706
-    },
-    "桜花賞": {
-      "n": 5,
-      "grade": "G1",
-      "win_rate": 0.8,
-      "show_rate": 0.667,
-      "win_roi": 2.9,
-      "show_roi": 1.502
-    },
-    "秋華賞": {
-      "n": 5,
-      "grade": "G1",
-      "win_rate": 0.4,
-      "show_rate": 0.6,
-      "win_roi": 1.32,
-      "show_roi": 1.448
-    },
-    "紫苑S": {
       "n": 4,
       "grade": "G3",
-      "win_rate": 0.5,
+      "win_rate": 0.75,
       "show_rate": 0.333,
-      "win_roi": 2.775,
-      "show_roi": 0.51
+      "win_roi": 6.725,
+      "show_roi": 0.833
     },
-    "阪神JF": {
-      "n": 5,
+    "ローズS": {
+      "n": 6,
+      "grade": "G2",
+      "win_rate": 0.333,
+      "show_rate": 0.5,
+      "win_roi": 1.817,
+      "show_roi": 1.012
+    },
+    "桜花賞": {
+      "n": 6,
       "grade": "G1",
+      "win_rate": 0.667,
+      "show_rate": 0.5,
+      "win_roi": 2.85,
+      "show_roi": 0.965
+    },
+    "秋華賞": {
+      "n": 6,
+      "grade": "G1",
+      "win_rate": 0.333,
+      "show_rate": 0.667,
+      "win_roi": 0.417,
+      "show_roi": 1.145
+    },
+    "紫苑S": {
+      "n": 5,
+      "grade": "G3",
       "win_rate": 0.6,
       "show_rate": 0.533,
-      "win_roi": 2.82,
-      "show_roi": 2.152
+      "win_roi": 3.38,
+      "show_roi": 1.0
+    },
+    "阪神JF": {
+      "n": 6,
+      "grade": "G1",
+      "win_rate": 0.5,
+      "show_rate": 0.556,
+      "win_roi": 2.2,
+      "show_roi": 1.153
     }
   },
   "by_year": {
-    "2021": {
+    "2020": {
       "n": 9,
-      "win_rate": 0.444,
-      "show_rate": 0.481,
-      "win_roi": 4.133,
-      "show_roi": 1.211
+      "win_rate": 0.778,
+      "show_rate": 0.407,
+      "win_roi": 6.422,
+      "show_roi": 0.762
+    },
+    "2021": {
+      "n": 10,
+      "win_rate": 0.4,
+      "show_rate": 0.567,
+      "win_roi": 2.11,
+      "show_roi": 0.988
     },
     "2022": {
       "n": 10,
-      "win_rate": 0.3,
-      "show_rate": 0.467,
-      "win_roi": 0.9,
-      "show_roi": 1.614
+      "win_rate": 0.2,
+      "show_rate": 0.567,
+      "win_roi": 0.54,
+      "show_roi": 0.747
     },
     "2023": {
       "n": 10,
-      "win_rate": 0.5,
-      "show_rate": 0.567,
-      "win_roi": 2.78,
-      "show_roi": 1.411
+      "win_rate": 0.1,
+      "show_rate": 0.6,
+      "win_roi": 0.11,
+      "show_roi": 1.395
     },
     "2024": {
       "n": 10,
       "win_rate": 0.3,
-      "show_rate": 0.467,
-      "win_roi": 1.23,
-      "show_roi": 1.295
+      "show_rate": 0.567,
+      "win_roi": 2.0,
+      "show_roi": 1.099
     },
     "2025": {
       "n": 9,
-      "win_rate": 0.667,
-      "show_rate": 0.519,
-      "win_roi": 3.544,
-      "show_roi": 1.559
+      "win_rate": 0.333,
+      "show_rate": 0.667,
+      "win_roi": 1.767,
+      "show_roi": 2.073
     },
     "2026": {
-      "n": 2,
-      "win_rate": 1.0,
-      "show_rate": 0.667,
-      "win_roi": 7.2,
-      "show_roi": 3.145
+      "n": 3,
+      "win_rate": 0.333,
+      "show_rate": 0.333,
+      "win_roi": 1.133,
+      "show_roi": 0.347
     }
   },
   "races": [
     {
+      "label": "フェアリーS2020",
+      "grade": "G3",
+      "year": 2020,
+      "ai_pick": "スマイルカナ",
+      "actual_winner": "スマイルカナ",
+      "win_hit": 1,
+      "show_hits": 1,
+      "win_return": 840.0,
+      "show_return": 252.0
+    },
+    {
+      "label": "紫苑S2020",
+      "grade": "G3",
+      "year": 2020,
+      "ai_pick": "マルターズディオサ",
+      "actual_winner": "マルターズディオサ",
+      "win_hit": 1,
+      "show_hits": 1,
+      "win_return": 960.0,
+      "show_return": 288.0
+    },
+    {
+      "label": "ローズS2020",
+      "grade": "G2",
+      "year": 2020,
+      "ai_pick": "リアアメリア",
+      "actual_winner": "リアアメリア",
+      "win_hit": 1,
+      "show_hits": 1,
+      "win_return": 509.99999999999994,
+      "show_return": 153.0
+    },
+    {
+      "label": "秋華賞2020",
+      "grade": "G1",
+      "year": 2020,
+      "ai_pick": "デアリングタクト",
+      "actual_winner": "デアリングタクト",
+      "win_hit": 1,
+      "show_hits": 1,
+      "win_return": 140.0,
+      "show_return": 42.0
+    },
+    {
+      "label": "チューリップ賞2020",
+      "grade": "G2",
+      "year": 2020,
+      "ai_pick": "マルターズディオサ",
+      "actual_winner": "マルターズディオサ",
+      "win_hit": 1,
+      "show_hits": 2,
+      "win_return": 1530.0,
+      "show_return": 501.0
+    },
+    {
+      "label": "フィリーズレビュー2020",
+      "grade": "G2",
+      "year": 2020,
+      "ai_pick": "エーポス",
+      "actual_winner": "エーポス",
+      "win_hit": 1,
+      "show_hits": 1,
+      "win_return": 1380.0,
+      "show_return": 414.0
+    },
+    {
+      "label": "桜花賞2020",
+      "grade": "G1",
+      "year": 2020,
+      "ai_pick": "デアリングタクト",
+      "actual_winner": "デアリングタクト",
+      "win_hit": 1,
+      "show_hits": 2,
+      "win_return": 420.0,
+      "show_return": 237.0
+    },
+    {
+      "label": "ファンタジーS2020(2021世代)",
+      "grade": "G3",
+      "year": 2020,
+      "ai_pick": "モンファボリ",
+      "actual_winner": "メイケイエール",
+      "win_hit": 0,
+      "show_hits": 1,
+      "win_return": 0.0,
+      "show_return": 75.0
+    },
+    {
+      "label": "阪神JF2020(2021世代)",
+      "grade": "G1",
+      "year": 2020,
+      "ai_pick": "エイシンヒテン",
+      "actual_winner": "ソダシ",
+      "win_hit": 0,
+      "show_hits": 1,
+      "win_return": 0.0,
+      "show_return": 96.0
+    },
+    {
+      "label": "クイーンC2021",
+      "grade": "G3",
+      "year": 2021,
+      "ai_pick": "ククナ",
+      "actual_winner": "アカイトリノムスメ",
+      "win_hit": 0,
+      "show_hits": 2,
+      "win_return": 0.0,
+      "show_return": 243.0
+    },
+    {
       "label": "アルテミスS2021(2022世代)",
       "grade": "G3",
       "year": 2021,
-      "ai_pick": "サークルオブライフ",
+      "ai_pick": "フォラブリューテ",
       "actual_winner": "サークルオブライフ",
-      "win_hit": 1,
-      "show_hits": 0,
-      "win_return": 2190.0,
-      "show_return": 0.0
+      "win_hit": 0,
+      "show_hits": 1,
+      "win_return": 0.0,
+      "show_return": 144.0
     },
     {
       "label": "紫苑S2021",
@@ -235,19 +352,19 @@
       "ai_pick": "ファインルージュ",
       "actual_winner": "ファインルージュ",
       "win_hit": 1,
-      "show_hits": 1,
+      "show_hits": 2,
       "win_return": 450.0,
-      "show_return": 135.0
+      "show_return": 441.0
     },
     {
       "label": "ローズS2021",
       "grade": "G2",
       "year": 2021,
-      "ai_pick": "アールドヴィーヴル",
+      "ai_pick": "アンドヴァラナウト",
       "actual_winner": "アンドヴァラナウト",
-      "win_hit": 0,
+      "win_hit": 1,
       "show_hits": 1,
-      "win_return": 0.0,
+      "win_return": 580.0,
       "show_return": 108.0
     },
     {
@@ -259,13 +376,13 @@
       "win_hit": 0,
       "show_hits": 2,
       "win_return": 160.0,
-      "show_return": 288.0
+      "show_return": 300.0
     },
     {
       "label": "フィリーズレビュー2021",
       "grade": "G2",
       "year": 2021,
-      "ai_pick": "ヨカヨカ",
+      "ai_pick": "スティクス",
       "actual_winner": "シゲルピンクルビー",
       "win_hit": 0,
       "show_hits": 1,
@@ -279,9 +396,9 @@
       "ai_pick": "ソダシ",
       "actual_winner": "ソダシ",
       "win_hit": 1,
-      "show_hits": 2,
+      "show_hits": 1,
       "win_return": 360.0,
-      "show_return": 207.0
+      "show_return": 459.0
     },
     {
       "label": "秋華賞2021",
@@ -301,9 +418,9 @@
       "ai_pick": "ママコチャ",
       "actual_winner": "ウォーターナビレラ",
       "win_hit": 0,
-      "show_hits": 2,
+      "show_hits": 3,
       "win_return": 0.0,
-      "show_return": 246.0
+      "show_return": 321.0
     },
     {
       "label": "阪神JF2021(2022世代)",
@@ -314,18 +431,18 @@
       "win_hit": 1,
       "show_hits": 2,
       "win_return": 560.0,
-      "show_return": 1704.0
+      "show_return": 366.0
     },
     {
       "label": "クイーンC2022",
       "grade": "G3",
       "year": 2022,
-      "ai_pick": "プレサージュリフト",
+      "ai_pick": "ベルクレスタ",
       "actual_winner": "プレサージュリフト",
-      "win_hit": 1,
-      "show_hits": 1,
-      "win_return": 370.0,
-      "show_return": 111.0
+      "win_hit": 0,
+      "show_hits": 3,
+      "win_return": 0.0,
+      "show_return": 324.0
     },
     {
       "label": "アルテミスS2022(2023世代)",
@@ -342,23 +459,23 @@
       "label": "紫苑S2022",
       "grade": "G3",
       "year": 2022,
-      "ai_pick": "エバーハンティング",
+      "ai_pick": "スタニングローズ",
       "actual_winner": "スタニングローズ",
-      "win_hit": 0,
-      "show_hits": 0,
-      "win_return": 0.0,
-      "show_return": 0.0
+      "win_hit": 1,
+      "show_hits": 1,
+      "win_return": 280.0,
+      "show_return": 204.0
     },
     {
       "label": "ローズS2022",
       "grade": "G2",
       "year": 2022,
-      "ai_pick": "アートハウス",
+      "ai_pick": "セントカメリア",
       "actual_winner": "アートハウス",
-      "win_hit": 1,
+      "win_hit": 0,
       "show_hits": 2,
-      "win_return": 270.0,
-      "show_return": 654.0
+      "win_return": 0.0,
+      "show_return": 201.0
     },
     {
       "label": "チューリップ賞2022",
@@ -375,12 +492,12 @@
       "label": "フィリーズレビュー2022",
       "grade": "G2",
       "year": 2022,
-      "ai_pick": "マイシンフォニー",
+      "ai_pick": "ナムラクレア",
       "actual_winner": "サブライムアンセム",
       "win_hit": 0,
       "show_hits": 2,
       "win_return": 0.0,
-      "show_return": 288.0
+      "show_return": 393.0
     },
     {
       "label": "桜花賞2022",
@@ -391,7 +508,7 @@
       "win_hit": 0,
       "show_hits": 1,
       "win_return": 0.0,
-      "show_return": 435.0
+      "show_return": 186.0
     },
     {
       "label": "秋華賞2022",
@@ -400,20 +517,20 @@
       "ai_pick": "スターズオンアース",
       "actual_winner": "スタニングローズ",
       "win_hit": 0,
-      "show_hits": 2,
+      "show_hits": 3,
       "win_return": 0.0,
-      "show_return": 261.0
+      "show_return": 360.0
     },
     {
       "label": "ファンタジーS2022(2023世代)",
       "grade": "G3",
       "year": 2022,
-      "ai_pick": "アロマデローサ",
+      "ai_pick": "ブトンドール",
       "actual_winner": "リバーラ",
       "win_hit": 0,
-      "show_hits": 2,
+      "show_hits": 1,
       "win_return": 0.0,
-      "show_return": 2637.0
+      "show_return": 117.0
     },
     {
       "label": "阪神JF2022(2023世代)",
@@ -430,33 +547,33 @@
       "label": "クイーンC2023",
       "grade": "G3",
       "year": 2023,
-      "ai_pick": "ハーパー",
+      "ai_pick": "ウンブライル",
       "actual_winner": "ハーパー",
-      "win_hit": 1,
-      "show_hits": 1,
-      "win_return": 1260.0,
-      "show_return": 141.0
+      "win_hit": 0,
+      "show_hits": 2,
+      "win_return": 0.0,
+      "show_return": 270.0
     },
     {
       "label": "アルテミスS2023(2024世代)",
       "grade": "G3",
       "year": 2023,
-      "ai_pick": "サフィラ",
+      "ai_pick": "ライトバック",
       "actual_winner": "チェルヴィニア",
       "win_hit": 0,
-      "show_hits": 2,
+      "show_hits": 3,
       "win_return": 0.0,
-      "show_return": 216.0
+      "show_return": 546.0
     },
     {
       "label": "紫苑S2023",
       "grade": "G3",
       "year": 2023,
-      "ai_pick": "モリアーナ",
+      "ai_pick": "ヒップホップソウル",
       "actual_winner": "モリアーナ",
-      "win_hit": 1,
+      "win_hit": 0,
       "show_hits": 2,
-      "win_return": 660.0,
+      "win_return": 0.0,
       "show_return": 309.0
     },
     {
@@ -474,23 +591,23 @@
       "label": "ファンタジーS2023(2024世代)",
       "grade": "G3",
       "year": 2023,
-      "ai_pick": "ピューロマジック",
+      "ai_pick": "クイックバイオ",
       "actual_winner": "カルチャーデイ",
       "win_hit": 0,
-      "show_hits": 0,
+      "show_hits": 1,
       "win_return": 0.0,
-      "show_return": 0.0
+      "show_return": 513.0
     },
     {
       "label": "チューリップ賞2023",
       "grade": "G2",
       "year": 2023,
-      "ai_pick": "ドゥーラ",
+      "ai_pick": "バースクライ",
       "actual_winner": "モズメイメイ",
       "win_hit": 0,
-      "show_hits": 2,
+      "show_hits": 0,
       "win_return": 0.0,
-      "show_return": 930.0
+      "show_return": 0.0
     },
     {
       "label": "フィリーズレビュー2023",
@@ -507,12 +624,12 @@
       "label": "桜花賞2023",
       "grade": "G1",
       "year": 2023,
-      "ai_pick": "リバティアイランド",
+      "ai_pick": "コナコースト",
       "actual_winner": "リバティアイランド",
-      "win_hit": 1,
-      "show_hits": 2,
-      "win_return": 160.0,
-      "show_return": 600.0
+      "win_hit": 0,
+      "show_hits": 1,
+      "win_return": 0.0,
+      "show_return": 48.0
     },
     {
       "label": "ローズS2023",
@@ -521,19 +638,19 @@
       "ai_pick": "ブレイディヴェーグ",
       "actual_winner": "マスクトディーヴァ",
       "win_hit": 0,
-      "show_hits": 1,
+      "show_hits": 2,
       "win_return": 0.0,
-      "show_return": 63.0
+      "show_return": 525.0
     },
     {
       "label": "阪神JF2023(2024世代)",
       "grade": "G1",
       "year": 2023,
-      "ai_pick": "アスコリピチェーノ",
+      "ai_pick": "ステレンボッシュ",
       "actual_winner": "アスコリピチェーノ",
-      "win_hit": 1,
+      "win_hit": 0,
       "show_hits": 3,
-      "win_return": 590.0,
+      "win_return": 0.0,
       "show_return": 582.0
     },
     {
@@ -551,67 +668,67 @@
       "label": "アルテミスS2024(2025世代)",
       "grade": "G3",
       "year": 2024,
-      "ai_pick": "ショウナンザナドゥ",
+      "ai_pick": "カムニャック",
       "actual_winner": "ブラウンラチェット",
       "win_hit": 0,
       "show_hits": 2,
       "win_return": 0.0,
-      "show_return": 609.0
+      "show_return": 264.0
     },
     {
       "label": "フェアリーS2024",
       "grade": "G3",
       "year": 2024,
-      "ai_pick": "キャットファイト",
+      "ai_pick": "イフェイオン",
       "actual_winner": "イフェイオン",
-      "win_hit": 0,
-      "show_hits": 2,
-      "win_return": 0.0,
-      "show_return": 738.0
+      "win_hit": 1,
+      "show_hits": 1,
+      "win_return": 1260.0,
+      "show_return": 378.0
     },
     {
       "label": "紫苑S2024",
       "grade": "G3",
       "year": 2024,
-      "ai_pick": "エラトー",
+      "ai_pick": "ボンドガール",
       "actual_winner": "クリスマスパレード",
       "win_hit": 0,
-      "show_hits": 1,
+      "show_hits": 2,
       "win_return": 0.0,
-      "show_return": 168.0
+      "show_return": 258.0
     },
     {
       "label": "ローズS2024",
       "grade": "G2",
       "year": 2024,
-      "ai_pick": "クイーンズウォーク",
+      "ai_pick": "カニキュル",
       "actual_winner": "クイーンズウォーク",
-      "win_hit": 1,
+      "win_hit": 0,
       "show_hits": 1,
-      "win_return": 490.00000000000006,
+      "win_return": 0.0,
       "show_return": 147.0
     },
     {
       "label": "秋華賞2024",
       "grade": "G1",
       "year": 2024,
-      "ai_pick": "ステレンボッシュ",
+      "ai_pick": "クイーンズウォーク",
       "actual_winner": "チェルヴィニア",
       "win_hit": 0,
-      "show_hits": 1,
+      "show_hits": 2,
       "win_return": 0.0,
-      "show_return": 438.0
+      "show_return": 186.0
     },
     {
       "label": "ファンタジーS2024(2025世代)",
       "grade": "G3",
       "year": 2024,
-      "ai_pick": "ゴージャス",
+      "ai_pick": "ヴーレヴー",
       "actual_winner": "ダンツエラン",
       "win_hit": 0,
-      "show_hits": 0,
+      "show_hits": 1,
       "win_return": 0.0,
-      "show_return": 0.0
+      "show_return": 285.0
     },
     {
       "label": "阪神JF2024(2025世代)",
@@ -622,7 +739,7 @@
       "win_hit": 0,
       "show_hits": 2,
       "win_return": 0.0,
-      "show_return": 864.0
+      "show_return": 804.0
     },
     {
       "label": "フィリーズレビュー2024",
@@ -631,9 +748,9 @@
       "ai_pick": "ロゼフレア",
       "actual_winner": "エトヴプレ",
       "win_hit": 0,
-      "show_hits": 0,
+      "show_hits": 1,
       "win_return": 0.0,
-      "show_return": 0.0
+      "show_return": 54.0
     },
     {
       "label": "桜花賞2024",
@@ -650,23 +767,23 @@
       "label": "クイーンC2025",
       "grade": "G3",
       "year": 2025,
-      "ai_pick": "エンブロイダリー",
+      "ai_pick": "ロートホルン",
       "actual_winner": "エンブロイダリー",
-      "win_hit": 1,
-      "show_hits": 1,
-      "win_return": 490.00000000000006,
-      "show_return": 147.0
+      "win_hit": 0,
+      "show_hits": 2,
+      "win_return": 0.0,
+      "show_return": 633.0
     },
     {
       "label": "アルテミスS2025(2026世代)",
       "grade": "G3",
       "year": 2025,
-      "ai_pick": "フィロステファニ",
+      "ai_pick": "マルガ",
       "actual_winner": "フィロステファニ",
-      "win_hit": 1,
-      "show_hits": 2,
-      "win_return": 390.0,
-      "show_return": 1944.0
+      "win_hit": 0,
+      "show_hits": 3,
+      "win_return": 0.0,
+      "show_return": 2127.0
     },
     {
       "label": "フェアリーS2025",
@@ -683,33 +800,33 @@
       "label": "秋華賞2025",
       "grade": "G1",
       "year": 2025,
-      "ai_pick": "エンブロイダリー",
+      "ai_pick": "セナスタイル",
       "actual_winner": "エンブロイダリー",
-      "win_hit": 1,
+      "win_hit": 0,
       "show_hits": 2,
-      "win_return": 550.0,
+      "win_return": 0.0,
       "show_return": 618.0
     },
     {
       "label": "ファンタジーS2025(2026世代)",
       "grade": "G3",
       "year": 2025,
-      "ai_pick": "ブラックチャリス",
+      "ai_pick": "メイショウハッケイ",
       "actual_winner": "フェスティバルヒル",
       "win_hit": 0,
-      "show_hits": 1,
+      "show_hits": 2,
       "win_return": 0.0,
-      "show_return": 84.0
+      "show_return": 258.0
     },
     {
       "label": "フィリーズレビュー2025",
       "grade": "G2",
       "year": 2025,
-      "ai_pick": "ショウナンザナドゥ",
+      "ai_pick": "ボンヌソワレ",
       "actual_winner": "ショウナンザナドゥ",
-      "win_hit": 1,
+      "win_hit": 0,
       "show_hits": 2,
-      "win_return": 670.0,
+      "win_return": 0.0,
       "show_return": 492.0
     },
     {
@@ -719,9 +836,9 @@
       "ai_pick": "エンブロイダリー",
       "actual_winner": "エンブロイダリー",
       "win_hit": 1,
-      "show_hits": 3,
+      "show_hits": 2,
       "win_return": 500.0,
-      "show_return": 468.0
+      "show_return": 264.0
     },
     {
       "label": "ローズS2025",
@@ -730,20 +847,20 @@
       "ai_pick": "ミッキージュエリー",
       "actual_winner": "カムニャック",
       "win_hit": 0,
-      "show_hits": 1,
+      "show_hits": 2,
       "win_return": 0.0,
-      "show_return": 87.0
+      "show_return": 687.0
     },
     {
       "label": "阪神JF2025(2026世代)",
       "grade": "G1",
       "year": 2025,
-      "ai_pick": "ギャラボーグ",
+      "ai_pick": "スターアニス",
       "actual_winner": "スターアニス",
-      "win_hit": 0,
-      "show_hits": 0,
-      "win_return": 0.0,
-      "show_return": 0.0
+      "win_hit": 1,
+      "show_hits": 1,
+      "win_return": 500.0,
+      "show_return": 150.0
     },
     {
       "label": "クイーンC2026",
@@ -752,136 +869,152 @@
       "ai_pick": "ドリームコア",
       "actual_winner": "ドリームコア",
       "win_hit": 1,
-      "show_hits": 2,
+      "show_hits": 1,
       "win_return": 340.0,
-      "show_return": 633.0
+      "show_return": 102.0
     },
     {
       "label": "フェアリーS2026",
       "grade": "G3",
       "year": 2026,
-      "ai_pick": "ブラックチャリス",
+      "ai_pick": "サンアントワーヌ",
       "actual_winner": "ブラックチャリス",
-      "win_hit": 1,
+      "win_hit": 0,
+      "show_hits": 0,
+      "win_return": 0.0,
+      "show_return": 0.0
+    },
+    {
+      "label": "チューリップ賞2026",
+      "grade": "G2",
+      "year": 2026,
+      "ai_pick": "アランカール",
+      "actual_winner": "タイセイボーグ",
+      "win_hit": 0,
       "show_hits": 2,
-      "win_return": 1100.0,
-      "show_return": 1254.0
+      "win_return": 0.0,
+      "show_return": 210.0
     }
   ],
   "frame_win_rate": [
     {
       "frame": "1枠",
-      "rate": 3.5,
-      "n": 86
+      "rate": 9.2,
+      "n": 98
     },
     {
       "frame": "2枠",
-      "rate": 5.4,
-      "n": 92
+      "rate": 6.1,
+      "n": 98
     },
     {
       "frame": "3枠",
-      "rate": 8.5,
-      "n": 94
+      "rate": 11.0,
+      "n": 100
     },
     {
       "frame": "4枠",
-      "rate": 6.2,
-      "n": 97
+      "rate": 8.8,
+      "n": 102
     },
     {
       "frame": "5枠",
-      "rate": 10.9,
-      "n": 101
+      "rate": 13.8,
+      "n": 109
     },
     {
       "frame": "6枠",
-      "rate": 11.5,
-      "n": 104
+      "rate": 13.8,
+      "n": 109
     },
     {
       "frame": "7枠",
-      "rate": 3.9,
-      "n": 128
+      "rate": 9.3,
+      "n": 140
     },
     {
       "frame": "8枠",
-      "rate": 3.8,
-      "n": 130
+      "rate": 5.8,
+      "n": 138
     }
   ],
   "popularity_show_rate": [
     {
       "pop": "1人気",
-      "rate": 51.9,
-      "n": 54
+      "rate": 58.0,
+      "n": 69
     },
     {
       "pop": "2人気",
-      "rate": 59.3,
-      "n": 54
+      "rate": 63.2,
+      "n": 68
     },
     {
       "pop": "3人気",
-      "rate": 37.0,
-      "n": 54
+      "rate": 42.6,
+      "n": 61
     },
     {
       "pop": "4人気",
-      "rate": 27.8,
-      "n": 54
+      "rate": 29.3,
+      "n": 58
     },
     {
       "pop": "5人気",
-      "rate": 20.4,
-      "n": 54
+      "rate": 25.0,
+      "n": 60
     },
     {
       "pop": "6人気",
-      "rate": 20.4,
-      "n": 54
+      "rate": 20.3,
+      "n": 59
     },
     {
       "pop": "7人気",
-      "rate": 25.9,
-      "n": 54
+      "rate": 25.5,
+      "n": 55
     },
     {
       "pop": "8人気",
-      "rate": 11.1,
-      "n": 54
+      "rate": 12.5,
+      "n": 56
     },
     {
       "pop": "9人気",
-      "rate": 7.5,
-      "n": 53
+      "rate": 9.1,
+      "n": 55
     },
     {
       "pop": "10人気",
-      "rate": 11.1,
-      "n": 54
+      "rate": 10.9,
+      "n": 55
     }
   ],
   "bloodline_win_rate": [
     {
       "name": "ハービンジャー系",
-      "rate": 10.9,
-      "n": 55
+      "rate": 13.6,
+      "n": 59
     },
     {
       "name": "ロードカナロア系",
-      "rate": 9.5,
-      "n": 126
+      "rate": 12.7,
+      "n": 134
     },
     {
       "name": "キンシャサノキセキ系",
-      "rate": 8.7,
-      "n": 69
+      "rate": 10.0,
+      "n": 70
     },
     {
       "name": "キズナ系",
-      "rate": 6.0,
-      "n": 465
+      "rate": 9.6,
+      "n": 510
+    },
+    {
+      "name": "ロゴタイプ系",
+      "rate": 5.3,
+      "n": 38
     },
     {
       "name": "モーリス系",
@@ -892,1013 +1025,1238 @@
       "name": "ドレフォン系",
       "rate": 3.3,
       "n": 30
-    },
-    {
-      "name": "ロゴタイプ系",
-      "rate": 0.0,
-      "n": 34
     }
   ],
   "feature_importance": [
     {
+      "name": "馬体重",
+      "key": "weight",
+      "value": 0.1445
+    },
+    {
       "name": "ペース偏差値",
       "key": "pace_deviation",
-      "value": 0.137
+      "value": 0.1382
     },
     {
       "name": "場の強さ",
       "key": "field_strength",
-      "value": 0.1064
-    },
-    {
-      "name": "馬体重",
-      "key": "weight",
-      "value": 0.1043
+      "value": 0.0939
     },
     {
       "name": "スピード指数",
       "key": "speed_index",
-      "value": 0.1043
+      "value": 0.0903
     },
     {
       "name": "馬番",
       "key": "horse_number",
-      "value": 0.0885
+      "value": 0.0768
     },
     {
       "name": "オッズ",
       "key": "odds",
-      "value": 0.0727
-    },
-    {
-      "name": "人気",
-      "key": "popularity",
-      "value": 0.058
+      "value": 0.0723
     },
     {
       "name": "騎手勝率",
       "key": "jockey_win_rate",
-      "value": 0.0474
+      "value": 0.0524
+    },
+    {
+      "name": "枠番",
+      "key": "frame_number",
+      "value": 0.0488
     },
     {
       "name": "馬体重増減",
       "key": "weight_diff",
-      "value": 0.0432
+      "value": 0.0434
     },
     {
-      "name": "調教師勝率",
-      "key": "trainer_win_rate",
-      "value": 0.0421
+      "name": "人気",
+      "key": "popularity",
+      "value": 0.0343
     }
   ],
   "holdout": {
     "cutoff_year": 2025,
     "train": {
-      "n_races": 39,
-      "win_hit_rate": 0.385,
-      "win_roi": 2.213,
-      "show_hit_rate": 0.496,
-      "show_roi": 1.387
+      "n_races": 49,
+      "win_hit_rate": 0.347,
+      "win_roi": 2.151,
+      "show_hit_rate": 0.544,
+      "show_roi": 1.003
     },
     "test": {
-      "n_races": 11,
-      "win_hit_rate": 0.727,
-      "win_roi": 4.209,
-      "show_hit_rate": 0.545,
-      "show_roi": 1.847
+      "n_races": 12,
+      "win_hit_rate": 0.333,
+      "win_roi": 1.608,
+      "show_hit_rate": 0.583,
+      "show_roi": 1.642
     },
     "degradation": {
-      "win_roi_ratio": 1.902
+      "win_roi_ratio": 0.748
     }
   },
   "jackknife": {
-    "n_races": 50,
-    "base_win_roi": 2.652,
+    "n_races": 61,
+    "base_win_roi": 2.044,
     "races": [
       {
-        "label": "アルテミスS2021(2022世代)",
-        "win_roi_without": 2.259,
-        "impact": -0.393,
-        "win_return": 2190.0
+        "label": "チューリップ賞2020",
+        "win_roi_without": 1.823,
+        "impact": -0.221,
+        "win_return": 1530.0
       },
       {
-        "label": "クイーンC2023",
-        "win_roi_without": 2.449,
-        "impact": -0.203,
+        "label": "フィリーズレビュー2020",
+        "win_roi_without": 1.848,
+        "impact": -0.196,
+        "win_return": 1380.0
+      },
+      {
+        "label": "フェアリーS2024",
+        "win_roi_without": 1.868,
+        "impact": -0.176,
         "win_return": 1260.0
       },
       {
-        "label": "フェアリーS2026",
-        "win_roi_without": 2.482,
-        "impact": -0.17,
-        "win_return": 1100.0
+        "label": "紫苑S2020",
+        "win_roi_without": 1.918,
+        "impact": -0.126,
+        "win_return": 960.0
       },
       {
-        "label": "フィリーズレビュー2025",
-        "win_roi_without": 2.569,
-        "impact": -0.083,
-        "win_return": 670.0
-      },
-      {
-        "label": "紫苑S2023",
-        "win_roi_without": 2.571,
-        "impact": -0.081,
-        "win_return": 660.0
-      },
-      {
-        "label": "阪神JF2023(2024世代)",
-        "win_roi_without": 2.586,
-        "impact": -0.066,
-        "win_return": 590.0
+        "label": "フェアリーS2020",
+        "win_roi_without": 1.938,
+        "impact": -0.106,
+        "win_return": 840.0
       },
       {
         "label": "フェアリーS2025",
-        "win_roi_without": 2.586,
-        "impact": -0.066,
+        "win_roi_without": 1.98,
+        "impact": -0.064,
         "win_return": 590.0
       },
       {
+        "label": "ローズS2021",
+        "win_roi_without": 1.982,
+        "impact": -0.063,
+        "win_return": 580.0
+      },
+      {
         "label": "阪神JF2021(2022世代)",
-        "win_roi_without": 2.592,
-        "impact": -0.06,
+        "win_roi_without": 1.985,
+        "impact": -0.059,
         "win_return": 560.0
       },
       {
-        "label": "秋華賞2025",
-        "win_roi_without": 2.594,
-        "impact": -0.058,
-        "win_return": 550.0
+        "label": "ローズS2020",
+        "win_roi_without": 1.993,
+        "impact": -0.051,
+        "win_return": 509.99999999999994
       },
       {
         "label": "桜花賞2025",
-        "win_roi_without": 2.604,
-        "impact": -0.048,
+        "win_roi_without": 1.995,
+        "impact": -0.049,
         "win_return": 500.0
       },
       {
-        "label": "ローズS2024",
-        "win_roi_without": 2.606,
-        "impact": -0.046,
-        "win_return": 490.00000000000006
-      },
-      {
-        "label": "クイーンC2025",
-        "win_roi_without": 2.606,
-        "impact": -0.046,
-        "win_return": 490.00000000000006
+        "label": "阪神JF2025(2026世代)",
+        "win_roi_without": 1.995,
+        "impact": -0.049,
+        "win_return": 500.0
       },
       {
         "label": "紫苑S2021",
-        "win_roi_without": 2.614,
-        "impact": -0.038,
+        "win_roi_without": 2.003,
+        "impact": -0.041,
         "win_return": 450.0
       },
       {
         "label": "桜花賞2024",
-        "win_roi_without": 2.618,
-        "impact": -0.034,
+        "win_roi_without": 2.007,
+        "impact": -0.038,
         "win_return": 430.0
       },
       {
-        "label": "アルテミスS2025(2026世代)",
-        "win_roi_without": 2.627,
-        "impact": -0.025,
-        "win_return": 390.0
-      },
-      {
-        "label": "クイーンC2022",
-        "win_roi_without": 2.631,
-        "impact": -0.021,
-        "win_return": 370.0
+        "label": "桜花賞2020",
+        "win_roi_without": 2.008,
+        "impact": -0.036,
+        "win_return": 420.0
       },
       {
         "label": "桜花賞2021",
-        "win_roi_without": 2.633,
-        "impact": -0.019,
+        "win_roi_without": 2.018,
+        "impact": -0.026,
         "win_return": 360.0
       },
       {
         "label": "クイーンC2026",
-        "win_roi_without": 2.637,
-        "impact": -0.015,
+        "win_roi_without": 2.022,
+        "impact": -0.023,
         "win_return": 340.0
       },
       {
         "label": "クイーンC2024",
-        "win_roi_without": 2.643,
-        "impact": -0.009,
+        "win_roi_without": 2.027,
+        "impact": -0.018,
         "win_return": 310.0
       },
       {
-        "label": "ローズS2022",
-        "win_roi_without": 2.651,
-        "impact": -0.001,
-        "win_return": 270.0
+        "label": "紫苑S2022",
+        "win_roi_without": 2.032,
+        "impact": -0.013,
+        "win_return": 280.0
       },
       {
         "label": "阪神JF2022(2023世代)",
-        "win_roi_without": 2.653,
-        "impact": 0.001,
+        "win_roi_without": 2.035,
+        "impact": -0.009,
         "win_return": 260.0
       },
       {
         "label": "チューリップ賞2021",
-        "win_roi_without": 2.673,
-        "impact": 0.021,
+        "win_roi_without": 2.052,
+        "impact": 0.007,
         "win_return": 160.0
       },
       {
-        "label": "桜花賞2023",
-        "win_roi_without": 2.673,
-        "impact": 0.021,
-        "win_return": 160.0
+        "label": "秋華賞2020",
+        "win_roi_without": 2.055,
+        "impact": 0.011,
+        "win_return": 140.0
       },
       {
         "label": "秋華賞2023",
-        "win_roi_without": 2.684,
-        "impact": 0.032,
+        "win_roi_without": 2.06,
+        "impact": 0.016,
         "win_return": 110.00000000000001
       },
       {
-        "label": "ローズS2021",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "label": "ファンタジーS2020(2021世代)",
+        "win_roi_without": 2.078,
+        "impact": 0.034,
+        "win_return": 0.0
+      },
+      {
+        "label": "阪神JF2020(2021世代)",
+        "win_roi_without": 2.078,
+        "impact": 0.034,
+        "win_return": 0.0
+      },
+      {
+        "label": "クイーンC2021",
+        "win_roi_without": 2.078,
+        "impact": 0.034,
+        "win_return": 0.0
+      },
+      {
+        "label": "アルテミスS2021(2022世代)",
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
         "label": "フィリーズレビュー2021",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
         "label": "秋華賞2021",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
         "label": "ファンタジーS2021(2022世代)",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "win_roi_without": 2.078,
+        "impact": 0.034,
+        "win_return": 0.0
+      },
+      {
+        "label": "クイーンC2022",
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
         "label": "アルテミスS2022(2023世代)",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
-        "label": "紫苑S2022",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "label": "ローズS2022",
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
         "label": "チューリップ賞2022",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
         "label": "フィリーズレビュー2022",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
         "label": "桜花賞2022",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
         "label": "秋華賞2022",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
         "label": "ファンタジーS2022(2023世代)",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "win_roi_without": 2.078,
+        "impact": 0.034,
+        "win_return": 0.0
+      },
+      {
+        "label": "クイーンC2023",
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
         "label": "アルテミスS2023(2024世代)",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "win_roi_without": 2.078,
+        "impact": 0.034,
+        "win_return": 0.0
+      },
+      {
+        "label": "紫苑S2023",
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
         "label": "ファンタジーS2023(2024世代)",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
         "label": "チューリップ賞2023",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
         "label": "フィリーズレビュー2023",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "win_roi_without": 2.078,
+        "impact": 0.034,
+        "win_return": 0.0
+      },
+      {
+        "label": "桜花賞2023",
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
         "label": "ローズS2023",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "win_roi_without": 2.078,
+        "impact": 0.034,
+        "win_return": 0.0
+      },
+      {
+        "label": "阪神JF2023(2024世代)",
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
         "label": "アルテミスS2024(2025世代)",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
-        "win_return": 0.0
-      },
-      {
-        "label": "フェアリーS2024",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
         "label": "紫苑S2024",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "win_roi_without": 2.078,
+        "impact": 0.034,
+        "win_return": 0.0
+      },
+      {
+        "label": "ローズS2024",
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
         "label": "秋華賞2024",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
         "label": "ファンタジーS2024(2025世代)",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
         "label": "阪神JF2024(2025世代)",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
         "label": "フィリーズレビュー2024",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "win_roi_without": 2.078,
+        "impact": 0.034,
+        "win_return": 0.0
+      },
+      {
+        "label": "クイーンC2025",
+        "win_roi_without": 2.078,
+        "impact": 0.034,
+        "win_return": 0.0
+      },
+      {
+        "label": "アルテミスS2025(2026世代)",
+        "win_roi_without": 2.078,
+        "impact": 0.034,
+        "win_return": 0.0
+      },
+      {
+        "label": "秋華賞2025",
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
         "label": "ファンタジーS2025(2026世代)",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "win_roi_without": 2.078,
+        "impact": 0.034,
+        "win_return": 0.0
+      },
+      {
+        "label": "フィリーズレビュー2025",
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
         "label": "ローズS2025",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       },
       {
-        "label": "阪神JF2025(2026世代)",
-        "win_roi_without": 2.706,
-        "impact": 0.054,
+        "label": "フェアリーS2026",
+        "win_roi_without": 2.078,
+        "impact": 0.034,
+        "win_return": 0.0
+      },
+      {
+        "label": "チューリップ賞2026",
+        "win_roi_without": 2.078,
+        "impact": 0.034,
         "win_return": 0.0
       }
     ],
-    "roi_without_top1": 2.259,
-    "roi_without_top3": 1.853,
-    "roi_without_top5": 1.64,
-    "min_roi": 2.259,
-    "max_roi": 2.706
+    "roi_without_top1": 1.823,
+    "roi_without_top3": 1.431,
+    "roi_without_top5": 1.161,
+    "min_roi": 1.823,
+    "max_roi": 2.078
   },
   "calibration": {
     "win": [
       {
         "bin_center": 0.05,
-        "predicted": 0.0703,
-        "observed": 0.0236,
-        "count": 381
+        "predicted": 0.061,
+        "observed": 0.0119,
+        "count": 84
       },
       {
         "bin_center": 0.15,
-        "predicted": 0.1547,
-        "observed": 0.0633,
-        "count": 237
+        "predicted": 0.1524,
+        "observed": 0.0152,
+        "count": 197
       },
       {
         "bin_center": 0.25,
-        "predicted": 0.2275,
-        "observed": 0.1714,
-        "count": 140
+        "predicted": 0.2361,
+        "observed": 0.0665,
+        "count": 346
       },
       {
         "bin_center": 0.35,
-        "predicted": 0.3494,
-        "observed": 0.1111,
-        "count": 9
+        "predicted": 0.3429,
+        "observed": 0.1417,
+        "count": 120
       },
       {
         "bin_center": 0.45,
-        "predicted": 0.4139,
-        "observed": 1.0,
-        "count": 1
+        "predicted": 0.4245,
+        "observed": 0.2353,
+        "count": 51
+      },
+      {
+        "bin_center": 0.55,
+        "predicted": 0.5561,
+        "observed": 0.0,
+        "count": 9
       },
       {
         "bin_center": 0.65,
-        "predicted": 0.6121,
-        "observed": 0.5,
+        "predicted": 0.6394,
+        "observed": 0.2,
+        "count": 15
+      },
+      {
+        "bin_center": 0.75,
+        "predicted": 0.7297,
+        "observed": 0.3333,
+        "count": 9
+      },
+      {
+        "bin_center": 0.85,
+        "predicted": 0.855,
+        "observed": 0.0,
+        "count": 3
+      },
+      {
+        "bin_center": 0.95,
+        "predicted": 0.9387,
+        "observed": 0.0,
         "count": 2
       }
     ],
     "show": [
       {
+        "bin_center": 0.05,
+        "predicted": 0.0541,
+        "observed": 0.2,
+        "count": 5
+      },
+      {
         "bin_center": 0.15,
-        "predicted": 0.1716,
-        "observed": 0.0361,
-        "count": 166
+        "predicted": 0.1722,
+        "observed": 0.0253,
+        "count": 79
       },
       {
         "bin_center": 0.25,
-        "predicted": 0.2445,
-        "observed": 0.1867,
-        "count": 450
+        "predicted": 0.2578,
+        "observed": 0.075,
+        "count": 240
       },
       {
         "bin_center": 0.35,
-        "predicted": 0.3393,
-        "observed": 0.339,
-        "count": 118
+        "predicted": 0.3489,
+        "observed": 0.1875,
+        "count": 256
       },
       {
         "bin_center": 0.45,
-        "predicted": 0.4328,
-        "observed": 0.5312,
-        "count": 32
+        "predicted": 0.442,
+        "observed": 0.4317,
+        "count": 139
       },
       {
         "bin_center": 0.55,
-        "predicted": 0.5108,
-        "observed": 0.75,
-        "count": 4
+        "predicted": 0.5313,
+        "observed": 0.3607,
+        "count": 61
+      },
+      {
+        "bin_center": 0.65,
+        "predicted": 0.6403,
+        "observed": 0.381,
+        "count": 21
+      },
+      {
+        "bin_center": 0.75,
+        "predicted": 0.7443,
+        "observed": 0.5455,
+        "count": 11
+      },
+      {
+        "bin_center": 0.85,
+        "predicted": 0.852,
+        "observed": 0.2308,
+        "count": 13
+      },
+      {
+        "bin_center": 0.95,
+        "predicted": 0.9539,
+        "observed": 0.2727,
+        "count": 11
       }
     ]
   },
   "simulation": {
     "initial_bankroll": 10000,
-    "n_races": 50,
+    "n_races": 61,
     "paths": {
       "p5": [
         10000,
-        9578,
-        9567,
-        9416,
-        9163,
-        9054,
-        9081,
-        8867,
-        8843,
-        8960,
-        8886,
-        8972,
-        8972,
-        9074,
-        8995,
-        8902,
-        8923,
-        9037,
-        9117,
-        9229,
-        9208,
-        9187,
-        9281,
-        9295,
-        9411,
-        9609,
-        9696,
-        10045,
-        10101,
-        10398,
-        10550,
-        10674,
-        10856,
-        11137,
-        11467,
-        11715,
-        11749,
-        12011,
-        11905,
-        12106,
-        12377,
-        12542,
-        12505,
-        12431,
-        13013,
-        13158,
-        13472,
-        13914,
-        13994,
-        15005,
-        15192
+        8267,
+        7931,
+        7701,
+        7362,
+        7250,
+        7026,
+        6811,
+        6586,
+        6522,
+        6386,
+        6382,
+        6391,
+        6604,
+        6630,
+        6506,
+        6518,
+        6873,
+        6861,
+        6727,
+        6960,
+        6737,
+        6800,
+        6951,
+        7183,
+        6715,
+        6563,
+        6659,
+        6695,
+        6958,
+        7032,
+        6980,
+        6851,
+        7871,
+        7891,
+        7989,
+        8246,
+        8557,
+        8769,
+        8770,
+        9113,
+        8970,
+        8907,
+        8779,
+        9301,
+        9619,
+        10294,
+        10840,
+        10799,
+        11247,
+        11646,
+        11548,
+        11619,
+        11256,
+        12892,
+        12945,
+        13843,
+        14984,
+        14939,
+        15178,
+        15644,
+        18125
       ],
       "p25": [
         10000,
-        10000,
-        9886,
-        9880,
-        9880,
-        9881,
-        9974,
-        10030,
-        10173,
-        10435,
-        10539,
-        10728,
-        10906,
-        11154,
-        11433,
-        11698,
-        12116,
-        12495,
-        12785,
-        13018,
-        13329,
-        13745,
-        14016,
-        14288,
-        14809,
-        15035,
-        15284,
-        15787,
-        16364,
-        16716,
-        17313,
-        17748,
-        18190,
-        18893,
-        19190,
-        19659,
-        20467,
-        21276,
-        22182,
-        23179,
-        23580,
-        24019,
-        24761,
-        25845,
-        26285,
-        26794,
-        27395,
-        27615,
-        28861,
-        29612,
-        30586
+        9500,
+        9229,
+        9135,
+        9084,
+        9181,
+        9326,
+        9374,
+        9636,
+        9967,
+        10027,
+        10179,
+        10395,
+        10624,
+        11274,
+        11538,
+        11639,
+        12570,
+        12881,
+        13006,
+        13605,
+        13887,
+        14514,
+        15468,
+        15302,
+        16095,
+        16851,
+        17371,
+        18161,
+        18588,
+        19475,
+        19866,
+        20146,
+        21719,
+        22787,
+        22732,
+        23172,
+        24059,
+        26601,
+        27493,
+        28765,
+        30201,
+        30756,
+        32424,
+        34613,
+        37138,
+        38255,
+        40606,
+        42404,
+        43973,
+        45707,
+        47487,
+        49079,
+        49529,
+        51520,
+        54464,
+        56804,
+        58588,
+        61085,
+        63303,
+        65351,
+        69151
       ],
       "p50": [
         10000,
-        10000,
-        10000,
-        10167,
-        10555,
-        10878,
-        11210,
-        11862,
-        12576,
-        13213,
-        13750,
-        14417,
-        14770,
-        15095,
-        15450,
-        15826,
-        16482,
-        16867,
-        17404,
-        17879,
-        18432,
-        19073,
-        19601,
-        20076,
-        21446,
-        21909,
-        22745,
-        23392,
-        24085,
-        24342,
-        25362,
-        26384,
-        27299,
-        28244,
-        30141,
-        30976,
-        32555,
-        33737,
-        35245,
-        36617,
-        38200,
-        40182,
-        41956,
-        43292,
-        44776,
-        46546,
-        47993,
-        49738,
-        51262,
-        52226,
-        52654
+        9953,
+        9957,
+        10656,
+        11140,
+        11771,
+        12481,
+        13045,
+        13560,
+        14285,
+        14846,
+        15632,
+        16546,
+        17460,
+        18471,
+        19277,
+        20487,
+        20761,
+        22153,
+        22464,
+        23742,
+        25130,
+        27304,
+        29399,
+        29819,
+        32812,
+        33537,
+        36491,
+        38324,
+        41172,
+        42487,
+        44107,
+        47524,
+        50244,
+        52962,
+        55806,
+        57180,
+        61853,
+        63118,
+        67264,
+        71463,
+        74587,
+        76614,
+        83692,
+        85310,
+        94722,
+        99206,
+        105885,
+        111929,
+        116257,
+        123966,
+        132761,
+        136287,
+        142547,
+        149986,
+        156979,
+        160663,
+        172440,
+        175465,
+        179301,
+        193108,
+        199230
       ],
       "p75": [
         10000,
-        10000,
-        10949,
-        11883,
-        13969,
-        14861,
-        15129,
-        15625,
-        16181,
-        16918,
-        17603,
-        18162,
-        19267,
-        20489,
-        21610,
-        22849,
-        23378,
-        24513,
-        25086,
-        25718,
-        27003,
-        27716,
-        29496,
-        31948,
-        32594,
-        34152,
-        35369,
-        37159,
-        38499,
-        40439,
-        41278,
-        43109,
-        44558,
-        47201,
-        49072,
-        51088,
-        52942,
-        55934,
-        58606,
-        62219,
-        63619,
-        66419,
-        69602,
-        71172,
-        73998,
-        77573,
-        80700,
-        83476,
-        88027,
-        91185,
-        96076
+        10492,
+        12116,
+        14447,
+        16353,
+        17683,
+        18565,
+        19777,
+        21163,
+        22943,
+        24428,
+        25798,
+        27232,
+        30234,
+        32090,
+        33204,
+        35727,
+        38827,
+        41990,
+        44897,
+        48170,
+        51634,
+        56130,
+        61166,
+        62578,
+        68903,
+        74934,
+        81934,
+        86550,
+        93007,
+        96007,
+        105670,
+        110513,
+        119163,
+        125384,
+        129143,
+        143116,
+        147909,
+        161836,
+        171971,
+        182709,
+        191625,
+        204703,
+        213448,
+        238905,
+        264644,
+        285518,
+        287826,
+        304870,
+        321194,
+        338680,
+        383589,
+        384548,
+        402868,
+        457264,
+        474822,
+        480696,
+        549699,
+        557112,
+        596061,
+        641657,
+        690606
       ],
       "p95": [
         10000,
-        14914,
-        15837,
-        16535,
-        18026,
-        22252,
-        22952,
-        23548,
-        24548,
-        26090,
-        27253,
-        29835,
-        32061,
-        34496,
-        36954,
-        39618,
-        42663,
-        44795,
-        45293,
-        47098,
-        51285,
-        52742,
-        57650,
-        64709,
-        66932,
-        70489,
-        72678,
-        75553,
-        78262,
-        82842,
-        90048,
-        93081,
-        97037,
-        103372,
-        108321,
-        113760,
-        120089,
-        123893,
-        130688,
-        139594,
-        146911,
-        148330,
-        158835,
-        165536,
-        176682,
-        185830,
-        184755,
-        191008,
-        214757,
-        228248,
-        243743
+        17835,
+        21337,
+        22978,
+        27147,
+        32197,
+        35686,
+        39241,
+        44578,
+        48530,
+        56449,
+        63145,
+        67283,
+        73303,
+        84664,
+        90157,
+        92964,
+        107025,
+        116075,
+        130965,
+        140510,
+        155350,
+        160418,
+        178013,
+        212249,
+        228064,
+        262975,
+        284638,
+        291771,
+        323984,
+        379911,
+        400160,
+        452121,
+        523165,
+        575086,
+        651392,
+        644061,
+        646018,
+        702183,
+        752204,
+        799104,
+        880584,
+        973796,
+        1081631,
+        1214888,
+        1379496,
+        1447579,
+        1475517,
+        1637774,
+        1738152,
+        1931905,
+        1983233,
+        2168674,
+        2418606,
+        2450534,
+        2871614,
+        2825463,
+        3019736,
+        3228880,
+        3500461,
+        3977703,
+        4036958
       ]
     },
     "max_drawdown": {
-      "median": 0.16,
-      "p95": 0.303
+      "median": 0.466,
+      "p95": 0.729
     },
     "final_bankroll": {
-      "median": 52654,
-      "p5": 15192,
-      "p95": 243743
+      "median": 199230,
+      "p5": 18125,
+      "p95": 4036958
     }
   },
   "bankroll_history": {
     "initial": 10000,
     "history": [
       {
+        "label": "フェアリーS2020",
+        "win_only": 16190,
+        "combo": 10225
+      },
+      {
+        "label": "紫苑S2020",
+        "win_only": 28606,
+        "combo": 10636
+      },
+      {
+        "label": "ローズS2020",
+        "win_only": 37260,
+        "combo": 10456
+      },
+      {
+        "label": "秋華賞2020",
+        "win_only": 37260,
+        "combo": 10456
+      },
+      {
+        "label": "チューリップ賞2020",
+        "win_only": 89337,
+        "combo": 12473
+      },
+      {
+        "label": "フィリーズレビュー2020",
+        "win_only": 198447,
+        "combo": 13765
+      },
+      {
+        "label": "桜花賞2020",
+        "win_only": 239431,
+        "combo": 16462
+      },
+      {
+        "label": "ファンタジーS2020(2021世代)",
+        "win_only": 216796,
+        "combo": 14906
+      },
+      {
+        "label": "阪神JF2020(2021世代)",
+        "win_only": 198253,
+        "combo": 13631
+      },
+      {
+        "label": "クイーンC2021",
+        "win_only": 197317,
+        "combo": 13620
+      },
+      {
         "label": "アルテミスS2021(2022世代)",
-        "win_only": 13424,
-        "combo": 12417
+        "win_only": 197317,
+        "combo": 13620
       },
       {
         "label": "紫苑S2021",
-        "win_only": 13424,
-        "combo": 12417
+        "win_only": 237101,
+        "combo": 13369
       },
       {
         "label": "ローズS2021",
-        "win_only": 13424,
-        "combo": 12417
+        "win_only": 277959,
+        "combo": 15933
       },
       {
         "label": "チューリップ賞2021",
-        "win_only": 13424,
-        "combo": 12417
+        "win_only": 262286,
+        "combo": 15034
       },
       {
         "label": "フィリーズレビュー2021",
-        "win_only": 13424,
-        "combo": 12417
+        "win_only": 216842,
+        "combo": 12430
       },
       {
         "label": "桜花賞2021",
-        "win_only": 13424,
-        "combo": 12417
+        "win_only": 216842,
+        "combo": 12430
       },
       {
         "label": "秋華賞2021",
-        "win_only": 13424,
-        "combo": 12417
+        "win_only": 216842,
+        "combo": 12430
       },
       {
         "label": "ファンタジーS2021(2022世代)",
-        "win_only": 13424,
-        "combo": 12417
+        "win_only": 214453,
+        "combo": 12410
       },
       {
         "label": "阪神JF2021(2022世代)",
-        "win_only": 13657,
-        "combo": 12486
+        "win_only": 259825,
+        "combo": 13261
       },
       {
         "label": "クイーンC2022",
-        "win_only": 13657,
-        "combo": 12486
+        "win_only": 246367,
+        "combo": 14091
       },
       {
         "label": "アルテミスS2022(2023世代)",
-        "win_only": 13657,
-        "combo": 12486
+        "win_only": 246367,
+        "combo": 14091
       },
       {
         "label": "紫苑S2022",
-        "win_only": 13290,
-        "combo": 12151
+        "win_only": 254360,
+        "combo": 14363
       },
       {
         "label": "ローズS2022",
-        "win_only": 13290,
-        "combo": 12151
+        "win_only": 236331,
+        "combo": 13345
       },
       {
         "label": "チューリップ賞2022",
-        "win_only": 13290,
-        "combo": 12151
+        "win_only": 226999,
+        "combo": 12818
       },
       {
         "label": "フィリーズレビュー2022",
-        "win_only": 12922,
-        "combo": 11815
+        "win_only": 226999,
+        "combo": 12818
       },
       {
         "label": "桜花賞2022",
-        "win_only": 12882,
-        "combo": 11778
+        "win_only": 216439,
+        "combo": 12221
       },
       {
         "label": "秋華賞2022",
-        "win_only": 12868,
-        "combo": 11779
+        "win_only": 166272,
+        "combo": 12476
       },
       {
         "label": "ファンタジーS2022(2023世代)",
-        "win_only": 12868,
-        "combo": 11779
+        "win_only": 158216,
+        "combo": 11872
       },
       {
         "label": "阪神JF2022(2023世代)",
-        "win_only": 12868,
-        "combo": 11779
+        "win_only": 158625,
+        "combo": 11860
       },
       {
         "label": "クイーンC2023",
-        "win_only": 20304,
-        "combo": 15858
+        "win_only": 150880,
+        "combo": 12911
       },
       {
         "label": "アルテミスS2023(2024世代)",
-        "win_only": 20083,
-        "combo": 15864
+        "win_only": 140228,
+        "combo": 12533
       },
       {
         "label": "紫苑S2023",
-        "win_only": 21980,
-        "combo": 16196
+        "win_only": 135069,
+        "combo": 12071
       },
       {
         "label": "秋華賞2023",
-        "win_only": 21980,
-        "combo": 16196
+        "win_only": 135069,
+        "combo": 12071
       },
       {
         "label": "ファンタジーS2023(2024世代)",
-        "win_only": 21052,
-        "combo": 15513
+        "win_only": 125583,
+        "combo": 11224
       },
       {
         "label": "チューリップ賞2023",
-        "win_only": 21052,
-        "combo": 15513
+        "win_only": 115280,
+        "combo": 10303
       },
       {
         "label": "フィリーズレビュー2023",
-        "win_only": 20520,
-        "combo": 15121
+        "win_only": 110588,
+        "combo": 9884
       },
       {
         "label": "桜花賞2023",
-        "win_only": 20520,
-        "combo": 15121
+        "win_only": 105055,
+        "combo": 11420
       },
       {
         "label": "ローズS2023",
-        "win_only": 20520,
-        "combo": 15121
+        "win_only": 105055,
+        "combo": 11420
       },
       {
         "label": "阪神JF2023(2024世代)",
-        "win_only": 23003,
-        "combo": 16871
+        "win_only": 100692,
+        "combo": 13691
       },
       {
         "label": "クイーンC2024",
-        "win_only": 23003,
-        "combo": 16871
+        "win_only": 105644,
+        "combo": 14291
       },
       {
         "label": "アルテミスS2024(2025世代)",
-        "win_only": 23003,
-        "combo": 16871
+        "win_only": 103048,
+        "combo": 13940
       },
       {
         "label": "フェアリーS2024",
-        "win_only": 23003,
-        "combo": 16871
+        "win_only": 158201,
+        "combo": 18133
       },
       {
         "label": "紫苑S2024",
-        "win_only": 22728,
-        "combo": 16783
+        "win_only": 153695,
+        "combo": 17616
       },
       {
         "label": "ローズS2024",
-        "win_only": 22728,
-        "combo": 16783
+        "win_only": 146005,
+        "combo": 16735
       },
       {
         "label": "秋華賞2024",
-        "win_only": 22728,
-        "combo": 16783
+        "win_only": 141528,
+        "combo": 16222
       },
       {
         "label": "ファンタジーS2024(2025世代)",
-        "win_only": 22728,
-        "combo": 16783
+        "win_only": 140959,
+        "combo": 16157
       },
       {
         "label": "阪神JF2024(2025世代)",
-        "win_only": 22457,
-        "combo": 18607
+        "win_only": 136696,
+        "combo": 15668
       },
       {
         "label": "フィリーズレビュー2024",
-        "win_only": 21484,
-        "combo": 17801
+        "win_only": 130061,
+        "combo": 14908
       },
       {
         "label": "桜花賞2024",
-        "win_only": 22022,
-        "combo": 17873
+        "win_only": 149635,
+        "combo": 15709
       },
       {
         "label": "クイーンC2025",
-        "win_only": 22390,
-        "combo": 17853
+        "win_only": 138632,
+        "combo": 14554
       },
       {
         "label": "アルテミスS2025(2026世代)",
-        "win_only": 22390,
-        "combo": 17853
+        "win_only": 138632,
+        "combo": 14554
       },
       {
         "label": "フェアリーS2025",
-        "win_only": 37021,
-        "combo": 31131
+        "win_only": 247254,
+        "combo": 27532
       },
       {
         "label": "秋華賞2025",
-        "win_only": 39147,
-        "combo": 36429
+        "win_only": 236949,
+        "combo": 32717
       },
       {
         "label": "ファンタジーS2025(2026世代)",
-        "win_only": 39147,
-        "combo": 36429
+        "win_only": 183017,
+        "combo": 25270
       },
       {
         "label": "フィリーズレビュー2025",
-        "win_only": 43378,
-        "combo": 102246
+        "win_only": 162966,
+        "combo": 31603
       },
       {
         "label": "桜花賞2025",
-        "win_only": 46298,
-        "combo": 107796
+        "win_only": 202058,
+        "combo": 37714
       },
       {
         "label": "ローズS2025",
-        "win_only": 44809,
-        "combo": 104328
+        "win_only": 194739,
+        "combo": 36348
       },
       {
         "label": "阪神JF2025(2026世代)",
-        "win_only": 38657,
-        "combo": 172243
+        "win_only": 225171,
+        "combo": 41671
       },
       {
         "label": "クイーンC2026",
-        "win_only": 38657,
-        "combo": 172243
+        "win_only": 235942,
+        "combo": 41267
       },
       {
         "label": "フェアリーS2026",
-        "win_only": 57654,
-        "combo": 177845
+        "win_only": 230868,
+        "combo": 40380
+      },
+      {
+        "label": "チューリップ賞2026",
+        "win_only": 230868,
+        "combo": 40380
       }
     ],
     "final": {
-      "win_only": 57654,
-      "combo": 177845
+      "win_only": 230868,
+      "combo": 40380
     },
     "max_dd": {
-      "win_only": 0.165,
-      "combo": 0.066
+      "win_only": 0.638,
+      "combo": 0.4
     },
     "profit_multiple": {
-      "win_only": 5.77,
-      "combo": 17.78
+      "win_only": 23.09,
+      "combo": 4.04
     }
   }
 }
