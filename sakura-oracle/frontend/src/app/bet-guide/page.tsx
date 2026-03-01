@@ -201,11 +201,11 @@ export default function BetGuidePage() {
   const wideBets = scaledBets.filter((b) => b.type === "ワイド");
   const winBets = scaledBets.filter((b) => b.type === "単勝");
 
-  // 対象馬（オッズ入力用）
+  // 対象馬（オッズ入力用） — 馬番順で固定（入力中に順番が変わらないように）
   const targetHorses = useMemo(() => {
-    return predictions.predictions.filter((h) =>
-      ["◎", "○", "▲", "△"].includes(h.mark)
-    );
+    return predictions.predictions
+      .filter((h) => ["◎", "○", "▲", "△"].includes(h.mark))
+      .sort((a, b) => a.horse_number - b.horse_number);
   }, [predictions]);
 
   // 大穴狙い: メイン買い目外のEV>1.0ハイリターン候補（各¥100固定、予算外）

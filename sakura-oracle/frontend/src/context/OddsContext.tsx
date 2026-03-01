@@ -419,6 +419,8 @@ const OddsContext = createContext<OddsContextValue | null>(null);
 export function OddsProvider({ children }: { children: ReactNode }) {
   const { predictions, selectedRaceId, scrapedComboOdds } = useRace();
   const prevRaceIdRef = useRef(selectedRaceId);
+  // localStorage からユーザー入力を復元済みかどうか（predictions同期による上書き防止）
+  const oddsHydratedRef = useRef(false);
 
   const initialOdds = useMemo(
     () => buildInitialOdds(predictions.predictions),
@@ -474,8 +476,8 @@ export function OddsProvider({ children }: { children: ReactNode }) {
       } catch {
         setComboOddsMap(scrapedComboOdds);
       }
-    } else {
-      // Same race but predictions data refreshed (initial load) — sync initialOdds
+    } else if (!oddsHydratedRef.current) {
+      // 初回ロード時のみ初期値同期（localStorageから復元済みなら上書きしない）
       setOddsMap(initialOdds);
     }
   }, [predictions, selectedRaceId, initialOdds]);
@@ -487,6 +489,7 @@ export function OddsProvider({ children }: { children: ReactNode }) {
       const stored = localStorage.getItem(keys.odds);
       if (stored) {
         setOddsMap(JSON.parse(stored));
+        oddsHydratedRef.current = true; // 復元成功 — predictions同期による上書きを防止
       }
     } catch { /* ignore */ }
     try {
@@ -556,6 +559,7 @@ export function OddsProvider({ children }: { children: ReactNode }) {
 
   const resetOdds = useCallback(() => {
     setOddsMap(initialOdds);
+    oddsHydratedRef.current = false; // リセット後は初期値同期を再許可
     const keys = storageKey(selectedRaceId);
     try { localStorage.removeItem(keys.odds); } catch { /* ignore */ }
   }, [initialOdds, selectedRaceId]);
