@@ -53,6 +53,18 @@ function ComboOddsInput({
   );
 }
 
+/** ポートフォリオ全体のBT実績ROI（50レース, ¥3,000/R, 実配当ベース） */
+const BT_PORTFOLIO_ROI: Record<string, Record<string, { roi: number; hitRate: number }>> = {
+  aggressive: {
+    box:    { roi: 3.50, hitRate: 0.18 },
+    nagashi: { roi: 1.78, hitRate: 0.18 },
+  },
+  stable: {
+    box:    { roi: 4.15, hitRate: 0.52 },
+    nagashi: { roi: 3.84, hitRate: 0.50 },
+  },
+};
+
 /** BT実績データ（v10, 50レース） */
 const BT_STATS = {
   box: {
@@ -152,14 +164,18 @@ export default function BetGuidePage() {
 
   const totalInvestment = scaledBets.reduce((s, b) => s + b.scaledAmount, 0);
 
-  // 期待リターン
+  // 理論EV（AI確率×オッズ — 穴馬で過大評価になりやすい参考値）
   const expectedReturn = scaledBets.reduce((s, b) => {
     if (b.scaledAmount === 0) return s;
     const effectiveEv = b.evReliable ? b.ev : b.backtestRoi;
     return s + b.scaledAmount * effectiveEv;
   }, 0);
-  const roi = totalInvestment > 0 ? (expectedReturn / totalInvestment - 1) * 100 : 0;
   const allReliable = scaledBets.filter((b) => b.scaledAmount > 0).every((b) => b.evReliable);
+
+  // BT実績ベース（50レース実配当から算出 — より信頼性の高い指標）
+  const btStats = BT_PORTFOLIO_ROI[strategyMode]?.[comboMode] ?? { roi: 1.0, hitRate: 0 };
+  const btExpectedReturn = totalInvestment * btStats.roi;
+  const btRoi = totalInvestment > 0 ? (btExpectedReturn / totalInvestment - 1) * 100 : 0;
 
   // 的中時リターン: 各組合せ馬券が的中した場合の最大払戻
   const maxHitReturn = useMemo(() => {
@@ -416,7 +432,7 @@ export default function BetGuidePage() {
                 </div>
               )}
 
-              {/* KPI */}
+              {/* KPI — BT実績ベース */}
               <div className="grid grid-cols-3 gap-2 text-center border-t border-white/10 pt-3">
                 <div>
                   <p className="text-[10px] text-muted-foreground mb-0.5">合計投資</p>
@@ -426,35 +442,53 @@ export default function BetGuidePage() {
                 </div>
                 <div>
                   <p className="text-[10px] text-muted-foreground mb-0.5">
-                    期待リターン{!allReliable && <span className="text-orange-400">*</span>}
+                    BT実績参考
                   </p>
                   <p className="font-mono text-sm font-bold text-gold">
-                    ¥{Math.round(expectedReturn).toLocaleString()}
+                    ¥{Math.round(btExpectedReturn).toLocaleString()}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-muted-foreground mb-0.5">期待ROI</p>
+                  <p className="text-[10px] text-muted-foreground mb-0.5">BT実績ROI</p>
                   <p
                     className={`font-mono text-lg font-bold ${
-                      roi >= 0 ? "text-green-400" : "text-red-400"
+                      btRoi >= 0 ? "text-green-400" : "text-red-400"
                     }`}
                   >
-                    {roi >= 0 ? "+" : ""}
-                    {roi.toFixed(0)}%
+                    {btRoi >= 0 ? "+" : ""}
+                    {btRoi.toFixed(0)}%
                   </p>
                 </div>
               </div>
 
-              {maxHitReturn > 0 && (
-                <p className="text-[10px] text-green-400/70 mt-2 text-center">
-                  最高的中時 ¥{Math.round(maxHitReturn).toLocaleString()} 回収
-                </p>
-              )}
+              {/* 当選率 + 最高的中時 */}
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-[10px] text-muted-foreground">
+                  BT当選率: <span className="font-mono font-bold text-white">{Math.round(btStats.hitRate * 100)}%</span>
+                  <span className="text-muted-foreground/50">（50R中 何か当たる確率）</span>
+                </span>
+                {maxHitReturn > 0 && (
+                  <span className="text-[10px] text-green-400/70 font-mono">
+                    最高的中¥{Math.round(maxHitReturn).toLocaleString()}
+                  </span>
+                )}
+              </div>
 
-              <p className="text-[9px] text-muted-foreground mt-2">
-                {allReliable
-                  ? "全馬券のオッズ入力済み — 実EVベース配分"
-                  : "※ BT実績ベースの推定配分。組合せオッズ入力で実EV確定値に切替わります"}
+              {/* 理論EV（参考） */}
+              <div className="mt-2 pt-2 border-t border-white/5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] text-muted-foreground/60">
+                    理論EV: ¥{Math.round(expectedReturn).toLocaleString()}
+                    {!allReliable && <span className="text-orange-400">*</span>}
+                  </span>
+                  <span className="text-[9px] text-muted-foreground/60">
+                    （AI確率×オッズ。穴馬で過大評価になりやすい）
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-[9px] text-muted-foreground mt-1">
+                ※ BT実績: 50レース実配当ベース({strategyMode === "stable" ? "安定" : "強気"}モード)
               </p>
             </div>
           </motion.section>
