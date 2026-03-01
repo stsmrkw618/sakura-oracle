@@ -224,6 +224,149 @@ def _find_payout(payouts_for_race: dict, bet_type: str, combo_set: set[int]) -> 
     return 0
 
 
+def _calc_kelly_frac(prob: float, odds: float, fraction: float = 0.25) -> float:
+    """Kelly fraction（1/4 Kelly）"""
+    if odds <= 1.0 or prob <= 0 or prob >= 1:
+        return 0.0
+    b = odds - 1
+    f = (prob * b - (1 - prob)) / b
+    return max(0.0, f * fraction)
+
+
+def _simulate_portfolio(
+    test_df: pd.DataFrame,
+    race_payouts: dict | None,
+    budget: int = 3000,
+) -> dict:
+    """買い目タブと同じロジックで1レースのポートフォリオをシミュレート
+
+    BOXモード・軸流しモード両方を計算。
+    フロントエンドの generateBets() と同一のロジック。
+
+    Returns:
+        {"box": {"inv": int, "ret": float}, "nagashi": {"inv": int, "ret": float}}
+    """
+    df = test_df.copy()
+
+    # Kelly計算
+    df["_kelly"] = df.apply(
+        lambda r: _calc_kelly_frac(float(r["pred_win"]), float(r["odds"])), axis=1
+    )
+
+    # ブレンドshow（△判定用）
+    _so = (df["odds"].astype(float) * 0.3).clip(lower=1.01)
+    _mr = 1.0 / _so
+    _ms = _mr.sum()
+    if _ms > 0:
+        df["_blended_show"] = 0.5 * df["pred_show"] + 0.5 * _mr * (3.0 / _ms)
+    else:
+        df["_blended_show"] = df["pred_show"]
+
+    # 印付与（数値: 0=◎, 1=○, 2=▲, 3=△, 4=×）
+    kr = df["_kelly"].rank(ascending=False, method="min")
+    mo_list = []
+    for idx in df.index:
+        k = float(df.loc[idx, "_kelly"])
+        r = kr[idx]
+        bs = float(df.loc[idx, "_blended_show"])
+        if r == 1 and k > 0.01:
+            mo_list.append(0)
+        elif r <= 3 and k > 0.005:
+            mo_list.append(1)
+        elif r <= 8 and k > 0.002:
+            mo_list.append(2)
+        elif bs >= 0.2:
+            mo_list.append(3)
+        else:
+            mo_list.append(4)
+    df["_mo"] = mo_list
+
+    # ソート（印→Kelly降順）
+    df = df.sort_values(["_mo", "_kelly"], ascending=[True, False]).reset_index(drop=True)
+
+    # 実績（着順）
+    actual_top1 = set(test_df[test_df["着順_num"] == 1]["horse_number"].astype(int).values)
+    actual_top2 = set(test_df[test_df["着順_num"] <= 2]["horse_number"].astype(int).values)
+    actual_top3 = set(test_df[test_df["着順_num"] <= 3]["horse_number"].astype(int).values)
+
+    out = {}
+    for mode in ["box", "nagashi"]:
+        inv = 0
+        ret = 0.0
+
+        # --- 単勝: ◎○▲から Kelly>0 & EV>=1.0 の上位3頭 ---
+        top_marks = df[df["_mo"] <= 2]
+        ev_ok = top_marks[
+            (top_marks["_kelly"] > 0)
+            & (top_marks["pred_win"] * top_marks["odds"] >= 1.0)
+        ]
+        for _, row in ev_ok.head(3).iterrows():
+            hn = int(row["horse_number"])
+            kelly = float(row["_kelly"])
+            odds_v = float(row["odds"])
+            amount = max(100, round(budget * kelly / 100) * 100)
+            if hn in actual_top1:
+                ret += amount * odds_v
+            inv += amount
+
+        # --- 馬連 ---
+        if mode == "box":
+            box3 = list(top_marks.head(3)["horse_number"].astype(int).values)
+            avg_k = float(top_marks.head(3)["_kelly"].mean()) if len(box3) > 0 else 0
+            pairs = [(box3[i], box3[j]) for i in range(len(box3)) for j in range(i + 1, len(box3))]
+        else:
+            pivot_n = int(df.iloc[0]["horse_number"])
+            p_df = df.iloc[1:5]
+            avg_k = float(df.iloc[:5]["_kelly"].mean())
+            pairs = [(pivot_n, int(p["horse_number"])) for _, p in p_df.iterrows()]
+
+        n_c = len(pairs)
+        if n_c > 0:
+            total_a = max(100 * n_c, round(budget * avg_k / 100) * 100)
+            per = max(100, round(total_a / n_c / 100) * 100)
+            for a, b in pairs:
+                if {a, b} == actual_top2 and race_payouts:
+                    p = _find_payout(race_payouts, "quinella", actual_top2)
+                    ret += p * per / 100
+                inv += per
+
+        # --- ワイド（◎-○）---
+        if len(top_marks) >= 2:
+            h1 = int(top_marks.iloc[0]["horse_number"])
+            h2 = int(top_marks.iloc[1]["horse_number"])
+            avg_kw = (float(top_marks.iloc[0]["_kelly"]) + float(top_marks.iloc[1]["_kelly"])) / 2
+            w_amount = max(100, round(budget * avg_kw / 100) * 100)
+            if {h1, h2} <= actual_top3 and race_payouts:
+                p = _find_payout(race_payouts, "wide", {h1, h2})
+                ret += p * w_amount / 100
+            inv += w_amount
+
+        # --- 三連複 ---
+        if mode == "box":
+            top5 = list(df[df["pred_win"] > 0].head(5)["horse_number"].astype(int).values)
+            avg_k5 = float(df.head(5)["_kelly"].mean())
+            combos = list(itertools.combinations(top5, 3))
+        else:
+            pivot_n = int(df.iloc[0]["horse_number"])
+            p_nums = list(df.iloc[1:5]["horse_number"].astype(int).values)
+            avg_k5 = float(df.iloc[:5]["_kelly"].mean())
+            combos = [(pivot_n, a, b) for a, b in itertools.combinations(p_nums, 2)]
+
+        n_c5 = len(combos)
+        if n_c5 > 0:
+            total_a5 = max(100 * n_c5, round(budget * avg_k5 * 0.5 / 100) * 100)
+            per5 = max(100, round(total_a5 / n_c5 / 100) * 100)
+            for combo in combos:
+                if set(combo) == actual_top3 and race_payouts:
+                    p = _find_payout(race_payouts, "trio", actual_top3)
+                    ret += p * per5 / 100
+                inv += per5
+
+        out[mode] = {"inv": inv, "ret": ret}
+
+    return out
+
+
 def _fit_calibrators(calib_pairs: list[dict]) -> dict:
     """Isotonic Regressionでキャリブレーターをフィットし、pickle保存 + 曲線データ返却"""
     if not calib_pairs:
@@ -819,6 +962,9 @@ def run_walk_forward(df: pd.DataFrame) -> tuple[list[dict], dict]:
         else:
             kelly_return = -kelly_bet
 
+        # --- ポートフォリオシミュレーション（買い目タブ再現） ---
+        portfolio = _simulate_portfolio(test_df, race_payouts, budget=3000)
+
         results.append({
             "label": label,
             "race_base": race["race_base"],
@@ -853,6 +999,10 @@ def run_walk_forward(df: pd.DataFrame) -> tuple[list[dict], dict]:
             "ev_trio_top5_roi": ev_trio_roi,
             "ev_quinella_top3_hit": ev_quinella_hit,
             "ev_quinella_top3_roi": ev_quinella_roi,
+            "portfolio_box_inv": portfolio["box"]["inv"],
+            "portfolio_box_ret": portfolio["box"]["ret"],
+            "portfolio_nagashi_inv": portfolio["nagashi"]["inv"],
+            "portfolio_nagashi_ret": portfolio["nagashi"]["ret"],
         })
 
     # --- キャリブレーター生成 & pickle保存 ---
@@ -959,6 +1109,24 @@ def print_summary(
     print(f"  三連複◎軸流し(6): {trio_nagashi_hits:>2}/{n} ({trio_nagashi_hits/n:>4.0%})  {t_nagashi_roi:>6.0%}   ¥600")
     print(f"  三連複EV Top5:     {ev_trio_top5_hits:>2}/{n} ({ev_trio_top5_hits/n:>4.0%})  {ev_trio_top5_roi:>6.0%}   ¥500")
     print(f"  馬連EV Top3:       {ev_quinella_top3_hits:>2}/{n} ({ev_quinella_top3_hits/n:>4.0%})  {ev_quinella_top3_roi:>6.0%}   ¥300")
+
+    # --- ポートフォリオシミュレーション（買い目タブ再現） ---
+    print(f"\n{'='*65}")
+    print(f"ポートフォリオシミュレーション（¥3,000/レース × {n}レース）")
+    print(f"{'='*65}")
+    for mode_label, mode_key in [("BOXモード", "box"), ("軸流しモード", "nagashi")]:
+        total_inv = sum(r.get(f"portfolio_{mode_key}_inv", 0) for r in results)
+        total_ret = sum(r.get(f"portfolio_{mode_key}_ret", 0) for r in results)
+        roi = total_ret / total_inv if total_inv > 0 else 0
+        avg_inv = total_inv / n
+        n_hit = sum(1 for r in results if r.get(f"portfolio_{mode_key}_ret", 0) > 0)
+        profit = total_ret - total_inv
+        print(f"\n  【{mode_label}】")
+        print(f"    総投資額:   ¥{total_inv:>10,}  (平均 ¥{avg_inv:,.0f}/R)")
+        print(f"    総リターン: ¥{total_ret:>10,.0f}")
+        print(f"    純利益:     ¥{profit:>10,.0f}  ({'プラス' if profit >= 0 else 'マイナス'})")
+        print(f"    回収率:     {roi:>10.0%}")
+        print(f"    何か当たったレース: {n_hit}/{n} ({n_hit/n:.0%})")
 
     # --- グレード別 ---
     print(f"\n{'='*65}")
@@ -1160,6 +1328,19 @@ def print_summary(
             "ev_trio_top5_roi": round(ev_trio_top5_roi, 3),
             "ev_quinella_top3": round(ev_quinella_top3_hits / n, 3) if n > 0 else 0,
             "ev_quinella_top3_roi": round(ev_quinella_top3_roi, 3),
+        },
+        "portfolio": {
+            mode_key: {
+                "total_inv": sum(r.get(f"portfolio_{mode_key}_inv", 0) for r in results),
+                "total_ret": round(sum(r.get(f"portfolio_{mode_key}_ret", 0) for r in results), 0),
+                "roi": round(
+                    sum(r.get(f"portfolio_{mode_key}_ret", 0) for r in results)
+                    / max(1, sum(r.get(f"portfolio_{mode_key}_inv", 0) for r in results)),
+                    3,
+                ),
+                "n_hit": sum(1 for r in results if r.get(f"portfolio_{mode_key}_ret", 0) > 0),
+            }
+            for mode_key in ["box", "nagashi"]
         },
         "by_grade": {},
         "by_race": {},

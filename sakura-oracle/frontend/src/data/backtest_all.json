@@ -45,6 +45,20 @@
     "ev_quinella_top3": 0.1,
     "ev_quinella_top3_roi": 4.761
   },
+  "portfolio": {
+    "box": {
+      "total_inv": 87500,
+      "total_ret": 306090.0,
+      "roi": 3.498,
+      "n_hit": 9
+    },
+    "nagashi": {
+      "total_inv": 72500,
+      "total_ret": 128700.0,
+      "roi": 1.775,
+      "n_hit": 9
+    }
+  },
   "by_grade": {
     "G1": {
       "n": 15,
