@@ -237,7 +237,7 @@ def main() -> None:
     current_params = _make_params_bin()
     # scale_pos_weightは別途渡すので除外
     base_params = {k: v for k, v in current_params.items() if k != "scale_pos_weight"}
-    baseline = _walk_forward_eval(df, base_params, 16.851, 5.020, feat_all, feat_no_odds, max_year=max_year)
+    baseline = _walk_forward_eval(df, base_params, 9.470, 5.012, feat_all, feat_no_odds, max_year=max_year)
     print(f"  win_roi: {baseline['win_roi']:.3f}")
     print(f"  show_roi: {baseline['show_roi']:.3f}")
     print(f"  評価レース数: {baseline['n_races']}\n")

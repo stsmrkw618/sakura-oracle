@@ -29,6 +29,7 @@ from ml.scraper.config import TARGET_RACES, DATA_DIR, BASE_DIR
 from ml.scraper.race_scraper import find_race_id_from_date
 from ml.scraper.entry_scraper import scrape_entries
 from ml.scraper.horse_history_scraper import build_features_from_history
+from ml.scraper.jockey_stats_scraper import scrape_jockey_stats
 from ml.scraper.horse_photo_scraper import download_horse_photo
 from ml.model.feature_engineering import RACE_META, get_race_base
 from ml.model.backtest_all_races import (
@@ -39,6 +40,9 @@ from ml.model.backtest_all_races import (
     FEATURE_COLS_NO_ODDS,
     BLEND_WEIGHT_A,
     BLEND_WEIGHT_B,
+    GRADE_MAP,
+    SPW_G1,
+    SPW_G2G3,
 )
 from ml.model.predictor import (
     calc_kelly,
@@ -273,13 +277,28 @@ def _build_prediction_features(
                 last_date = pd.to_datetime(last_date_str, format="%Y%m%d")
                 row["rest_weeks"] = (target_date - last_date).days / 7.0
 
-        # 騎手情報
+        # 騎手情報（3段階フォールバック）
         jockey_name = str(entry.get("騎手", ""))
         row["騎手"] = jockey_name
         jockey_hist = latest_jockey.get(jockey_name)
         if jockey_hist is not None:
+            # 1. features.csv から取得（既知騎手）
             row["jockey_win_rate"] = jockey_hist.get("jockey_win_rate", 0)
             row["jockey_g1_wins"] = jockey_hist.get("jockey_g1_wins", 0)
+        else:
+            # 2. 騎手ページからスクレイピング
+            jockey_id = str(entry.get("jockey_id", ""))
+            jockey_stats = None
+            if jockey_id:
+                jockey_stats = scrape_jockey_stats(
+                    jockey_id,
+                    target_date=target_date_str,
+                    jockey_name=jockey_name,
+                )
+            if jockey_stats is not None:
+                row["jockey_win_rate"] = jockey_stats["jockey_win_rate"]
+                row["jockey_g1_wins"] = jockey_stats["jockey_g1_wins"]
+            # 3. else → NaN → 末尾の median fill で補完（現行動作と同じ）
 
         rows.append(row)
 
@@ -418,9 +437,13 @@ def predict_race(
     y_win = train_df["is_win"].values
     y_show = train_df["is_show"].values
 
-    # Optuna最適化済み scale_pos_weight
-    params_win = _make_params_bin(scale_pos_weight=11.817)
-    params_show = _make_params_bin(scale_pos_weight=6.988)
+    # グレード別パラメータ切替（G1=Trial#87 / G2,G3=Trial#53）
+    race_base = meta["race_base"]
+    grade = GRADE_MAP.get(race_base, "G3")
+    spw = SPW_G2G3 if grade == "G2" else SPW_G1
+    params_win = _make_params_bin(scale_pos_weight=spw["win"], grade=grade)
+    params_show = _make_params_bin(scale_pos_weight=spw["show"], grade=grade)
+    print(f"  グレード: {grade} → パラメータ: {'Trial#53(G2専用)' if grade == 'G2' else 'Trial#87'}")
 
     # Model A: 全特徴量（市場連動型）
     model_a_win = _train_model(X_train_all, y_win, params_win)

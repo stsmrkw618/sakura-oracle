@@ -97,7 +97,7 @@ def _train_lgbm_cls(
 
 
 def _make_params_bin(scale_pos_weight: float = 1.0) -> dict:
-    """二値分類パラメータ（Nested CV最適化済み — Trial#87, 2025年以降除外）"""
+    """二値分類パラメータ（桜花賞専用 = G1パラメータ — Trial#87）"""
     return {
         "objective": "binary",
         "metric": "binary_logloss",

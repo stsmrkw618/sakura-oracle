@@ -58,24 +58,47 @@ FEATURE_COLS = FEATURE_COLS_ALL
 BLEND_WEIGHT_A = 0.2  # Model A（市場連動型）— 少量のみ
 BLEND_WEIGHT_B = 0.8  # Model B（エッジ検出型）— 主力
 
-def _make_params_bin(scale_pos_weight: float = 1.0) -> dict:
-    """二値分類パラメータを生成（Nested CV最適化済み — Trial#87, 2025年以降除外）"""
-    return {
+def _make_params_bin(scale_pos_weight: float = 1.0, grade: str = "G1") -> dict:
+    """二値分類パラメータを生成（グレード別切替: G1=Trial#87 / G2,G3=Trial#53）"""
+    base = {
         "objective": "binary",
         "metric": "binary_logloss",
-        "num_leaves": 40,
-        "learning_rate": 0.149,
-        "n_estimators": 100,
         "verbose": -1,
         "random_state": 42,
         "scale_pos_weight": scale_pos_weight,
-        "min_child_samples": 23,
-        "reg_alpha": 1.059,
-        "reg_lambda": 3.483,
-        "colsample_bytree": 0.884,
-        "subsample": 0.601,
-        "subsample_freq": 6,
     }
+    if grade != "G2":
+        # Trial#87 — G1/G3に強い（桜花賞67%、G3 ROI193%、高正則化で安定）
+        base.update({
+            "num_leaves": 40,
+            "learning_rate": 0.149,
+            "n_estimators": 100,
+            "min_child_samples": 23,
+            "reg_alpha": 1.059,
+            "reg_lambda": 3.483,
+            "colsample_bytree": 0.884,
+            "subsample": 0.601,
+            "subsample_freq": 6,
+        })
+    else:
+        # Trial#53 — G2専用（G2的中35%/ROI274%、低正則化で複雑パターン検出）
+        base.update({
+            "num_leaves": 52,
+            "learning_rate": 0.038,
+            "n_estimators": 200,
+            "min_child_samples": 11,
+            "reg_alpha": 0.008,
+            "reg_lambda": 0.045,
+            "colsample_bytree": 0.914,
+            "subsample": 0.593,
+            "subsample_freq": 7,
+        })
+    return base
+
+
+# グレード別 scale_pos_weight
+SPW_G1 = {"win": 16.851, "show": 5.020}   # Trial#87
+SPW_G2G3 = {"win": 9.470, "show": 5.012}  # Trial#53
 
 
 # 後方互換性のため旧名を残す
@@ -749,9 +772,11 @@ def run_walk_forward(df: pd.DataFrame) -> tuple[list[dict], dict]:
         if len(train_df) < min_train_size:
             continue
 
-        # Nested CV最適化済み scale_pos_weight（Trial#87）
-        params_win = _make_params_bin(scale_pos_weight=16.851)
-        params_show = _make_params_bin(scale_pos_weight=5.020)
+        # グレード別パラメータ切替（G1=Trial#87 / G2,G3=Trial#53）
+        grade = race.get("grade", GRADE_MAP.get(race.get("race_base", ""), "G3"))
+        spw = SPW_G2G3 if grade == "G2" else SPW_G1
+        params_win = _make_params_bin(scale_pos_weight=spw["win"], grade=grade)
+        params_show = _make_params_bin(scale_pos_weight=spw["show"], grade=grade)
 
         X_train_all = train_df[feat_all].values
         X_test_all = test_df[feat_all].values
