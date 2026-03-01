@@ -137,6 +137,31 @@ export default function BetGuidePage() {
       return Math.max(100, Math.round((w / totalWeight) * budget / 100) * 100);
     });
 
+    // 単勝キャップ: 予算の30%を上限とし、超過分を組合せ馬券に再配分
+    const WIN_CAP_RATIO = 0.3;
+    const winCap = Math.round(budget * WIN_CAP_RATIO / 100) * 100;
+    const winTotal = liveBets.reduce((s, b, i) => s + (b.type === "単勝" ? amounts[i] : 0), 0);
+    if (winTotal > winCap && winCap > 0) {
+      const scale = winCap / winTotal;
+      // 単勝を圧縮
+      for (let i = 0; i < liveBets.length; i++) {
+        if (liveBets[i].type === "単勝" && amounts[i] > 0) {
+          amounts[i] = Math.max(100, Math.round(amounts[i] * scale / 100) * 100);
+        }
+      }
+      // 超過分を組合せ馬券へ均等加算
+      const newWinTotal = liveBets.reduce((s, b, i) => s + (b.type === "単勝" ? amounts[i] : 0), 0);
+      const excess = winTotal - newWinTotal;
+      const comboIndices = liveBets.map((b, i) => ({ i, w: weights[i] }))
+        .filter((x) => liveBets[x.i].type !== "単勝" && x.w > 0);
+      if (comboIndices.length > 0 && excess > 0) {
+        const comboWeight = comboIndices.reduce((s, x) => s + x.w, 0);
+        for (const { i, w } of comboIndices) {
+          amounts[i] += Math.round((excess * w / comboWeight) / 100) * 100;
+        }
+      }
+    }
+
     // 合計 = 予算に調整
     let total = amounts.reduce((s, a) => s + a, 0);
     const maxIdx = weights.indexOf(Math.max(...weights));

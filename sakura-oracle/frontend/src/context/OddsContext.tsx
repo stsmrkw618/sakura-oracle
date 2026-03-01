@@ -430,7 +430,7 @@ export function OddsProvider({ children }: { children: ReactNode }) {
   const [oddsMap, setOddsMap] = useState<Record<number, OddsEntry>>(initialOdds);
   const [comboOddsMap, setComboOddsMap] = useState<Record<string, number>>({});
   const [comboMode, setComboModeState] = useState<ComboMode>("box");
-  const [strategyMode, setStrategyModeState] = useState<StrategyMode>("aggressive");
+  const [strategyMode, setStrategyModeState] = useState<StrategyMode>("stable");
 
   // strategyMode の localStorage 永続化
   const setStrategyMode = useCallback((mode: StrategyMode) => {

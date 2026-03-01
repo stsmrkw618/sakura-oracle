@@ -81,8 +81,8 @@ def safe_request(url: str, max_retries: int = MAX_RETRIES) -> bytes | None:
 
 # 手動フォールバック: 日付検索で見つからないレースのrace_id
 MANUAL_RACE_IDS: dict[str, str] = {
-    # 必要に応じて "label": "race_id" で追加
-    # 例: "フェアリーS2025": "202506010511",
+    # 日付検索で見つからないレースのrace_idを手動指定
+    "チューリップ賞2026": "202609010411",
 }
 
 
