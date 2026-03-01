@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import OddsInput from "@/components/OddsInput";
 import { useOdds } from "@/context/OddsContext";
 import { useRace } from "@/context/RaceContext";
+import { quinellaProb, wideProb, trioProb } from "@/lib/harville";
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
@@ -94,6 +95,7 @@ export default function BetGuidePage() {
     setComboMode,
     strategyMode,
     setStrategyMode,
+    normProbs,
   } = useOdds();
   const [budget, setBudget] = useState(3000);
   const [glossaryOpen, setGlossaryOpen] = useState<string | null>(null);
@@ -205,6 +207,119 @@ export default function BetGuidePage() {
       ["◎", "○", "▲", "△"].includes(h.mark)
     );
   }, [predictions]);
+
+  // 大穴狙い: メイン買い目外のEV>1.0ハイリターン候補（各¥100固定、予算外）
+  const longshotBets = useMemo(() => {
+    if (liveHorses.length === 0 || normProbs.size === 0) return [];
+
+    type LshotBet = {
+      type: string;
+      targets: string;
+      description: string;
+      odds: number;
+      ev: number;
+      hitReturn: number;
+    };
+    const candidates: LshotBet[] = [];
+
+    // メイン買い目の馬券キーを除外用に収集
+    const mainKeys = new Set(scaledBets.map((b) => `${b.type}-${b.targets}`));
+
+    // 1. 単勝: EV >= 1.0 でメインリストにない馬
+    for (const h of liveHorses) {
+      if (h.ev_win < 1.0) continue;
+      const targets = `${h.horse_number}番 ${h.horse_name}`;
+      if (mainKeys.has(`単勝-${targets}`)) continue;
+      candidates.push({
+        type: "単勝",
+        targets,
+        description: `AI勝率${(h.win_prob * 100).toFixed(1)}%`,
+        odds: h.odds_win,
+        ev: h.ev_win,
+        hitReturn: Math.round(100 * h.odds_win),
+      });
+    }
+
+    // 全馬番リスト
+    const nums = liveHorses.map((h) => h.horse_number);
+    const nameOf = (n: number) =>
+      liveHorses.find((h) => h.horse_number === n)?.horse_name ?? `${n}番`;
+
+    // 2. 馬連: comboOddsあり、EV >= 1.0、メインにない
+    for (let i = 0; i < nums.length; i++) {
+      for (let j = i + 1; j < nums.length; j++) {
+        const pair = [nums[i], nums[j]].sort((a, b) => a - b);
+        const key = `quinella-${pair[0]}-${pair[1]}`;
+        const odds = comboOddsMap[key];
+        if (!odds) continue;
+        const tgt = `${pair[0]}-${pair[1]}`;
+        if (mainKeys.has(`馬連-${tgt}`)) continue;
+        const prob = quinellaProb(normProbs, pair[0], pair[1]);
+        const ev = Math.round(prob * odds * 100) / 100;
+        if (ev < 1.0) continue;
+        candidates.push({
+          type: "馬連",
+          targets: tgt,
+          description: `${nameOf(pair[0])}×${nameOf(pair[1])}`,
+          odds,
+          ev,
+          hitReturn: Math.round(100 * odds),
+        });
+      }
+    }
+
+    // 3. ワイド: comboOddsあり、EV >= 1.0、メインにない
+    for (let i = 0; i < nums.length; i++) {
+      for (let j = i + 1; j < nums.length; j++) {
+        const pair = [nums[i], nums[j]].sort((a, b) => a - b);
+        const key = `wide-${pair[0]}-${pair[1]}`;
+        const odds = comboOddsMap[key];
+        if (!odds) continue;
+        const tgt = `${pair[0]}-${pair[1]}`;
+        if (mainKeys.has(`ワイド-${tgt}`)) continue;
+        const prob = wideProb(normProbs, pair[0], pair[1]);
+        const ev = Math.round(prob * odds * 100) / 100;
+        if (ev < 1.0) continue;
+        candidates.push({
+          type: "ワイド",
+          targets: tgt,
+          description: `${nameOf(pair[0])}×${nameOf(pair[1])}`,
+          odds,
+          ev,
+          hitReturn: Math.round(100 * odds),
+        });
+      }
+    }
+
+    // 4. 三連複: comboOddsあり、EV >= 1.0、メインにない
+    for (let i = 0; i < nums.length; i++) {
+      for (let j = i + 1; j < nums.length; j++) {
+        for (let k = j + 1; k < nums.length; k++) {
+          const tri = [nums[i], nums[j], nums[k]].sort((a, b) => a - b);
+          const key = `trio-${tri[0]}-${tri[1]}-${tri[2]}`;
+          const odds = comboOddsMap[key];
+          if (!odds) continue;
+          const tgt = `${tri[0]}-${tri[1]}-${tri[2]}`;
+          if (mainKeys.has(`三連複-${tgt}`)) continue;
+          const prob = trioProb(normProbs, tri[0], tri[1], tri[2]);
+          const ev = Math.round(prob * odds * 100) / 100;
+          if (ev < 1.0) continue;
+          candidates.push({
+            type: "三連複",
+            targets: tgt,
+            description: `${nameOf(tri[0])}・${nameOf(tri[1])}・${nameOf(tri[2])}`,
+            odds,
+            ev,
+            hitReturn: Math.round(100 * odds),
+          });
+        }
+      }
+    }
+
+    // 的中時リターン降順（盛り上がり度優先）→ EV降順
+    candidates.sort((a, b) => b.hitReturn - a.hitReturn || b.ev - a.ev);
+    return candidates.slice(0, 5);
+  }, [liveHorses, normProbs, comboOddsMap, scaledBets]);
 
   const stats = BT_STATS[comboMode];
 
@@ -646,6 +761,74 @@ export default function BetGuidePage() {
               </div>
             )}
           </>
+        )}
+
+        {/* 大穴狙い（おまけ） */}
+        {longshotBets.length > 0 && (
+          <motion.section {...fadeIn} transition={{ delay: 0.18 }}>
+            <div className="bg-card rounded-xl p-4 border border-gold/20">
+              <div className="flex items-center justify-between mb-1">
+                <h2 className="text-sm font-bold">🎰 大穴狙い（おまけ）</h2>
+                <span className="text-[10px] text-muted-foreground font-mono">
+                  各¥100固定
+                </span>
+              </div>
+              <p className="text-[10px] text-muted-foreground mb-3">
+                当たれば盛り上がる＋EV 1.0超の穴馬券。予算外の追加投資
+              </p>
+
+              <div className="space-y-2">
+                {longshotBets.map((bet, i) => (
+                  <div
+                    key={`ls-${bet.type}-${bet.targets}`}
+                    className="flex items-start justify-between gap-2"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-gold shrink-0">
+                          #{i + 1}
+                        </span>
+                        <span className="text-sakura-pink font-bold text-xs shrink-0">
+                          {bet.type}
+                        </span>
+                        <span className="text-white font-mono text-xs">
+                          {bet.targets}
+                        </span>
+                        <span
+                          className={`text-[9px] font-mono shrink-0 ${
+                            bet.ev >= 1.5 ? "text-gold font-bold" : "text-green-400"
+                          }`}
+                        >
+                          EV{bet.ev.toFixed(1)}
+                        </span>
+                      </div>
+                      <p className="text-[9px] text-muted-foreground mt-0.5 truncate">
+                        {bet.description}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-xs font-mono text-green-400 font-bold">
+                        ¥{bet.hitReturn.toLocaleString()}
+                      </p>
+                      <p className="text-[9px] text-muted-foreground">
+                        {bet.odds.toFixed(1)}倍
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-3 pt-2 border-t border-white/10 flex justify-between items-center">
+                <span className="text-[10px] text-muted-foreground">
+                  追加投資: <span className="font-mono font-bold text-white">¥{(longshotBets.length * 100).toLocaleString()}</span>
+                  （{longshotBets.length}点×¥100）
+                </span>
+                <span className="text-[10px] text-gold/70 font-mono">
+                  最高¥{Math.max(...longshotBets.map((b) => b.hitReturn)).toLocaleString()}
+                </span>
+              </div>
+            </div>
+          </motion.section>
         )}
 
         {/* 単勝・複勝オッズ更新 */}
