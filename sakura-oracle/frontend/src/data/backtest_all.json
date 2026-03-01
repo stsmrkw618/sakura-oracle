@@ -47,16 +47,16 @@
   },
   "portfolio": {
     "box": {
-      "total_inv": 130100,
-      "total_ret": 112830.0,
-      "roi": 0.867,
-      "n_hit": 15
+      "total_inv": 130300,
+      "total_ret": 113080.0,
+      "roi": 0.868,
+      "n_hit": 16
     },
     "nagashi": {
-      "total_inv": 112500,
-      "total_ret": 110810.0,
-      "roi": 0.985,
-      "n_hit": 15
+      "total_inv": 112600,
+      "total_ret": 111060.0,
+      "roi": 0.986,
+      "n_hit": 16
     }
   },
   "by_grade": {
@@ -2009,335 +2009,449 @@
       {
         "label": "フェアリーS2020",
         "win_only": 16190,
-        "combo": 10225
+        "combo": 11237
       },
       {
         "label": "紫苑S2020",
         "win_only": 28606,
-        "combo": 10636
+        "combo": 13073
       },
       {
         "label": "ローズS2020",
         "win_only": 41455,
-        "combo": 10368
+        "combo": 13797
       },
       {
         "label": "秋華賞2020",
         "win_only": 41455,
-        "combo": 10368
+        "combo": 13797
       },
       {
         "label": "チューリップ賞2020",
         "win_only": 31656,
-        "combo": 9542
+        "combo": 12349
       },
       {
         "label": "フィリーズレビュー2020",
         "win_only": 126024,
-        "combo": 11953
+        "combo": 21185
       },
       {
         "label": "桜花賞2020",
         "win_only": 152050,
-        "combo": 14296
+        "combo": 28394
       },
       {
         "label": "ファンタジーS2020(2021世代)",
         "win_only": 137676,
-        "combo": 12944
+        "combo": 25710
       },
       {
         "label": "阪神JF2020(2021世代)",
         "win_only": 125900,
-        "combo": 11837
+        "combo": 23511
       },
       {
         "label": "クイーンC2021",
         "win_only": 125306,
-        "combo": 11827
+        "combo": 23476
       },
       {
         "label": "アルテミスS2021(2022世代)",
         "win_only": 125306,
-        "combo": 11827
+        "combo": 23476
       },
       {
         "label": "フェアリーS2021",
         "win_only": 115890,
-        "combo": 10938
+        "combo": 21712
       },
       {
         "label": "紫苑S2021",
         "win_only": 122740,
-        "combo": 10879
+        "combo": 21832
       },
       {
         "label": "ローズS2021",
         "win_only": 105395,
-        "combo": 9342
+        "combo": 18747
       },
       {
         "label": "チューリップ賞2021",
         "win_only": 95652,
-        "combo": 8478
+        "combo": 17014
       },
       {
         "label": "フィリーズレビュー2021",
         "win_only": 363877,
-        "combo": 29854
+        "combo": 61070
       },
       {
         "label": "桜花賞2021",
         "win_only": 406245,
-        "combo": 31208
+        "combo": 63509
       },
       {
         "label": "秋華賞2021",
         "win_only": 395265,
-        "combo": 32907
+        "combo": 67380
       },
       {
         "label": "ファンタジーS2021(2022世代)",
         "win_only": 394356,
-        "combo": 32897
+        "combo": 67351
       },
       {
         "label": "阪神JF2021(2022世代)",
         "win_only": 483835,
-        "combo": 35314
+        "combo": 74101
       },
       {
         "label": "クイーンC2022",
         "win_only": 478916,
-        "combo": 35615
+        "combo": 74262
       },
       {
         "label": "アルテミスS2022(2023世代)",
         "win_only": 669881,
-        "combo": 39264
+        "combo": 85820
       },
       {
         "label": "フェアリーS2022",
         "win_only": 632816,
-        "combo": 37092
+        "combo": 81071
       },
       {
         "label": "紫苑S2022",
         "win_only": 604714,
-        "combo": 38159
+        "combo": 80738
       },
       {
         "label": "ローズS2022",
         "win_only": 525761,
-        "combo": 33176
+        "combo": 70196
       },
       {
         "label": "チューリップ賞2022",
         "win_only": 425748,
-        "combo": 82805
+        "combo": 231957
       },
       {
         "label": "フィリーズレビュー2022",
         "win_only": 347969,
-        "combo": 67677
+        "combo": 189581
       },
       {
         "label": "桜花賞2022",
         "win_only": 329013,
-        "combo": 63991
+        "combo": 179253
       },
       {
         "label": "秋華賞2022",
         "win_only": 317977,
-        "combo": 66746
+        "combo": 182316
       },
       {
         "label": "ファンタジーS2022(2023世代)",
         "win_only": 303516,
-        "combo": 63711
+        "combo": 174025
       },
       {
         "label": "阪神JF2022(2023世代)",
         "win_only": 288529,
-        "combo": 60565
+        "combo": 165432
       },
       {
         "label": "クイーンC2023",
         "win_only": 276414,
-        "combo": 61527
+        "combo": 166521
       },
       {
         "label": "アルテミスS2023(2024世代)",
         "win_only": 266055,
-        "combo": 60065
+        "combo": 160882
       },
       {
         "label": "フェアリーS2023",
         "win_only": 264638,
-        "combo": 59745
+        "combo": 160026
       },
       {
         "label": "紫苑S2023",
         "win_only": 310648,
-        "combo": 62047
+        "combo": 166361
       },
       {
         "label": "秋華賞2023",
         "win_only": 310648,
-        "combo": 62047
+        "combo": 166361
       },
       {
         "label": "ファンタジーS2023(2024世代)",
         "win_only": 294239,
-        "combo": 58770
+        "combo": 157574
       },
       {
         "label": "チューリップ賞2023",
         "win_only": 274191,
-        "combo": 54765
+        "combo": 146838
       },
       {
         "label": "フィリーズレビュー2023",
         "win_only": 223072,
-        "combo": 225476
+        "combo": 643836
       },
       {
         "label": "桜花賞2023",
         "win_only": 214140,
-        "combo": 216448
+        "combo": 618056
       },
       {
         "label": "ローズS2023",
         "win_only": 186421,
-        "combo": 310348
+        "combo": 947186
       },
       {
         "label": "阪神JF2023(2024世代)",
         "win_only": 176373,
-        "combo": 293621
+        "combo": 896135
       },
       {
         "label": "クイーンC2024",
         "win_only": 173320,
-        "combo": 300079
+        "combo": 906892
       },
       {
         "label": "アルテミスS2024(2025世代)",
         "win_only": 169029,
-        "combo": 305720
+        "combo": 942878
       },
       {
         "label": "フェアリーS2024",
         "win_only": 168493,
-        "combo": 304751
+        "combo": 939890
       },
       {
         "label": "紫苑S2024",
         "win_only": 165632,
-        "combo": 302499
+        "combo": 937267
       },
       {
         "label": "ローズS2024",
         "win_only": 267567,
-        "combo": 290103
+        "combo": 1003214
       },
       {
         "label": "秋華賞2024",
         "win_only": 267567,
-        "combo": 290103
+        "combo": 1003214
       },
       {
         "label": "ファンタジーS2024(2025世代)",
         "win_only": 266160,
-        "combo": 288576
+        "combo": 997936
       },
       {
         "label": "阪神JF2024(2025世代)",
         "win_only": 253123,
-        "combo": 274441
+        "combo": 949055
       },
       {
         "label": "フィリーズレビュー2024",
         "win_only": 1270425,
-        "combo": 768182
+        "combo": 3382889
       },
       {
         "label": "桜花賞2024",
         "win_only": 1214869,
-        "combo": 734590
+        "combo": 3234956
       },
       {
         "label": "クイーンC2025",
         "win_only": 1116861,
-        "combo": 675327
+        "combo": 2973979
       },
       {
         "label": "アルテミスS2025(2026世代)",
         "win_only": 1086867,
-        "combo": 681231
+        "combo": 2982955
       },
       {
         "label": "フェアリーS2025",
         "win_only": 1047092,
-        "combo": 823046
+        "combo": 3954039
       },
       {
         "label": "秋華賞2025",
         "win_only": 1138800,
-        "combo": 908743
+        "combo": 4113883
       },
       {
         "label": "ファンタジーS2025(2026世代)",
         "win_only": 1067809,
-        "combo": 852094
+        "combo": 3857432
       },
       {
         "label": "フィリーズレビュー2025",
         "win_only": 1001189,
-        "combo": 2251817
+        "combo": 13347852
       },
       {
         "label": "桜花賞2025",
         "win_only": 1071148,
-        "combo": 2378656
+        "combo": 14085964
       },
       {
         "label": "ローズS2025",
         "win_only": 1048925,
-        "combo": 2329306
+        "combo": 13793722
       },
       {
         "label": "阪神JF2025(2026世代)",
         "win_only": 954659,
-        "combo": 2927958
+        "combo": 16450449
       },
       {
         "label": "クイーンC2026",
         "win_only": 954659,
-        "combo": 2927958
+        "combo": 16450449
       },
       {
         "label": "フェアリーS2026",
         "win_only": 930039,
-        "combo": 2852449
+        "combo": 16026208
       },
       {
         "label": "チューリップ賞2026",
         "win_only": 930039,
-        "combo": 2852449
+        "combo": 16026208
       }
     ],
     "final": {
       "win_only": 930039,
-      "combo": 2852449
+      "combo": 16026208
     },
     "max_dd": {
       "win_only": 0.753,
-      "combo": 0.407
+      "combo": 0.401
     },
     "profit_multiple": {
       "win_only": 93.0,
-      "combo": 285.24
+      "combo": 1602.62
     }
+  },
+  "strategy_comparison": {
+    "n_races": 64,
+    "budget_per_race": 3000,
+    "table": [
+      {
+        "label": "回収率",
+        "box_agg": "87%",
+        "box_stb": "328%",
+        "nag_agg": "99%",
+        "nag_stb": "359%"
+      },
+      {
+        "label": "1回EV",
+        "box_agg": "1767",
+        "box_stb": "6543",
+        "nag_agg": "1735",
+        "nag_stb": "6177"
+      },
+      {
+        "label": "当選率",
+        "box_agg": "25%",
+        "box_stb": "59%",
+        "nag_agg": "25%",
+        "nag_stb": "53%"
+      },
+      {
+        "label": "最大DD",
+        "box_agg": "100%",
+        "box_stb": "42%",
+        "nag_agg": "82%",
+        "nag_stb": "34%"
+      },
+      {
+        "label": "最終倍率",
+        "box_agg": "0.0x",
+        "box_stb": "30.1x",
+        "nag_agg": "0.8x",
+        "nag_stb": "29.5x"
+      }
+    ],
+    "bankroll": [
+      {
+        "label": "開始",
+        "agg": 10000,
+        "stb": 10000
+      },
+      {
+        "label": "5R",
+        "agg": 21560,
+        "stb": 21660
+      },
+      {
+        "label": "10R",
+        "agg": 20920,
+        "stb": 34120
+      },
+      {
+        "label": "15R",
+        "agg": 10320,
+        "stb": 23820
+      },
+      {
+        "label": "20R",
+        "agg": 35470,
+        "stb": 57070
+      },
+      {
+        "label": "25R",
+        "agg": 26850,
+        "stb": 54410
+      },
+      {
+        "label": "30R",
+        "agg": 13850,
+        "stb": 77050
+      },
+      {
+        "label": "35R",
+        "agg": 6170,
+        "stb": 71830
+      },
+      {
+        "label": "40R",
+        "agg": 16170,
+        "stb": 106690
+      },
+      {
+        "label": "45R",
+        "agg": 7990,
+        "stb": 118430
+      },
+      {
+        "label": "50R",
+        "agg": 640,
+        "stb": 116400
+      },
+      {
+        "label": "55R",
+        "agg": 5110,
+        "stb": 178460
+      },
+      {
+        "label": "60R",
+        "agg": 0,
+        "stb": 279460
+      },
+      {
+        "label": "64R",
+        "agg": 0,
+        "stb": 301280
+      }
+    ],
+    "summary_text": "安定モードが優秀: 当選率25%→59%、DD 100%→42%で安定しつつ回収率+242%pt上回る。強気はハイリスク・ハイリターン型、安定は投資家型。リスク許容度で選択を。"
   }
 }

@@ -260,11 +260,14 @@ def _simulate_portfolio(
     test_df: pd.DataFrame,
     race_payouts: dict | None,
     budget: int = 3000,
+    strategy: str = "aggressive",
 ) -> dict:
-    """買い目タブと同じロジックで1レースのポートフォリオをシミュレート
+    """戦略別ポートフォリオシミュレーション
 
     BOXモード・軸流しモード両方を計算。
-    フロントエンドの generateBets() と同一のロジック。
+    strategy="aggressive": Kelly/印順で穴馬軸（強気）
+    strategy="stable": 勝率降順で人気馬軸（安定）
+    単勝は常に強気ソートを使用。
 
     Returns:
         {"box": {"inv": int, "ret": float}, "nagashi": {"inv": int, "ret": float}}
@@ -304,8 +307,17 @@ def _simulate_portfolio(
             mo_list.append(4)
     df["_mo"] = mo_list
 
-    # ソート（印→Kelly降順）
-    df = df.sort_values(["_mo", "_kelly"], ascending=[True, False]).reset_index(drop=True)
+    # 強気ソート（単勝用 + aggressive用）
+    agg_sorted = df.sort_values(["_mo", "_kelly"], ascending=[True, False]).reset_index(drop=True)
+
+    # 安定ソート（stable用: 勝率降順）
+    if strategy == "stable":
+        combo_df = df.sort_values("pred_win", ascending=False).reset_index(drop=True)
+    else:
+        combo_df = agg_sorted
+
+    # 単勝は常に強気ソート
+    win_df = agg_sorted
 
     # 実績（着順）
     actual_top1 = set(test_df[test_df["着順_num"] == 1]["horse_number"].astype(int).values)
@@ -317,8 +329,8 @@ def _simulate_portfolio(
         inv = 0
         ret = 0.0
 
-        # --- 単勝: ◎○▲から Kelly>0 & EV>=1.0 の上位3頭 ---
-        top_marks = df[df["_mo"] <= 2]
+        # --- 単勝: ◎○▲から Kelly>0 & EV>=1.0 の上位3頭（常に強気ソート） ---
+        top_marks = win_df[win_df["_mo"] <= 2]
         ev_ok = top_marks[
             (top_marks["_kelly"] > 0)
             & (top_marks["pred_win"] * top_marks["odds"] >= 1.0)
@@ -332,15 +344,15 @@ def _simulate_portfolio(
                 ret += amount * odds_v
             inv += amount
 
-        # --- 馬連 ---
+        # --- 馬連（組合せ馬券はcombo_dfを使用） ---
         if mode == "box":
-            box3 = list(top_marks.head(3)["horse_number"].astype(int).values)
-            avg_k = float(top_marks.head(3)["_kelly"].mean()) if len(box3) > 0 else 0
+            box3 = list(combo_df.head(3)["horse_number"].astype(int).values)
+            avg_k = float(combo_df.head(3)["_kelly"].mean()) if len(box3) > 0 else 0
             pairs = [(box3[i], box3[j]) for i in range(len(box3)) for j in range(i + 1, len(box3))]
         else:
-            pivot_n = int(df.iloc[0]["horse_number"])
-            p_df = df.iloc[1:5]
-            avg_k = float(df.iloc[:5]["_kelly"].mean())
+            pivot_n = int(combo_df.iloc[0]["horse_number"])
+            p_df = combo_df.iloc[1:5]
+            avg_k = float(combo_df.iloc[:5]["_kelly"].mean())
             pairs = [(pivot_n, int(p["horse_number"])) for _, p in p_df.iterrows()]
 
         n_c = len(pairs)
@@ -353,11 +365,12 @@ def _simulate_portfolio(
                     ret += p * per / 100
                 inv += per
 
-        # --- ワイド（◎-○）---
-        if len(top_marks) >= 2:
-            h1 = int(top_marks.iloc[0]["horse_number"])
-            h2 = int(top_marks.iloc[1]["horse_number"])
-            avg_kw = (float(top_marks.iloc[0]["_kelly"]) + float(top_marks.iloc[1]["_kelly"])) / 2
+        # --- ワイド（上位2頭） ---
+        wide_top = combo_df.head(2)
+        if len(wide_top) >= 2:
+            h1 = int(wide_top.iloc[0]["horse_number"])
+            h2 = int(wide_top.iloc[1]["horse_number"])
+            avg_kw = (float(wide_top.iloc[0]["_kelly"]) + float(wide_top.iloc[1]["_kelly"])) / 2
             w_amount = max(100, round(budget * avg_kw / 100) * 100)
             if {h1, h2} <= actual_top3 and race_payouts:
                 p = _find_payout(race_payouts, "wide", {h1, h2})
@@ -366,13 +379,13 @@ def _simulate_portfolio(
 
         # --- 三連複 ---
         if mode == "box":
-            top5 = list(df[df["pred_win"] > 0].head(5)["horse_number"].astype(int).values)
-            avg_k5 = float(df.head(5)["_kelly"].mean())
+            top5 = list(combo_df[combo_df["pred_win"] > 0].head(5)["horse_number"].astype(int).values)
+            avg_k5 = float(combo_df.head(5)["_kelly"].mean())
             combos = list(itertools.combinations(top5, 3))
         else:
-            pivot_n = int(df.iloc[0]["horse_number"])
-            p_nums = list(df.iloc[1:5]["horse_number"].astype(int).values)
-            avg_k5 = float(df.iloc[:5]["_kelly"].mean())
+            pivot_n = int(combo_df.iloc[0]["horse_number"])
+            p_nums = list(combo_df.iloc[1:5]["horse_number"].astype(int).values)
+            avg_k5 = float(combo_df.iloc[:5]["_kelly"].mean())
             combos = [(pivot_n, a, b) for a, b in itertools.combinations(p_nums, 2)]
 
         n_c5 = len(combos)
@@ -655,8 +668,19 @@ def _compute_bankroll_history(
     if not results:
         return {}
 
-    # BT ROI重み（v10実績ベース）
-    weights = {"trio": 4.74, "quinella": 5.50, "wide": 4.65, "win": 2.65}
+    # 動的ウェイト（BT累積ROIベース）
+    n = len(results)
+    trio_roi = sum(r["trio_box5_roi"] for r in results) / n if n > 0 else 1.0
+    quin_roi = sum(r["quinella_box3_roi"] for r in results) / n if n > 0 else 1.0
+    wide_roi = sum(r["wide_top2_roi"] for r in results) / n if n > 0 else 1.0
+    win_roi = sum((r["win_return"] + 100) / 100 for r in results) / n if n > 0 else 1.0
+    # ROI < 1.0（マイナス期待値）の馬券種には最小配分
+    weights = {
+        "trio": max(trio_roi, 0.1),
+        "quinella": max(quin_roi, 0.1),
+        "wide": max(wide_roi, 0.1),
+        "win": max(win_roi, 0.1),
+    }
     total_weight = sum(weights.values())
 
     bankroll_win = float(initial)
@@ -728,6 +752,160 @@ def _compute_bankroll_history(
             "win_only": round(bankroll_win / initial, 2),
             "combo": round(bankroll_combo / initial, 2),
         },
+    }
+
+
+def _compute_strategy_comparison(
+    results: list[dict], initial: int = 10000, budget: int = 3000,
+) -> dict:
+    """強気 vs 安定の戦略比較データ（JSON出力用）
+
+    BOXモードのバンクロール推移 + 両モード×両戦略の統計テーブルを生成。
+    """
+    if not results:
+        return {}
+
+    n = len(results)
+
+    # --- 4パターンの集計 ---
+    stats = {}
+    for mode_key, strat_key, inv_key, ret_key in [
+        ("box", "agg", "portfolio_box_inv", "portfolio_box_ret"),
+        ("box", "stb", "portfolio_stb_box_inv", "portfolio_stb_box_ret"),
+        ("nag", "agg", "portfolio_nagashi_inv", "portfolio_nagashi_ret"),
+        ("nag", "stb", "portfolio_stb_nagashi_inv", "portfolio_stb_nagashi_ret"),
+    ]:
+        total_inv = sum(r.get(inv_key, 0) for r in results)
+        total_ret = sum(r.get(ret_key, 0) for r in results)
+        n_hit = sum(1 for r in results if r.get(ret_key, 0) > 0)
+        roi = total_ret / max(1, total_inv)
+        ev_per = total_ret / n if n > 0 else 0
+
+        # バンクロール推移（この組合せ）
+        bankroll = float(initial)
+        peak = bankroll
+        max_dd = 0.0
+        for r in results:
+            inv_r = r.get(inv_key, 0)
+            ret_r = r.get(ret_key, 0)
+            if inv_r > 0:
+                pnl = (ret_r - inv_r) / bankroll if bankroll > 0 else 0
+                bankroll *= (1 + pnl)
+                bankroll = max(bankroll, 0)
+            if bankroll > peak:
+                peak = bankroll
+            dd = (peak - bankroll) / peak if peak > 0 else 0
+            max_dd = max(max_dd, dd)
+
+        key = f"{mode_key}_{strat_key}"
+        stats[key] = {
+            "roi": roi,
+            "ev_per": ev_per,
+            "hit_rate": n_hit / n if n > 0 else 0,
+            "max_dd": max_dd,
+            "final_mult": bankroll / initial if initial > 0 else 0,
+        }
+
+    # --- 比較テーブル ---
+    table = [
+        {
+            "label": "回収率",
+            "box_agg": f"{stats['box_agg']['roi']:.0%}",
+            "box_stb": f"{stats['box_stb']['roi']:.0%}",
+            "nag_agg": f"{stats['nag_agg']['roi']:.0%}",
+            "nag_stb": f"{stats['nag_stb']['roi']:.0%}",
+        },
+        {
+            "label": "1回EV",
+            "box_agg": f"{stats['box_agg']['ev_per']:.0f}",
+            "box_stb": f"{stats['box_stb']['ev_per']:.0f}",
+            "nag_agg": f"{stats['nag_agg']['ev_per']:.0f}",
+            "nag_stb": f"{stats['nag_stb']['ev_per']:.0f}",
+        },
+        {
+            "label": "当選率",
+            "box_agg": f"{stats['box_agg']['hit_rate']:.0%}",
+            "box_stb": f"{stats['box_stb']['hit_rate']:.0%}",
+            "nag_agg": f"{stats['nag_agg']['hit_rate']:.0%}",
+            "nag_stb": f"{stats['nag_stb']['hit_rate']:.0%}",
+        },
+        {
+            "label": "最大DD",
+            "box_agg": f"{stats['box_agg']['max_dd']:.0%}",
+            "box_stb": f"{stats['box_stb']['max_dd']:.0%}",
+            "nag_agg": f"{stats['nag_agg']['max_dd']:.0%}",
+            "nag_stb": f"{stats['nag_stb']['max_dd']:.0%}",
+        },
+        {
+            "label": "最終倍率",
+            "box_agg": f"{stats['box_agg']['final_mult']:.1f}x",
+            "box_stb": f"{stats['box_stb']['final_mult']:.1f}x",
+            "nag_agg": f"{stats['nag_agg']['final_mult']:.1f}x",
+            "nag_stb": f"{stats['nag_stb']['final_mult']:.1f}x",
+        },
+    ]
+
+    # --- BOXモードのバンクロール推移（5R間隔） ---
+    bankroll_agg = float(initial)
+    bankroll_stb = float(initial)
+    bankroll_data = [{"label": "開始", "agg": initial, "stb": initial}]
+
+    for i, r in enumerate(results):
+        # 強気BOX
+        inv_a = r.get("portfolio_box_inv", 0)
+        ret_a = r.get("portfolio_box_ret", 0)
+        if inv_a > 0 and bankroll_agg > 0:
+            pnl_a = (ret_a - inv_a) / bankroll_agg
+            bankroll_agg *= (1 + pnl_a)
+            bankroll_agg = max(bankroll_agg, 0)
+
+        # 安定BOX
+        inv_s = r.get("portfolio_stb_box_inv", 0)
+        ret_s = r.get("portfolio_stb_box_ret", 0)
+        if inv_s > 0 and bankroll_stb > 0:
+            pnl_s = (ret_s - inv_s) / bankroll_stb
+            bankroll_stb *= (1 + pnl_s)
+            bankroll_stb = max(bankroll_stb, 0)
+
+        race_num = i + 1
+        # 5R間隔 or 最終R
+        if race_num % 5 == 0 or race_num == n:
+            bankroll_data.append({
+                "label": f"{race_num}R",
+                "agg": round(bankroll_agg),
+                "stb": round(bankroll_stb),
+            })
+
+    # --- まとめテキスト生成 ---
+    box_agg = stats["box_agg"]
+    box_stb = stats["box_stb"]
+    if box_stb["roi"] > box_agg["roi"]:
+        winner = "安定モード"
+        roi_diff = box_stb["roi"] - box_agg["roi"]
+        hit_agg = f"{box_agg['hit_rate']:.0%}"
+        hit_stb = f"{box_stb['hit_rate']:.0%}"
+        dd_agg = f"{box_agg['max_dd']:.0%}"
+        dd_stb = f"{box_stb['max_dd']:.0%}"
+        summary_text = (
+            f"{winner}が優秀: 当選率{hit_agg}→{hit_stb}、"
+            f"DD {dd_agg}→{dd_stb}で安定しつつ回収率+{roi_diff:.0%}pt上回る。"
+            f"強気はハイリスク・ハイリターン型、安定は投資家型。リスク許容度で選択を。"
+        )
+    else:
+        winner = "強気モード"
+        roi_diff = box_agg["roi"] - box_stb["roi"]
+        summary_text = (
+            f"{winner}が回収率+{roi_diff:.0%}ptで優勢。"
+            f"ただしDD {box_agg['max_dd']:.0%}とリスク大。"
+            f"安定モードはDD {box_stb['max_dd']:.0%}で堅実。リスク許容度で選択を。"
+        )
+
+    return {
+        "n_races": n,
+        "budget_per_race": budget,
+        "table": table,
+        "bankroll": bankroll_data,
+        "summary_text": summary_text,
     }
 
 
@@ -987,8 +1165,9 @@ def run_walk_forward(df: pd.DataFrame) -> tuple[list[dict], dict]:
         else:
             kelly_return = -kelly_bet
 
-        # --- ポートフォリオシミュレーション（買い目タブ再現） ---
-        portfolio = _simulate_portfolio(test_df, race_payouts, budget=3000)
+        # --- ポートフォリオシミュレーション（強気 + 安定の両戦略） ---
+        portfolio_agg = _simulate_portfolio(test_df, race_payouts, budget=3000, strategy="aggressive")
+        portfolio_stb = _simulate_portfolio(test_df, race_payouts, budget=3000, strategy="stable")
 
         results.append({
             "label": label,
@@ -1024,10 +1203,14 @@ def run_walk_forward(df: pd.DataFrame) -> tuple[list[dict], dict]:
             "ev_trio_top5_roi": ev_trio_roi,
             "ev_quinella_top3_hit": ev_quinella_hit,
             "ev_quinella_top3_roi": ev_quinella_roi,
-            "portfolio_box_inv": portfolio["box"]["inv"],
-            "portfolio_box_ret": portfolio["box"]["ret"],
-            "portfolio_nagashi_inv": portfolio["nagashi"]["inv"],
-            "portfolio_nagashi_ret": portfolio["nagashi"]["ret"],
+            "portfolio_box_inv": portfolio_agg["box"]["inv"],
+            "portfolio_box_ret": portfolio_agg["box"]["ret"],
+            "portfolio_nagashi_inv": portfolio_agg["nagashi"]["inv"],
+            "portfolio_nagashi_ret": portfolio_agg["nagashi"]["ret"],
+            "portfolio_stb_box_inv": portfolio_stb["box"]["inv"],
+            "portfolio_stb_box_ret": portfolio_stb["box"]["ret"],
+            "portfolio_stb_nagashi_inv": portfolio_stb["nagashi"]["inv"],
+            "portfolio_stb_nagashi_ret": portfolio_stb["nagashi"]["ret"],
         })
 
     # --- キャリブレーター生成 & pickle保存 ---
@@ -1324,6 +1507,17 @@ def print_summary(
         print(f"  最大DD 単勝: {bh['max_dd']['win_only']:.1%}  "
               f"全戦略: {bh['max_dd']['combo']:.1%}")
 
+    # --- 戦略比較（強気 vs 安定） ---
+    strategy_comp = _compute_strategy_comparison(results)
+    if strategy_comp:
+        print(f"\n{'='*65}")
+        print(f"戦略比較: 強気 vs 安定（{strategy_comp['n_races']}レース）")
+        print(f"{'='*65}")
+        for row in strategy_comp["table"]:
+            print(f"  {row['label']:>8}  BOX強気:{row['box_agg']:>8}  BOX安定:{row['box_stb']:>8}  "
+                  f"軸流し強気:{row['nag_agg']:>8}  軸流し安定:{row['nag_stb']:>8}")
+        print(f"\n  {strategy_comp['summary_text']}")
+
     # --- JSON保存 ---
     output = {
         "summary": {
@@ -1542,6 +1736,8 @@ def print_summary(
         output["simulation"] = simulation
     if bankroll_history:
         output["bankroll_history"] = bankroll_history
+    if strategy_comp:
+        output["strategy_comparison"] = strategy_comp
 
     json_path = BASE_DIR / "frontend" / "src" / "data" / "backtest_all.json"
     with open(json_path, "w", encoding="utf-8") as f:

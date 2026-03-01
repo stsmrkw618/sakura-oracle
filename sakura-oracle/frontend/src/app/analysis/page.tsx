@@ -126,6 +126,17 @@ const bloodlineData = bloodlineFromJson ?? [
   { name: "No Nay Never系", rate: 3.3 },
 ];
 
+// 戦略比較データ（JSONから取得、フォールバック付き）
+const strategyComparison = (backtestAll as Record<string, unknown>).strategy_comparison as
+  | {
+      n_races: number;
+      budget_per_race: number;
+      table: { label: string; box_agg: string; box_stb: string; nag_agg: string; nag_stb: string }[];
+      bankroll: { label: string; agg: number; stb: number }[];
+      summary_text: string;
+    }
+  | undefined;
+
 // バックテストデータ（JSONから取得）
 const summary = backtestAll.summary;
 const byYear = backtestAll.by_year as Record<string, { n: number; win_rate: number; show_rate: number }>;
@@ -839,7 +850,9 @@ export default function AnalysisPage() {
           <div className="bg-card rounded-xl p-4 border border-white/5">
             <h2 className="text-sm font-bold mb-3">🔥 戦略比較: 強気 vs 安定</h2>
             <p className="text-xs text-muted-foreground mb-3">
-              50レースBT。強気=Kelly/印順で穴馬軸、安定=勝率順で人気馬軸。¥3,000/R投資
+              {strategyComparison
+                ? `${strategyComparison.n_races}レースBT。強気=Kelly/印順で穴馬軸、安定=勝率順で人気馬軸。¥${strategyComparison.budget_per_race.toLocaleString()}/R投資`
+                : "50レースBT（v10）。強気=Kelly/印順で穴馬軸、安定=勝率順で人気馬軸。¥3,000/R投資"}
             </p>
 
             {/* 比較テーブル */}
@@ -855,13 +868,13 @@ export default function AnalysisPage() {
                   </tr>
                 </thead>
                 <tbody className="font-mono">
-                  {[
+                  {(strategyComparison?.table ?? [
                     { label: "回収率", box_agg: "350%", box_stb: "415%", nag_agg: "178%", nag_stb: "384%" },
                     { label: "1回EV", box_agg: "3.50", box_stb: "4.15", nag_agg: "1.78", nag_stb: "3.84" },
                     { label: "当選率", box_agg: "18%", box_stb: "52%", nag_agg: "18%", nag_stb: "50%" },
                     { label: "最大DD", box_agg: "100%", box_stb: "51%", nag_agg: "100%", nag_stb: "26%" },
                     { label: "最終倍率", box_agg: "27.0x", box_stb: "28.4x", nag_agg: "9.7x", nag_stb: "21.5x" },
-                  ].map((row) => (
+                  ]).map((row) => (
                     <tr key={row.label} className="border-b border-white/5">
                       <td className="py-1.5 text-muted-foreground font-sans">{row.label}</td>
                       <td className="text-right py-1.5">{row.box_agg}</td>
@@ -880,7 +893,7 @@ export default function AnalysisPage() {
             </h3>
             <ResponsiveContainer width="100%" height={220}>
               <LineChart
-                data={[
+                data={strategyComparison?.bankroll ?? [
                   { label: "開始", agg: 10000, stb: 10000 },
                   { label: "5R", agg: 3690, stb: 30390 },
                   { label: "10R", agg: 0, stb: 24270 },
@@ -928,10 +941,14 @@ export default function AnalysisPage() {
             {/* まとめ */}
             <div className="mt-3 p-3 bg-navy/50 rounded-lg border border-sakura-pink/20">
               <p className="text-xs text-muted-foreground leading-relaxed">
-                <span className="text-sakura-pink font-bold">安定モードが優秀</span>:
-                当選率3倍（18%→52%）、DD半減（100%→51%）でありながら回収率も+65pt上回る。
-                強気は途中2度破産するが一発逆転で巻き返す「ギャンブラー型」。
-                安定はコツコツ積み上げる「投資家型」。リスク許容度で選択を。
+                {strategyComparison?.summary_text ?? (
+                  <>
+                    <span className="text-sakura-pink font-bold">安定モードが優秀</span>:
+                    当選率3倍（18%→52%）、DD半減（100%→51%）でありながら回収率も+65pt上回る。
+                    強気は途中2度破産するが一発逆転で巻き返す「ギャンブラー型」。
+                    安定はコツコツ積み上げる「投資家型」。リスク許容度で選択を。
+                  </>
+                )}
               </p>
             </div>
           </div>
