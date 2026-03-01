@@ -834,6 +834,109 @@ export default function AnalysisPage() {
           </motion.section>
         )}
 
+        {/* 戦略比較: 強気 vs 安定 */}
+        <motion.section {...fadeIn} transition={{ delay: 0.195 }}>
+          <div className="bg-card rounded-xl p-4 border border-white/5">
+            <h2 className="text-sm font-bold mb-3">🔥 戦略比較: 強気 vs 安定</h2>
+            <p className="text-xs text-muted-foreground mb-3">
+              50レースBT。強気=Kelly/印順で穴馬軸、安定=勝率順で人気馬軸。¥3,000/R投資
+            </p>
+
+            {/* 比較テーブル */}
+            <div className="overflow-x-auto mb-4">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-white/10">
+                    <th className="text-left py-1.5 text-muted-foreground font-normal">指標</th>
+                    <th className="text-right py-1.5 text-gold font-bold">BOX強気</th>
+                    <th className="text-right py-1.5 text-sakura-pink font-bold">BOX安定</th>
+                    <th className="text-right py-1.5 text-gold font-bold">軸流し強気</th>
+                    <th className="text-right py-1.5 text-sakura-pink font-bold">軸流し安定</th>
+                  </tr>
+                </thead>
+                <tbody className="font-mono">
+                  {[
+                    { label: "回収率", box_agg: "350%", box_stb: "415%", nag_agg: "178%", nag_stb: "384%" },
+                    { label: "1回EV", box_agg: "3.50", box_stb: "4.15", nag_agg: "1.78", nag_stb: "3.84" },
+                    { label: "当選率", box_agg: "18%", box_stb: "52%", nag_agg: "18%", nag_stb: "50%" },
+                    { label: "最大DD", box_agg: "100%", box_stb: "51%", nag_agg: "100%", nag_stb: "26%" },
+                    { label: "最終倍率", box_agg: "27.0x", box_stb: "28.4x", nag_agg: "9.7x", nag_stb: "21.5x" },
+                  ].map((row) => (
+                    <tr key={row.label} className="border-b border-white/5">
+                      <td className="py-1.5 text-muted-foreground font-sans">{row.label}</td>
+                      <td className="text-right py-1.5">{row.box_agg}</td>
+                      <td className="text-right py-1.5">{row.box_stb}</td>
+                      <td className="text-right py-1.5">{row.nag_agg}</td>
+                      <td className="text-right py-1.5">{row.nag_stb}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* バンクロール推移チャート（BOXモード・初期¥10,000） */}
+            <h3 className="text-xs font-bold text-muted-foreground mb-2">
+              バンクロール推移（BOXモード・初期¥10,000）
+            </h3>
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart
+                data={[
+                  { label: "開始", agg: 10000, stb: 10000 },
+                  { label: "5R", agg: 3690, stb: 30390 },
+                  { label: "10R", agg: 0, stb: 24270 },
+                  { label: "15R", agg: 0, stb: 18040 },
+                  { label: "20R", agg: 3230, stb: 36970 },
+                  { label: "25R", agg: 0, stb: 31520 },
+                  { label: "30R", agg: 0, stb: 28310 },
+                  { label: "35R", agg: 0, stb: 58090 },
+                  { label: "40R", agg: 42610, stb: 92030 },
+                  { label: "45R", agg: 86160, stb: 276410 },
+                  { label: "50R", agg: 270070, stb: 284020 },
+                ]}
+                margin={{ left: 10, right: 10, top: 5, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#1A1A2E" />
+                <XAxis dataKey="label" tick={{ fill: "#A0A0B0", fontSize: 10 }} />
+                <YAxis
+                  tick={{ fill: "#A0A0B0", fontSize: 10 }}
+                  tickFormatter={(v: number) => `¥${(v / 1000).toFixed(0)}k`}
+                />
+                <Tooltip
+                  content={({ payload }) => {
+                    if (!payload || payload.length === 0) return null;
+                    const d = payload[0].payload as { label: string; agg: number; stb: number };
+                    return (
+                      <div className="bg-navy border border-white/10 rounded p-2 text-xs">
+                        <p className="font-bold mb-1">{d.label}</p>
+                        <p><span className="text-gold">強気:</span> ¥{d.agg.toLocaleString()}</p>
+                        <p><span className="text-sakura-pink">安定:</span> ¥{d.stb.toLocaleString()}</p>
+                      </div>
+                    );
+                  }}
+                />
+                <ReferenceLine y={10000} stroke="#666" strokeDasharray="5 5" />
+                <Line type="monotone" dataKey="agg" stroke="#FFD700" strokeWidth={2} dot={false} name="強気" />
+                <Line type="monotone" dataKey="stb" stroke="#E8879C" strokeWidth={2} dot={false} name="安定" />
+              </LineChart>
+            </ResponsiveContainer>
+
+            <div className="flex justify-center gap-4 mt-1">
+              <span className="text-[10px] text-gold">━ 強気（Kelly/印順）</span>
+              <span className="text-[10px] text-sakura-pink">━ 安定（勝率順）</span>
+            </div>
+
+            {/* まとめ */}
+            <div className="mt-3 p-3 bg-navy/50 rounded-lg border border-sakura-pink/20">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                <span className="text-sakura-pink font-bold">安定モードが優秀</span>:
+                当選率3倍（18%→52%）、DD半減（100%→51%）でありながら回収率も+65pt上回る。
+                強気は途中2度破産するが一発逆転で巻き返す「ギャンブラー型」。
+                安定はコツコツ積み上げる「投資家型」。リスク許容度で選択を。
+              </p>
+            </div>
+          </div>
+        </motion.section>
+
         {/* 特徴量重要度 */}
         <motion.section {...fadeIn} transition={{ delay: 0.2 }}>
           <div className="bg-card rounded-xl p-4 border border-white/5">

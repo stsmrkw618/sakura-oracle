@@ -80,6 +80,8 @@ export default function BetGuidePage() {
     resetComboOdds,
     comboMode,
     setComboMode,
+    strategyMode,
+    setStrategyMode,
   } = useOdds();
   const [budget, setBudget] = useState(3000);
   const [glossaryOpen, setGlossaryOpen] = useState<string | null>(null);
@@ -243,6 +245,40 @@ export default function BetGuidePage() {
             </div>
 
             {/* 戦略モード切替 */}
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <button
+                onClick={() => setStrategyMode("aggressive")}
+                className={`rounded-lg p-3 text-left border transition-all ${
+                  strategyMode === "aggressive"
+                    ? "border-gold bg-gold/10"
+                    : "border-white/10 bg-navy/50"
+                }`}
+              >
+                <span className="text-sm font-bold block mb-1">
+                  {strategyMode === "aggressive" ? "● " : "○ "}強気
+                </span>
+                <span className="text-[10px] text-muted-foreground leading-relaxed block">
+                  穴馬で高配当を狙う
+                </span>
+              </button>
+              <button
+                onClick={() => setStrategyMode("stable")}
+                className={`rounded-lg p-3 text-left border transition-all ${
+                  strategyMode === "stable"
+                    ? "border-sakura-pink bg-sakura-pink/10"
+                    : "border-white/10 bg-navy/50"
+                }`}
+              >
+                <span className="text-sm font-bold block mb-1">
+                  {strategyMode === "stable" ? "● " : "○ "}安定
+                </span>
+                <span className="text-[10px] text-muted-foreground leading-relaxed block">
+                  人気馬を軸に手堅く
+                </span>
+              </button>
+            </div>
+
+            {/* 買い方切替 */}
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setComboMode("box")}
@@ -299,7 +335,7 @@ export default function BetGuidePage() {
               ))}
             </div>
             <p className="text-[9px] text-muted-foreground mt-2">
-              ※ BT実績: 50レース実配当ベース回収率(v10)
+              ※ BT実績: 50レース実配当ベース回収率(v10)。強気モード基準
             </p>
           </div>
         </motion.section>

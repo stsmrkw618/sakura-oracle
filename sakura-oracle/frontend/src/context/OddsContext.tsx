@@ -23,6 +23,9 @@ import {
 /** BOX買い or ◎軸流し */
 export type ComboMode = "box" | "nagashi";
 
+/** 強気（穴狙い）or 安定（人気馬軸） */
+export type StrategyMode = "aggressive" | "stable";
+
 interface OddsEntry {
   win: number;
   show: number;
@@ -83,6 +86,8 @@ interface OddsContextValue {
   normProbs: Map<number, number>;
   comboMode: ComboMode;
   setComboMode: (mode: ComboMode) => void;
+  strategyMode: StrategyMode;
+  setStrategyMode: (mode: StrategyMode) => void;
 }
 
 function storageKey(raceId: string | null) {
@@ -157,6 +162,7 @@ function generateBets(
   normProbs: Map<number, number>,
   comboOddsMap: Record<string, number>,
   comboMode: ComboMode = "box",
+  strategyMode: StrategyMode = "aggressive",
   budget = 3000,
 ): Bet[] {
   const MARK_ORDER: Record<string, number> = {
@@ -168,6 +174,11 @@ function generateBets(
     if (oa !== ob) return oa - ob;
     return b.kelly_win - a.kelly_win;
   });
+
+  // 組合せ馬券の対象馬 — 戦略モードで切替
+  const comboSorted = strategyMode === "stable"
+    ? [...horses].sort((a, b) => b.win_prob - a.win_prob) // 安定: 勝率降順（人気馬軸）
+    : sorted; // 強気: Kelly/印順（現行）
 
   const topHorses = sorted.filter((h) => ["◎", "○", "▲"].includes(h.mark));
   const bets: Bet[] = [];
@@ -208,8 +219,9 @@ function generateBets(
   // 馬連: BOX=上位3頭のBOX(3通り) / nagashi=◎軸→2-5位(4通り)
   if (comboMode === "box") {
     // BOX: 上位2-3頭の全組合せ（Kelly傾斜配分）
-    if (topHorses.length >= 2) {
-      const slice = topHorses.slice(0, 3);
+    const comboTop = comboSorted.slice(0, 3);
+    if (comboTop.length >= 2) {
+      const slice = comboTop;
       const n = slice.length;
       const numCombs = comb(n, 2);
       const avgKelly = slice.reduce((s, h) => s + h.kelly_win, 0) / slice.length;
@@ -245,10 +257,10 @@ function generateBets(
       bets.push(...quinellaBets);
     }
   } else {
-    // nagashi馬連: ◎(Kelly1位)を軸 → Kelly2-5位への4通り（Kelly傾斜配分）
-    if (sorted.length >= 2) {
-      const pivot = sorted[0]; // ◎（Kelly最大 = 最もエッジが高い馬）
-      const partners = sorted.slice(1, 5); // Kelly2-5位
+    // nagashi馬連: 軸馬→2-5位への4通り（Kelly傾斜配分）
+    if (comboSorted.length >= 2) {
+      const pivot = comboSorted[0]; // 強気:◎(Kelly最大) / 安定:勝率1位
+      const partners = comboSorted.slice(1, 5);
       const avgKelly = [pivot, ...partners].reduce((s, h) => s + h.kelly_win, 0) / (partners.length + 1);
       const numCombs = partners.length;
       const totalAmount = Math.max(100 * numCombs, Math.round((budget * avgKelly) / 100) * 100);
@@ -281,9 +293,10 @@ function generateBets(
     }
   }
 
-  // ワイド（◎-○）— モード共通
-  if (topHorses.length >= 2) {
-    const [h1, h2] = topHorses;
+  // ワイド（上位2頭）— モード共通
+  const wideTop = comboSorted.slice(0, 2);
+  if (wideTop.length >= 2) {
+    const [h1, h2] = wideTop;
     const nums = [h1.horse_number, h2.horse_number].sort((a, b) => a - b);
     const comboKey = `wide-${nums[0]}-${nums[1]}`;
     const prob = wideProb(normProbs, nums[0], nums[1]);
@@ -310,7 +323,7 @@ function generateBets(
   // 三連複: BOX=上位5頭(10通り) / nagashi=◎軸+2-5位から2頭(6通り)
   if (comboMode === "box") {
     // BOX(5): 上位5頭から全10通り（Kelly傾斜配分）
-    const top5 = sorted
+    const top5 = comboSorted
       .filter((h) => h.win_prob > 0)
       .slice(0, 5);
     if (top5.length >= 3) {
@@ -351,12 +364,12 @@ function generateBets(
       bets.push(...trioBets);
     }
   } else {
-    // nagashi三連複: ◎(Kelly1位)を軸 + Kelly2-5位から2頭 = 4C2=6通り（Kelly傾斜配分）
-    const top5 = sorted
+    // nagashi三連複: 軸馬 + 2-5位から2頭 = 4C2=6通り（Kelly傾斜配分）
+    const top5 = comboSorted
       .filter((h) => h.kelly_win > 0 || h.win_prob > 0)
       .slice(0, 5);
     if (top5.length >= 3) {
-      const pivot = top5[0]; // ◎（Kelly最大）
+      const pivot = top5[0]; // 強気:◎(Kelly最大) / 安定:勝率1位
       const partners = top5.slice(1); // Kelly2-5位
       const avgKelly = top5.reduce((s, h) => s + h.kelly_win, 0) / top5.length;
       const numCombs = comb(partners.length, 2);
@@ -415,6 +428,13 @@ export function OddsProvider({ children }: { children: ReactNode }) {
   const [oddsMap, setOddsMap] = useState<Record<number, OddsEntry>>(initialOdds);
   const [comboOddsMap, setComboOddsMap] = useState<Record<string, number>>({});
   const [comboMode, setComboModeState] = useState<ComboMode>("box");
+  const [strategyMode, setStrategyModeState] = useState<StrategyMode>("aggressive");
+
+  // strategyMode の localStorage 永続化
+  const setStrategyMode = useCallback((mode: StrategyMode) => {
+    setStrategyModeState(mode);
+    try { localStorage.setItem("sakura-oracle-strategy-mode", mode); } catch { /* ignore */ }
+  }, []);
 
   // comboMode の localStorage 永続化
   const setComboMode = useCallback((mode: ComboMode) => {
@@ -482,6 +502,12 @@ export function OddsProvider({ children }: { children: ReactNode }) {
       const stored = localStorage.getItem("sakura-oracle-combo-mode");
       if (stored === "box" || stored === "nagashi") {
         setComboModeState(stored);
+      }
+    } catch { /* ignore */ }
+    try {
+      const stored = localStorage.getItem("sakura-oracle-strategy-mode");
+      if (stored === "aggressive" || stored === "stable") {
+        setStrategyModeState(stored);
       }
     } catch { /* ignore */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -611,8 +637,8 @@ export function OddsProvider({ children }: { children: ReactNode }) {
   );
 
   const liveBets = useMemo(
-    () => generateBets(liveHorses, normProbs, comboOddsMap, comboMode),
-    [liveHorses, normProbs, comboOddsMap, comboMode]
+    () => generateBets(liveHorses, normProbs, comboOddsMap, comboMode, strategyMode),
+    [liveHorses, normProbs, comboOddsMap, comboMode, strategyMode]
   );
 
   const value = useMemo<OddsContextValue>(
@@ -628,8 +654,10 @@ export function OddsProvider({ children }: { children: ReactNode }) {
       normProbs,
       comboMode,
       setComboMode,
+      strategyMode,
+      setStrategyMode,
     }),
-    [oddsMap, updateOdds, resetOdds, liveHorses, liveBets, comboOddsMap, updateComboOdds, resetComboOdds, normProbs, comboMode, setComboMode]
+    [oddsMap, updateOdds, resetOdds, liveHorses, liveBets, comboOddsMap, updateComboOdds, resetComboOdds, normProbs, comboMode, setComboMode, strategyMode, setStrategyMode]
   );
 
   return (
