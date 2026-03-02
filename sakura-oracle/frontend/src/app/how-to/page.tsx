@@ -135,6 +135,24 @@ const betGuideItems: AccordionItem[] = [
     ),
   },
   {
+    key: "longshot",
+    title: "🎰 大穴狙い（おまけ）とは？",
+    content: (
+      <div className="space-y-2 text-xs text-muted-foreground leading-relaxed">
+        <p>
+          メインの買い目（TOP10）とは別に、
+          <span className="text-white font-medium">高配当 × EV 1.0以上</span>
+          の組合せを自動検出して表示するセクションです。
+        </p>
+        <div className="bg-navy/50 rounded-lg p-2 space-y-1">
+          <p>・各100円固定（予算スライダーの対象外）</p>
+          <p>・当たれば高配当だが的中率は低い</p>
+          <p>・余裕があるときの「おまけ」として楽しむ用</p>
+        </div>
+      </div>
+    ),
+  },
+  {
     key: "estimated-vs-confirmed",
     title: "「推定」と「確定」の違い",
     content: (
@@ -169,6 +187,18 @@ const betGuideItems: AccordionItem[] = [
 /* ─── セクション6: FAQ項目 ─── */
 const faqItems: AccordionItem[] = [
   {
+    key: "multi-race",
+    title: "桜花賞以外のレースも予測できる？",
+    content: (
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        はい。チューリップ賞・フィリーズレビュー・阪神JFなど
+        3歳牝馬重賞11種に対応しています。
+        TOPページのドロップダウンで切り替えてください。
+        新しいレースが追加されると自動で選択肢に表示されます。
+      </p>
+    ),
+  },
+  {
     key: "ev-below-1",
     title: "EVが1.0未満の買い目は買わない方がいい？",
     content: (
@@ -195,8 +225,8 @@ const faqItems: AccordionItem[] = [
     content: (
       <div className="text-xs text-muted-foreground leading-relaxed space-y-1">
         <p>
-          過去50レースのバックテストでは、三連複BOXで回収率 <span className="text-gold font-bold">474%</span>、
-          馬連BOXで <span className="text-gold font-bold">550%</span> でした（分析ページで詳細が見られます）。
+          過去64レースのバックテストでは、三連複BOX(5頭)で回収率 <span className="text-gold font-bold">441%</span>、
+          ワイド(◎-○)で <span className="text-gold font-bold">245%</span> でした（分析ページで詳細が見られます）。
         </p>
         <p>
           ただしこれは過去の成績であり、将来を保証するものではありません。
@@ -240,7 +270,8 @@ export default function HowToPage() {
           <h2 className="text-sm font-bold mb-2">🌸 このアプリって何？</h2>
           <div className="bg-card rounded-xl p-4 border border-white/5">
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-              桜花賞をAIで予測するアプリです。4つのページで構成されています。
+              桜花賞をはじめとする3歳牝馬重賞をAIで予測するアプリです。
+              チューリップ賞・フィリーズレビューなど複数レースに対応しています。
             </p>
             <table className="w-full text-xs border-collapse">
               <thead>
@@ -252,22 +283,29 @@ export default function HowToPage() {
               <tbody className="text-muted-foreground">
                 <tr className="border-b border-white/10">
                   <td className="py-1.5 font-medium text-white">🏠 TOP</td>
-                  <td className="py-1.5">レース選択・トップ画面</td>
+                  <td className="py-1.5">レース選択（ドロップダウン）・トップ画面</td>
                 </tr>
                 <tr className="border-b border-white/10">
                   <td className="py-1.5 font-medium text-white">📊 予測</td>
                   <td className="py-1.5">各馬の勝率・印・EVを確認</td>
                 </tr>
                 <tr className="border-b border-white/10">
+                  <td className="py-1.5 font-medium text-white">🧠 AI解説</td>
+                  <td className="py-1.5">AIの注目ポイント・穴馬をわかりやすく解説</td>
+                </tr>
+                <tr className="border-b border-white/10">
                   <td className="py-1.5 font-medium text-white">💰 買い目</td>
-                  <td className="py-1.5">おすすめ馬券と金額配分</td>
+                  <td className="py-1.5">AI推奨TOP10 + 大穴狙い</td>
                 </tr>
                 <tr>
                   <td className="py-1.5 font-medium text-white">📈 分析</td>
-                  <td className="py-1.5">過去50レースの成績データ</td>
+                  <td className="py-1.5">過去64レースの成績データ</td>
                 </tr>
               </tbody>
             </table>
+            <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">
+              TOPページのドロップダウンでレースを切り替えると、予測・買い目が自動で切り替わります。
+            </p>
           </div>
         </motion.section>
 
@@ -431,23 +469,23 @@ export default function HowToPage() {
               {[
                 {
                   step: "1",
-                  title: "予算を決める",
-                  desc: "買い目ページのスライダーで設定（初心者は3,000〜5,000円）",
+                  title: "レースを選ぶ",
+                  desc: "TOPページのドロップダウンから対象レースを選択",
                 },
                 {
                   step: "2",
-                  title: "買い目を確認",
-                  desc: "AI推奨TOP10の馬券種・組合せ・金額をチェック",
+                  title: "オッズを入力",
+                  desc: "発走10〜15分前にnetkeibaの単勝オッズを入力（EVが正確になる）",
                 },
                 {
                   step: "3",
-                  title: "馬券を購入",
-                  desc: "JRAのネット投票（即PAT等）またはマークカードで購入",
+                  title: "買い目を確認",
+                  desc: "AI推奨TOP10 + 大穴狙いの馬券種・組合せ・金額をチェック",
                 },
                 {
                   step: "4",
-                  title: "レースを楽しむ！",
-                  desc: "的中時は自動で口座に払戻されます",
+                  title: "馬券を購入",
+                  desc: "JRAのネット投票（即PAT等）またはマークカードで購入",
                 },
               ].map((item) => (
                 <li key={item.step} className="flex gap-3">

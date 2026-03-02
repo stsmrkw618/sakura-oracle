@@ -223,6 +223,20 @@ def scrape_entries(race_id: str) -> pd.DataFrame:
         matched = (df["horse_id"] != "").sum()
         print(f"  horse_id マッチ: {matched}/{len(df)}頭")
 
+    # jockey_id 抽出（騎手リンクから /jockey/{jockey_id}/ を取得）
+    jockey_id_map: dict[str, str] = {}
+    for link in soup.select('a[href*="/jockey/"]'):
+        href = link.get("href", "")
+        text = re.sub(r"\s+", "", link.get_text(strip=True))
+        m = re.search(r"/jockey/(?:result/recent/)?(\d{5})", href)
+        if m and text and len(text) > 1:
+            jockey_id_map[text] = m.group(1)
+
+    if "騎手" in df.columns:
+        df["jockey_id"] = df["騎手"].map(jockey_id_map).fillna("")
+        j_matched = (df["jockey_id"] != "").sum()
+        print(f"  jockey_id マッチ: {j_matched}/{len(df)}頭")
+
     # オッズ・人気を数値化
     if "単勝オッズ" in df.columns:
         df["単勝オッズ"] = pd.to_numeric(df["単勝オッズ"], errors="coerce")
@@ -278,4 +292,7 @@ if __name__ == "__main__":
         sys.exit(1)
     rid = sys.argv[1]
     result = scrape_entries(rid)
-    print(result[["枠番", "馬番", "馬名", "騎手"]].to_string(index=False))
+    cols = ["枠番", "馬番", "馬名", "騎手"]
+    if "jockey_id" in result.columns:
+        cols.append("jockey_id")
+    print(result[cols].to_string(index=False))

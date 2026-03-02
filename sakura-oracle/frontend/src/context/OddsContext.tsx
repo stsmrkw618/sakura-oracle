@@ -191,10 +191,10 @@ function generateBets(
     return result;
   };
 
-  // BT実績ROI定数（モード別 — v10, 50レース実配当ベース）
+  // BT実績ROI定数（モード別 — v15, 64レース実配当ベース）
   const BT_ROI: Record<ComboMode, Record<string, number>> = {
-    box: { "馬連": 5.50, "三連複": 4.74, "ワイド": 4.65, "単勝": 2.65 },
-    nagashi: { "馬連": 4.515, "三連複": 5.89, "ワイド": 4.65, "単勝": 2.65 },
+    box: { "馬連": 0.91, "三連複": 4.41, "ワイド": 2.45, "単勝": 2.25 },
+    nagashi: { "馬連": 2.60, "三連複": 5.45, "ワイド": 2.45, "単勝": 2.25 },
   };
   const roi = BT_ROI[comboMode];
 

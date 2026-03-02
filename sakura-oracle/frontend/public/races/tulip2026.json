@@ -5,7 +5,7 @@
     "course": "阪神 芝1600m",
     "going": "TBD",
     "weather": "TBD",
-    "updated_at": "2026-03-01T13:08:36.762294"
+    "updated_at": "2026-03-01T21:10:35.747031"
   },
   "predictions": [
     {
@@ -199,7 +199,7 @@
         "stamina": 75,
         "instant": 63,
         "pedigree": 50,
-        "jockey": 0,
+        "jockey": 7,
         "course_fit": 0
       },
       "comment": "前走4着。",
@@ -514,7 +514,7 @@
         "stamina": 100,
         "instant": 0,
         "pedigree": 50,
-        "jockey": 0,
+        "jockey": 18,
         "course_fit": 0
       },
       "comment": "前走1着。安定した成績。",

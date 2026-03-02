@@ -54,29 +54,29 @@ function ComboOddsInput({
   );
 }
 
-/** ポートフォリオ全体のBT実績ROI（50レース, ¥3,000/R, 実配当ベース） */
+/** ポートフォリオ全体のBT実績ROI（64レース, ¥3,000/R, 実配当ベース） */
 const BT_PORTFOLIO_ROI: Record<string, Record<string, { roi: number; hitRate: number }>> = {
   aggressive: {
-    box:    { roi: 3.50, hitRate: 0.18 },
-    nagashi: { roi: 1.78, hitRate: 0.18 },
+    box:    { roi: 4.41, hitRate: 0.30 },
+    nagashi: { roi: 5.45, hitRate: 0.22 },
   },
   stable: {
-    box:    { roi: 4.15, hitRate: 0.52 },
-    nagashi: { roi: 3.84, hitRate: 0.50 },
+    box:    { roi: 2.45, hitRate: 0.30 },
+    nagashi: { roi: 2.60, hitRate: 0.25 },
   },
 };
 
-/** BT実績データ（v10, 50レース） */
+/** BT実績データ（v15, 64レース） */
 const BT_STATS = {
   box: {
-    trio: { label: "三連複BOX(5)", hit: 34, roi: 474, cost: "10通り×¥100", sharpe: "0.57" },
-    quinella: { label: "馬連BOX(3)", hit: 32, roi: 550, cost: "3通り×¥100", sharpe: "0.56" },
-    wide: { label: "ワイド(◎-○)", hit: 30, roi: 465, cost: "1通り×¥100", sharpe: "--" },
+    trio: { label: "三連複BOX(5)", hit: 30, roi: 441, cost: "10通り×¥100", sharpe: "0.57" },
+    quinella: { label: "馬連BOX(3)", hit: 19, roi: 91, cost: "3通り×¥100", sharpe: "0.56" },
+    wide: { label: "ワイド(◎-○)", hit: 30, roi: 245, cost: "1通り×¥100", sharpe: "--" },
   },
   nagashi: {
-    trio: { label: "三連複◎軸流し(6)", hit: 28, roi: 589, cost: "6通り×¥100", sharpe: "0.52" },
-    quinella: { label: "馬連◎軸流し(4)", hit: 36, roi: 452, cost: "4通り×¥100", sharpe: "0.58" },
-    wide: { label: "ワイド(◎-○)", hit: 30, roi: 465, cost: "1通り×¥100", sharpe: "--" },
+    trio: { label: "三連複◎軸流し(6)", hit: 22, roi: 545, cost: "6通り×¥100", sharpe: "0.52" },
+    quinella: { label: "馬連◎軸流し(4)", hit: 25, roi: 260, cost: "4通り×¥100", sharpe: "0.58" },
+    wide: { label: "ワイド(◎-○)", hit: 30, roi: 245, cost: "1通り×¥100", sharpe: "--" },
   },
 } as const;
 
@@ -199,7 +199,7 @@ export default function BetGuidePage() {
   }, 0);
   const allReliable = scaledBets.filter((b) => b.scaledAmount > 0).every((b) => b.evReliable);
 
-  // BT実績ベース（50レース実配当から算出 — より信頼性の高い指標）
+  // BT実績ベース（64レース実配当から算出 — より信頼性の高い指標）
   const btStats = BT_PORTFOLIO_ROI[strategyMode]?.[comboMode] ?? { roi: 1.0, hitRate: 0 };
   const btExpectedReturn = totalInvestment * btStats.roi;
   const btRoi = totalInvestment > 0 ? (btExpectedReturn / totalInvestment - 1) * 100 : 0;
@@ -491,7 +491,7 @@ export default function BetGuidePage() {
               ))}
             </div>
             <p className="text-[9px] text-muted-foreground mt-2">
-              ※ BT実績: 50レース実配当ベース回収率(v10)。強気モード基準
+              ※ BT実績: 64レース実配当ベース回収率(v15)
             </p>
           </div>
         </motion.section>
@@ -605,7 +605,7 @@ export default function BetGuidePage() {
               <div className="flex justify-between items-center mt-2">
                 <span className="text-[10px] text-muted-foreground">
                   BT当選率: <span className="font-mono font-bold text-white">{Math.round(btStats.hitRate * 100)}%</span>
-                  <span className="text-muted-foreground/50">（50R中 何か当たる確率）</span>
+                  <span className="text-muted-foreground/50">（64R中 何か当たる確率）</span>
                 </span>
                 {maxHitReturn > 0 && (
                   <span className="text-[10px] text-green-400/70 font-mono">
@@ -628,7 +628,7 @@ export default function BetGuidePage() {
               </div>
 
               <p className="text-[9px] text-muted-foreground mt-1">
-                ※ BT実績: 50レース実配当ベース({strategyMode === "stable" ? "安定" : "強気"}モード)
+                ※ BT実績: 64レース実配当ベース({strategyMode === "stable" ? "安定" : "強気"}モード)
               </p>
             </div>
           </motion.section>
@@ -728,7 +728,7 @@ export default function BetGuidePage() {
                 <h3 className="text-xs font-bold text-muted-foreground mb-2">
                   単勝（{winBets.length}点）
                   <span className="font-normal ml-2">
-                    BT: 的中46% / 回収265%
+                    BT: 的中30% / 回収225%
                   </span>
                 </h3>
                 <div className="space-y-2">
