@@ -658,100 +658,66 @@ def _simulate_bankroll(
     }
 
 
-def _compute_bankroll_history(
-    results: list[dict], initial: int = 10000,
-) -> dict:
-    """確定的バンクロール推移: 単勝のみ vs 全戦略（組合せ馬券込み）
+def _compute_cumulative_pnl(results: list[dict]) -> dict:
+    """定額ベット累積損益: 単勝のみ vs 全戦略（三連複+馬連+ワイド+単勝）
 
-    全戦略は同じ kelly_bet をBT ROI比率で4種に分配し、実配当で計算。
+    毎レース定額投資:
+      単勝: ¥100（AI予測1位に1点）
+      馬連BOX3: ¥300（3通り×¥100）
+      ワイド: ¥100（上位2頭1点）
+      三連複BOX5: ¥1,000（10通り×¥100）
+      合計: ¥1,500/レース
     """
     if not results:
         return {}
 
-    # 動的ウェイト（BT累積ROIベース）
-    n = len(results)
-    trio_roi = sum(r["trio_box5_roi"] for r in results) / n if n > 0 else 1.0
-    quin_roi = sum(r["quinella_box3_roi"] for r in results) / n if n > 0 else 1.0
-    wide_roi = sum(r["wide_top2_roi"] for r in results) / n if n > 0 else 1.0
-    win_roi = sum((r["win_return"] + 100) / 100 for r in results) / n if n > 0 else 1.0
-    # ROI < 1.0（マイナス期待値）の馬券種には最小配分
-    weights = {
-        "trio": max(trio_roi, 0.1),
-        "quinella": max(quin_roi, 0.1),
-        "wide": max(wide_roi, 0.1),
-        "win": max(win_roi, 0.1),
-    }
-    total_weight = sum(weights.values())
+    # 1レースあたりの定額投資
+    inv_win = 100      # 単勝1点
+    inv_quin = 300     # 馬連BOX3 = 3通り×¥100
+    inv_wide = 100     # ワイド1点
+    inv_trio = 1000    # 三連複BOX5 = 10通り×¥100
+    inv_total = inv_win + inv_quin + inv_wide + inv_trio  # ¥1,500
 
-    bankroll_win = float(initial)
-    bankroll_combo = float(initial)
+    cum_win = 0    # 単勝のみ累積P&L
+    cum_combo = 0  # 全戦略累積P&L
     history = []
 
-    # 最大ドローダウン追跡
-    peak_win = bankroll_win
-    peak_combo = bankroll_combo
-    max_dd_win = 0.0
-    max_dd_combo = 0.0
-
     for r in results:
-        kb = r["kelly_bet"]
+        # 単勝P&L: 的中時は odds×100 - 100、不的中時は -100
+        win_pnl = r["win_return"] - inv_win  # win_return = odds*100 or 0
 
-        # --- 単勝のみ ---
-        bankroll_win *= (1 + r["kelly_return"])
-        bankroll_win = max(bankroll_win, 0)
+        # 組合せ馬券P&L（実配当ベース）
+        # trio_box5_roi = 配当/投資額（的中時>0、不的中時=0）
+        trio_pnl = r["trio_box5_roi"] * inv_trio - inv_trio
+        quin_pnl = r["quinella_box3_roi"] * inv_quin - inv_quin
+        wide_pnl = r["wide_top2_roi"] * inv_wide - inv_wide
 
-        # --- 全戦略（combo） ---
-        alloc_trio = kb * weights["trio"] / total_weight
-        alloc_quin = kb * weights["quinella"] / total_weight
-        alloc_wide = kb * weights["wide"] / total_weight
-        alloc_win = kb * weights["win"] / total_weight
+        combo_pnl = win_pnl + trio_pnl + quin_pnl + wide_pnl
 
-        # trio_box5_roi: 配当/投資額 (0=不的中, >0=的中)
-        ret_trio = alloc_trio * (r["trio_box5_roi"] - 1)
-        ret_quin = alloc_quin * (r["quinella_box3_roi"] - 1)
-        ret_wide = alloc_wide * (r["wide_top2_roi"] - 1)
-        # 単勝: 的中なら (odds-1), 不的中なら -1
-        if r["win_hit"] and alloc_win > 0:
-            ret_win = alloc_win * (r["ai_odds"] - 1)
-        else:
-            ret_win = -alloc_win
-
-        combo_return = ret_trio + ret_quin + ret_wide + ret_win
-        bankroll_combo *= (1 + combo_return)
-        bankroll_combo = max(bankroll_combo, 0)
-
-        # ドローダウン更新
-        if bankroll_win > peak_win:
-            peak_win = bankroll_win
-        dd_win = (peak_win - bankroll_win) / peak_win if peak_win > 0 else 0
-        max_dd_win = max(max_dd_win, dd_win)
-
-        if bankroll_combo > peak_combo:
-            peak_combo = bankroll_combo
-        dd_combo = (peak_combo - bankroll_combo) / peak_combo if peak_combo > 0 else 0
-        max_dd_combo = max(max_dd_combo, dd_combo)
+        cum_win += win_pnl
+        cum_combo += combo_pnl
 
         history.append({
             "label": r["label"],
-            "win_only": round(bankroll_win),
-            "combo": round(bankroll_combo),
+            "cum_win": round(cum_win),
+            "cum_combo": round(cum_combo),
         })
 
+    n = len(results)
     return {
-        "initial": initial,
+        "per_race_investment": {
+            "win": inv_win,
+            "quinella": inv_quin,
+            "wide": inv_wide,
+            "trio": inv_trio,
+            "total": inv_total,
+        },
         "history": history,
-        "final": {
-            "win_only": round(bankroll_win),
-            "combo": round(bankroll_combo),
+        "total": {
+            "win": round(cum_win),
+            "combo": round(cum_combo),
         },
-        "max_dd": {
-            "win_only": round(max_dd_win, 3),
-            "combo": round(max_dd_combo, 3),
-        },
-        "profit_multiple": {
-            "win_only": round(bankroll_win / initial, 2),
-            "combo": round(bankroll_combo / initial, 2),
-        },
+        "n_races": n,
     }
 
 
@@ -781,29 +747,26 @@ def _compute_strategy_comparison(
         roi = total_ret / max(1, total_inv)
         ev_per = total_ret / n if n > 0 else 0
 
-        # バンクロール推移（この組合せ）
-        bankroll = float(initial)
-        peak = bankroll
-        max_dd = 0.0
+        # 累積P&L推移（この組合せ）
+        cumulative = 0
+        peak_cum = 0
+        max_dd_abs = 0
         for r in results:
             inv_r = r.get(inv_key, 0)
             ret_r = r.get(ret_key, 0)
-            if inv_r > 0:
-                pnl = (ret_r - inv_r) / bankroll if bankroll > 0 else 0
-                bankroll *= (1 + pnl)
-                bankroll = max(bankroll, 0)
-            if bankroll > peak:
-                peak = bankroll
-            dd = (peak - bankroll) / peak if peak > 0 else 0
-            max_dd = max(max_dd, dd)
+            cumulative += (ret_r - inv_r)
+            if cumulative > peak_cum:
+                peak_cum = cumulative
+            dd_abs = peak_cum - cumulative
+            max_dd_abs = max(max_dd_abs, dd_abs)
 
         key = f"{mode_key}_{strat_key}"
         stats[key] = {
             "roi": roi,
             "ev_per": ev_per,
             "hit_rate": n_hit / n if n > 0 else 0,
-            "max_dd": max_dd,
-            "final_mult": bankroll / initial if initial > 0 else 0,
+            "max_dd_abs": max_dd_abs,
+            "cum_pnl": cumulative,
         }
 
     # --- 比較テーブル ---
@@ -831,49 +794,43 @@ def _compute_strategy_comparison(
         },
         {
             "label": "最大DD",
-            "box_agg": f"{stats['box_agg']['max_dd']:.0%}",
-            "box_stb": f"{stats['box_stb']['max_dd']:.0%}",
-            "nag_agg": f"{stats['nag_agg']['max_dd']:.0%}",
-            "nag_stb": f"{stats['nag_stb']['max_dd']:.0%}",
+            "box_agg": f"¥{stats['box_agg']['max_dd_abs']:,.0f}",
+            "box_stb": f"¥{stats['box_stb']['max_dd_abs']:,.0f}",
+            "nag_agg": f"¥{stats['nag_agg']['max_dd_abs']:,.0f}",
+            "nag_stb": f"¥{stats['nag_stb']['max_dd_abs']:,.0f}",
         },
         {
-            "label": "最終倍率",
-            "box_agg": f"{stats['box_agg']['final_mult']:.1f}x",
-            "box_stb": f"{stats['box_stb']['final_mult']:.1f}x",
-            "nag_agg": f"{stats['nag_agg']['final_mult']:.1f}x",
-            "nag_stb": f"{stats['nag_stb']['final_mult']:.1f}x",
+            "label": "累積損益",
+            "box_agg": f"¥{stats['box_agg']['cum_pnl']:,.0f}",
+            "box_stb": f"¥{stats['box_stb']['cum_pnl']:,.0f}",
+            "nag_agg": f"¥{stats['nag_agg']['cum_pnl']:,.0f}",
+            "nag_stb": f"¥{stats['nag_stb']['cum_pnl']:,.0f}",
         },
     ]
 
-    # --- BOXモードのバンクロール推移（5R間隔） ---
-    bankroll_agg = float(initial)
-    bankroll_stb = float(initial)
-    bankroll_data = [{"label": "開始", "agg": initial, "stb": initial}]
+    # --- BOXモードの累積P&L推移（5R間隔） ---
+    cum_agg = 0
+    cum_stb = 0
+    pnl_data = [{"label": "開始", "agg": 0, "stb": 0}]
 
     for i, r in enumerate(results):
         # 強気BOX
         inv_a = r.get("portfolio_box_inv", 0)
         ret_a = r.get("portfolio_box_ret", 0)
-        if inv_a > 0 and bankroll_agg > 0:
-            pnl_a = (ret_a - inv_a) / bankroll_agg
-            bankroll_agg *= (1 + pnl_a)
-            bankroll_agg = max(bankroll_agg, 0)
+        cum_agg += (ret_a - inv_a)
 
         # 安定BOX
         inv_s = r.get("portfolio_stb_box_inv", 0)
         ret_s = r.get("portfolio_stb_box_ret", 0)
-        if inv_s > 0 and bankroll_stb > 0:
-            pnl_s = (ret_s - inv_s) / bankroll_stb
-            bankroll_stb *= (1 + pnl_s)
-            bankroll_stb = max(bankroll_stb, 0)
+        cum_stb += (ret_s - inv_s)
 
         race_num = i + 1
         # 5R間隔 or 最終R
         if race_num % 5 == 0 or race_num == n:
-            bankroll_data.append({
+            pnl_data.append({
                 "label": f"{race_num}R",
-                "agg": round(bankroll_agg),
-                "stb": round(bankroll_stb),
+                "agg": round(cum_agg),
+                "stb": round(cum_stb),
             })
 
     # --- まとめテキスト生成 ---
@@ -884,27 +841,24 @@ def _compute_strategy_comparison(
         roi_diff = box_stb["roi"] - box_agg["roi"]
         hit_agg = f"{box_agg['hit_rate']:.0%}"
         hit_stb = f"{box_stb['hit_rate']:.0%}"
-        dd_agg = f"{box_agg['max_dd']:.0%}"
-        dd_stb = f"{box_stb['max_dd']:.0%}"
         summary_text = (
             f"{winner}が優秀: 当選率{hit_agg}→{hit_stb}、"
-            f"DD {dd_agg}→{dd_stb}で安定しつつ回収率+{roi_diff:.0%}pt上回る。"
+            f"累積損益¥{box_stb['cum_pnl']:,.0f}で回収率+{roi_diff:.0%}pt上回る。"
             f"強気はハイリスク・ハイリターン型、安定は投資家型。リスク許容度で選択を。"
         )
     else:
         winner = "強気モード"
         roi_diff = box_agg["roi"] - box_stb["roi"]
         summary_text = (
-            f"{winner}が回収率+{roi_diff:.0%}ptで優勢。"
-            f"ただしDD {box_agg['max_dd']:.0%}とリスク大。"
-            f"安定モードはDD {box_stb['max_dd']:.0%}で堅実。リスク許容度で選択を。"
+            f"{winner}が回収率+{roi_diff:.0%}ptで優勢（累積損益¥{box_agg['cum_pnl']:,.0f}）。"
+            f"安定モードは累積損益¥{box_stb['cum_pnl']:,.0f}で堅実。リスク許容度で選択を。"
         )
 
     return {
         "n_races": n,
         "budget_per_race": budget,
         "table": table,
-        "bankroll": bankroll_data,
+        "pnl": pnl_data,
         "summary_text": summary_text,
     }
 
@@ -1492,20 +1446,17 @@ def print_summary(
         print(f"  最終資金 5%tile: ¥{fb['p5']:,}  95%tile: ¥{fb['p95']:,}")
         print(f"  最大DD 中央値: {mdd['median']:.1%}  95%tile: {mdd['p95']:.1%}")
 
-    # --- バンクロール推移（確定的・実績ベース） ---
-    bankroll_history = _compute_bankroll_history(results)
-    if bankroll_history:
-        bh = bankroll_history
+    # --- 累積損益（定額ベット） ---
+    cumulative_pnl = _compute_cumulative_pnl(results)
+    if cumulative_pnl:
+        cp = cumulative_pnl
         print(f"\n{'='*65}")
-        print("バンクロール推移（実績ベース）")
+        print("累積損益（定額ベット）")
         print(f"{'='*65}")
-        print(f"  初期資金: ¥{bh['initial']:,}")
-        print(f"  最終資金 単勝のみ: ¥{bh['final']['win_only']:,}  "
-              f"(×{bh['profit_multiple']['win_only']:.1f})")
-        print(f"  最終資金 全戦略:   ¥{bh['final']['combo']:,}  "
-              f"(×{bh['profit_multiple']['combo']:.1f})")
-        print(f"  最大DD 単勝: {bh['max_dd']['win_only']:.1%}  "
-              f"全戦略: {bh['max_dd']['combo']:.1%}")
+        print(f"  1レース投資額: ¥{cp['per_race_investment']['total']:,}")
+        print(f"  累積P&L 単勝のみ: ¥{cp['total']['win']:,}")
+        print(f"  累積P&L 全戦略:   ¥{cp['total']['combo']:,}")
+        print(f"  レース数: {cp['n_races']}")
 
     # --- 戦略比較（強気 vs 安定） ---
     strategy_comp = _compute_strategy_comparison(results)
@@ -1729,13 +1680,12 @@ def print_summary(
     if jackknife:
         output["jackknife"] = jackknife
 
-    # キャリブレーション・シミュレーションデータ追加
+    # キャリブレーション・累積P&L・戦略比較データ追加
     if calib_data:
         output["calibration"] = calib_data
-    if simulation:
-        output["simulation"] = simulation
-    if bankroll_history:
-        output["bankroll_history"] = bankroll_history
+    # simulation は JSON出力から除外（Kelly複利前提のため不正確）
+    if cumulative_pnl:
+        output["cumulative_pnl"] = cumulative_pnl
     if strategy_comp:
         output["strategy_comparison"] = strategy_comp
 

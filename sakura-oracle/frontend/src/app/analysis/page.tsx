@@ -12,8 +12,6 @@ import {
   ScatterChart,
   Scatter,
   ZAxis,
-  AreaChart,
-  Area,
   LineChart,
   Line,
   ReferenceLine,
@@ -132,7 +130,7 @@ const strategyComparison = (backtestAll as Record<string, unknown>).strategy_com
       n_races: number;
       budget_per_race: number;
       table: { label: string; box_agg: string; box_stb: string; nag_agg: string; nag_stb: string }[];
-      bankroll: { label: string; agg: number; stb: number }[];
+      pnl: { label: string; agg: number; stb: number }[];
       summary_text: string;
     }
   | undefined;
@@ -203,49 +201,17 @@ const jackknife = (backtestAll as Record<string, unknown>).jackknife as
     }
   | undefined;
 
-// シミュレーションデータ（旧JSONには存在しない場合あり）
-const simulation = (backtestAll as Record<string, unknown>).simulation as
+// 累積損益データ（定額ベット）
+const cumulativePnl = (backtestAll as Record<string, unknown>).cumulative_pnl as
   | {
-      initial_bankroll: number;
+      per_race_investment: { win: number; quinella: number; wide: number; trio: number; total: number };
+      history: { label: string; cum_win: number; cum_combo: number }[];
+      total: { win: number; combo: number };
       n_races: number;
-      paths: Record<string, number[]>;
-      max_drawdown: { median: number; p95: number };
-      final_bankroll: { median: number; p5: number; p95: number };
     }
   | undefined;
-
-// バンクロール推移（確定的・実績ベース）
-const bankrollHistory = (backtestAll as Record<string, unknown>).bankroll_history as
-  | {
-      initial: number;
-      history: { label: string; win_only: number; combo: number }[];
-      final: { win_only: number; combo: number };
-      max_dd: { win_only: number; combo: number };
-      profit_multiple: { win_only: number; combo: number };
-    }
-  | undefined;
-
-// シミュレーションパスからバンクロールチャートデータを構築
-function buildBankrollData() {
-  if (!simulation?.paths) return [];
-  const p50 = simulation.paths.p50 || [];
-  const data = [];
-  for (let i = 0; i < p50.length; i++) {
-    data.push({
-      race: i,
-      p5: simulation.paths.p5?.[i] ?? 0,
-      p25: simulation.paths.p25?.[i] ?? 0,
-      p50: simulation.paths.p50?.[i] ?? 0,
-      p75: simulation.paths.p75?.[i] ?? 0,
-      p95: simulation.paths.p95?.[i] ?? 0,
-    });
-  }
-  return data;
-}
 
 export default function AnalysisPage() {
-  const bankrollData = buildBankrollData();
-
   return (
     <div className="min-h-screen bg-navy-dark pb-20">
       <motion.header
@@ -268,20 +234,10 @@ export default function AnalysisPage() {
             </p>
 
             <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="bg-navy/50 rounded-lg p-3 text-center">
-                <p className="text-[10px] text-muted-foreground mb-1">1着的中率</p>
+              {/* ROIを主役に */}
+              <div className="bg-navy/50 rounded-lg p-3 text-center border border-gold/20">
+                <p className="text-[10px] text-gold mb-1">単勝回収率</p>
                 <p className="font-mono text-lg font-bold text-gold">
-                  {(summary.win_hit_rate * 100).toFixed(0)}%
-                </p>
-                {confidence && (
-                  <p className="text-[9px] text-muted-foreground font-mono">
-                    95%CI: [{(confidence.win_hit_rate_ci[0] * 100).toFixed(0)}–{(confidence.win_hit_rate_ci[1] * 100).toFixed(0)}%]
-                  </p>
-                )}
-              </div>
-              <div className="bg-navy/50 rounded-lg p-3 text-center">
-                <p className="text-[10px] text-muted-foreground mb-1">単勝回収率</p>
-                <p className="font-mono text-lg font-bold text-green-400">
                   {(summary.win_roi * 100).toFixed(0)}%
                 </p>
                 {confidence && (
@@ -295,25 +251,37 @@ export default function AnalysisPage() {
                   </>
                 )}
               </div>
-              <div className="bg-navy/50 rounded-lg p-3 text-center">
-                <p className="text-[10px] text-muted-foreground mb-1">複勝的中率</p>
-                <p className="font-mono text-lg font-bold">
-                  {(summary.show_hit_rate * 100).toFixed(0)}%
-                </p>
-                {confidence && (
-                  <p className="text-[9px] text-muted-foreground font-mono">
-                    95%CI: [{(confidence.show_hit_rate_ci[0] * 100).toFixed(0)}–{(confidence.show_hit_rate_ci[1] * 100).toFixed(0)}%]
-                  </p>
-                )}
-              </div>
-              <div className="bg-navy/50 rounded-lg p-3 text-center">
-                <p className="text-[10px] text-muted-foreground mb-1">複勝回収率</p>
+              <div className="bg-navy/50 rounded-lg p-3 text-center border border-green-400/20">
+                <p className="text-[10px] text-green-400 mb-1">複勝回収率</p>
                 <p className="font-mono text-lg font-bold text-green-400">
                   {(summary.show_roi * 100).toFixed(0)}%
                 </p>
                 {confidence && (
                   <p className="text-[9px] text-muted-foreground font-mono">
                     95%CI: [{(confidence.show_roi_ci[0] * 100).toFixed(0)}–{(confidence.show_roi_ci[1] * 100).toFixed(0)}%]
+                  </p>
+                )}
+              </div>
+              {/* 的中率は参考指標 */}
+              <div className="bg-navy/50 rounded-lg p-3 text-center">
+                <p className="text-[10px] text-muted-foreground mb-1">1着的中率（参考）</p>
+                <p className="font-mono text-lg font-bold text-muted-foreground">
+                  {(summary.win_hit_rate * 100).toFixed(0)}%
+                </p>
+                {confidence && (
+                  <p className="text-[9px] text-muted-foreground font-mono">
+                    95%CI: [{(confidence.win_hit_rate_ci[0] * 100).toFixed(0)}–{(confidence.win_hit_rate_ci[1] * 100).toFixed(0)}%]
+                  </p>
+                )}
+              </div>
+              <div className="bg-navy/50 rounded-lg p-3 text-center">
+                <p className="text-[10px] text-muted-foreground mb-1">複勝的中率（参考）</p>
+                <p className="font-mono text-lg font-bold text-muted-foreground">
+                  {(summary.show_hit_rate * 100).toFixed(0)}%
+                </p>
+                {confidence && (
+                  <p className="text-[9px] text-muted-foreground font-mono">
+                    95%CI: [{(confidence.show_hit_rate_ci[0] * 100).toFixed(0)}–{(confidence.show_hit_rate_ci[1] * 100).toFixed(0)}%]
                   </p>
                 )}
               </div>
@@ -361,10 +329,10 @@ export default function AnalysisPage() {
                   <tbody>
                     {[
                       { label: "レース数", train: `${holdout.train.n_races}`, test: `${holdout.test.n_races}` },
-                      { label: "1着的中率", train: `${(holdout.train.win_hit_rate * 100).toFixed(0)}%`, test: `${(holdout.test.win_hit_rate * 100).toFixed(0)}%` },
                       { label: "単勝回収率", train: `${(holdout.train.win_roi * 100).toFixed(0)}%`, test: `${(holdout.test.win_roi * 100).toFixed(0)}%` },
-                      { label: "複勝的中率", train: `${(holdout.train.show_hit_rate * 100).toFixed(0)}%`, test: `${(holdout.test.show_hit_rate * 100).toFixed(0)}%` },
                       { label: "複勝回収率", train: `${(holdout.train.show_roi * 100).toFixed(0)}%`, test: `${(holdout.test.show_roi * 100).toFixed(0)}%` },
+                      { label: "1着的中率", train: `${(holdout.train.win_hit_rate * 100).toFixed(0)}%`, test: `${(holdout.test.win_hit_rate * 100).toFixed(0)}%` },
+                      { label: "複勝的中率", train: `${(holdout.train.show_hit_rate * 100).toFixed(0)}%`, test: `${(holdout.test.show_hit_rate * 100).toFixed(0)}%` },
                     ].map((row) => (
                       <tr key={row.label} className="border-b border-white/5">
                         <td className="py-2 pr-2 text-muted-foreground">{row.label}</td>
@@ -681,89 +649,18 @@ export default function AnalysisPage() {
           </motion.section>
         )}
 
-        {/* バンクロールシミュレーション（Monte Carlo） */}
-        {simulation && bankrollData.length > 0 && (
+        {/* 累積損益（定額ベット） */}
+        {cumulativePnl && cumulativePnl.history.length > 0 && (
           <motion.section {...fadeIn} transition={{ delay: 0.18 }}>
             <div className="bg-card rounded-xl p-4 border border-white/5">
-              <h2 className="text-sm font-bold mb-3">💰 バンクロールシミュレーション</h2>
+              <h2 className="text-sm font-bold mb-3">📈 累積損益（定額ベット）</h2>
               <p className="text-xs text-muted-foreground mb-3">
-                1/4 Kelly戦略 × 1,000パス Monte Carlo（初期資金¥{simulation.initial_bankroll.toLocaleString()}）
-              </p>
-              <ResponsiveContainer width="100%" height={250}>
-                <AreaChart data={bankrollData} margin={{ left: 10, right: 10, top: 5, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1A1A2E" />
-                  <XAxis
-                    dataKey="race"
-                    tick={{ fill: "#A0A0B0", fontSize: 10 }}
-                    label={{ value: "レース数", position: "bottom", fill: "#A0A0B0", fontSize: 10, offset: -5 }}
-                  />
-                  <YAxis
-                    tick={{ fill: "#A0A0B0", fontSize: 10 }}
-                    tickFormatter={(v: number) => `¥${(v / 1000).toFixed(0)}k`}
-                  />
-                  <Tooltip
-                    content={({ payload, label }) => {
-                      if (!payload || payload.length === 0) return null;
-                      const d = payload[0].payload as Record<string, number>;
-                      return (
-                        <div className="bg-navy border border-white/10 rounded p-2 text-xs">
-                          <p>レース #{label}</p>
-                          <p>95%tile: ¥{d.p95?.toLocaleString()}</p>
-                          <p>中央値: ¥{d.p50?.toLocaleString()}</p>
-                          <p>5%tile: ¥{d.p5?.toLocaleString()}</p>
-                        </div>
-                      );
-                    }}
-                  />
-                  <ReferenceLine y={simulation.initial_bankroll} stroke="#666" strokeDasharray="5 5" />
-                  {/* 5%-95% light fill */}
-                  <Area type="monotone" dataKey="p95" stroke="none" fill="#E8879C" fillOpacity={0.1} />
-                  <Area type="monotone" dataKey="p5" stroke="none" fill="#0F0F1A" fillOpacity={1} />
-                  {/* 25%-75% darker fill */}
-                  <Area type="monotone" dataKey="p75" stroke="none" fill="#E8879C" fillOpacity={0.2} />
-                  <Area type="monotone" dataKey="p25" stroke="none" fill="#0F0F1A" fillOpacity={1} />
-                  {/* 50% median line */}
-                  <Area type="monotone" dataKey="p50" stroke="#E8879C" strokeWidth={2} fill="none" />
-                </AreaChart>
-              </ResponsiveContainer>
-
-              {/* KPI指標 */}
-              <div className="grid grid-cols-3 gap-2 mt-3">
-                <div className="bg-navy/50 rounded-lg p-2 text-center">
-                  <p className="text-[9px] text-muted-foreground">中央値リターン</p>
-                  <p className={`font-mono text-sm font-bold ${simulation.final_bankroll.median > simulation.initial_bankroll ? "text-green-400" : "text-red-400"}`}>
-                    ¥{simulation.final_bankroll.median.toLocaleString()}
-                  </p>
-                </div>
-                <div className="bg-navy/50 rounded-lg p-2 text-center">
-                  <p className="text-[9px] text-muted-foreground">最大DD(中央)</p>
-                  <p className="font-mono text-sm font-bold text-orange-400">
-                    {(simulation.max_drawdown.median * 100).toFixed(0)}%
-                  </p>
-                </div>
-                <div className="bg-navy/50 rounded-lg p-2 text-center">
-                  <p className="text-[9px] text-muted-foreground">5%tile最終</p>
-                  <p className={`font-mono text-sm font-bold ${simulation.final_bankroll.p5 > simulation.initial_bankroll ? "text-green-400" : "text-red-400"}`}>
-                    ¥{simulation.final_bankroll.p5.toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </motion.section>
-        )}
-
-        {/* バンクロール推移（確定的・実績ベース） */}
-        {bankrollHistory && bankrollHistory.history.length > 0 && (
-          <motion.section {...fadeIn} transition={{ delay: 0.19 }}>
-            <div className="bg-card rounded-xl p-4 border border-white/5">
-              <h2 className="text-sm font-bold mb-3">📈 バンクロール推移（実績ベース）</h2>
-              <p className="text-xs text-muted-foreground mb-3">
-                過去{bankrollHistory.history.length}レースの確定実績。初期資金¥{bankrollHistory.initial.toLocaleString()}、1/4 Kelly比率
+                毎レース¥{cumulativePnl.per_race_investment.total.toLocaleString()}定額投資の累積損益（{cumulativePnl.n_races}レース）
               </p>
 
               <ResponsiveContainer width="100%" height={250}>
                 <LineChart
-                  data={bankrollHistory.history}
+                  data={cumulativePnl.history}
                   margin={{ left: 10, right: 10, top: 5, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#1A1A2E" />
@@ -774,25 +671,26 @@ export default function AnalysisPage() {
                   />
                   <YAxis
                     tick={{ fill: "#A0A0B0", fontSize: 10 }}
-                    tickFormatter={(v: number) => `¥${(v / 1000).toFixed(0)}k`}
+                    tickFormatter={(v: number) => `¥${v.toLocaleString()}`}
                   />
                   <Tooltip
                     content={({ payload }) => {
                       if (!payload || payload.length === 0) return null;
-                      const d = payload[0].payload as { label: string; win_only: number; combo: number };
+                      const d = payload[0].payload as { label: string; cum_win: number; cum_combo: number };
                       return (
                         <div className="bg-navy border border-white/10 rounded p-2 text-xs">
                           <p className="font-bold mb-1">{d.label}</p>
-                          <p><span className="text-[#FFD700]">全戦略:</span> ¥{d.combo.toLocaleString()}</p>
-                          <p><span className="text-[#A0A0B0]">単勝のみ:</span> ¥{d.win_only.toLocaleString()}</p>
+                          <p><span className="text-[#FFD700]">全戦略:</span> ¥{d.cum_combo.toLocaleString()}</p>
+                          <p><span className="text-[#A0A0B0]">単勝のみ:</span> ¥{d.cum_win.toLocaleString()}</p>
                         </div>
                       );
                     }}
                   />
-                  <ReferenceLine y={bankrollHistory.initial} stroke="#666" strokeDasharray="5 5" />
+                  {/* 損益分岐点 */}
+                  <ReferenceLine y={0} stroke="#666" strokeDasharray="5 5" />
                   <Line
                     type="monotone"
-                    dataKey="win_only"
+                    dataKey="cum_win"
                     stroke="#A0A0B0"
                     strokeWidth={1.5}
                     dot={false}
@@ -800,7 +698,7 @@ export default function AnalysisPage() {
                   />
                   <Line
                     type="monotone"
-                    dataKey="combo"
+                    dataKey="cum_combo"
                     stroke="#FFD700"
                     strokeWidth={2}
                     dot={false}
@@ -815,29 +713,23 @@ export default function AnalysisPage() {
               </div>
 
               {/* KPI指標 */}
-              <div className="grid grid-cols-3 gap-2 mt-3">
+              <div className="grid grid-cols-2 gap-2 mt-3">
                 <div className="bg-navy/50 rounded-lg p-2 text-center">
-                  <p className="text-[9px] text-muted-foreground">最終資金（全戦略）</p>
-                  <p className="font-mono text-sm font-bold text-gold">
-                    ¥{bankrollHistory.final.combo.toLocaleString()}
+                  <p className="text-[9px] text-muted-foreground">累積損益（全戦略）</p>
+                  <p className={`font-mono text-sm font-bold ${cumulativePnl.total.combo >= 0 ? "text-green-400" : "text-red-400"}`}>
+                    ¥{cumulativePnl.total.combo.toLocaleString()}
                   </p>
                   <p className="text-[9px] text-muted-foreground">
-                    ×{bankrollHistory.profit_multiple.combo}
+                    ROI {((cumulativePnl.total.combo + cumulativePnl.n_races * cumulativePnl.per_race_investment.total) / (cumulativePnl.n_races * cumulativePnl.per_race_investment.total) * 100).toFixed(0)}%
                   </p>
                 </div>
                 <div className="bg-navy/50 rounded-lg p-2 text-center">
-                  <p className="text-[9px] text-muted-foreground">最大DD（全戦略）</p>
-                  <p className="font-mono text-sm font-bold text-orange-400">
-                    {(bankrollHistory.max_dd.combo * 100).toFixed(0)}%
-                  </p>
-                </div>
-                <div className="bg-navy/50 rounded-lg p-2 text-center">
-                  <p className="text-[9px] text-muted-foreground">最終資金（単勝）</p>
-                  <p className={`font-mono text-sm font-bold ${bankrollHistory.final.win_only > bankrollHistory.initial ? "text-green-400" : "text-red-400"}`}>
-                    ¥{bankrollHistory.final.win_only.toLocaleString()}
+                  <p className="text-[9px] text-muted-foreground">累積損益（単勝）</p>
+                  <p className={`font-mono text-sm font-bold ${cumulativePnl.total.win >= 0 ? "text-green-400" : "text-red-400"}`}>
+                    ¥{cumulativePnl.total.win.toLocaleString()}
                   </p>
                   <p className="text-[9px] text-muted-foreground">
-                    ×{bankrollHistory.profit_multiple.win_only}
+                    ROI {((cumulativePnl.total.win + cumulativePnl.n_races * cumulativePnl.per_race_investment.win) / (cumulativePnl.n_races * cumulativePnl.per_race_investment.win) * 100).toFixed(0)}%
                   </p>
                 </div>
               </div>
@@ -887,24 +779,14 @@ export default function AnalysisPage() {
               </table>
             </div>
 
-            {/* バンクロール推移チャート（BOXモード・初期¥10,000） */}
+            {/* 累積損益推移チャート（BOXモード） */}
             <h3 className="text-xs font-bold text-muted-foreground mb-2">
-              バンクロール推移（BOXモード・初期¥10,000）
+              累積損益推移（BOXモード）
             </h3>
             <ResponsiveContainer width="100%" height={220}>
               <LineChart
-                data={strategyComparison?.bankroll ?? [
-                  { label: "開始", agg: 10000, stb: 10000 },
-                  { label: "5R", agg: 3690, stb: 30390 },
-                  { label: "10R", agg: 0, stb: 24270 },
-                  { label: "15R", agg: 0, stb: 18040 },
-                  { label: "20R", agg: 3230, stb: 36970 },
-                  { label: "25R", agg: 0, stb: 31520 },
-                  { label: "30R", agg: 0, stb: 28310 },
-                  { label: "35R", agg: 0, stb: 58090 },
-                  { label: "40R", agg: 42610, stb: 92030 },
-                  { label: "45R", agg: 86160, stb: 276410 },
-                  { label: "50R", agg: 270070, stb: 284020 },
+                data={strategyComparison?.pnl ?? [
+                  { label: "開始", agg: 0, stb: 0 },
                 ]}
                 margin={{ left: 10, right: 10, top: 5, bottom: 5 }}
               >
@@ -912,7 +794,7 @@ export default function AnalysisPage() {
                 <XAxis dataKey="label" tick={{ fill: "#A0A0B0", fontSize: 10 }} />
                 <YAxis
                   tick={{ fill: "#A0A0B0", fontSize: 10 }}
-                  tickFormatter={(v: number) => `¥${(v / 1000).toFixed(0)}k`}
+                  tickFormatter={(v: number) => `¥${v.toLocaleString()}`}
                 />
                 <Tooltip
                   content={({ payload }) => {
@@ -927,7 +809,8 @@ export default function AnalysisPage() {
                     );
                   }}
                 />
-                <ReferenceLine y={10000} stroke="#666" strokeDasharray="5 5" />
+                {/* 損益分岐点 */}
+                <ReferenceLine y={0} stroke="#666" strokeDasharray="5 5" />
                 <Line type="monotone" dataKey="agg" stroke="#FFD700" strokeWidth={2} dot={false} name="強気" />
                 <Line type="monotone" dataKey="stb" stroke="#E8879C" strokeWidth={2} dot={false} name="安定" />
               </LineChart>
