@@ -406,6 +406,26 @@ def predict_race(
             photo_skip += 1
     print(f"  写真取得: {photo_ok}頭成功 / {photo_skip}頭スキップ")
 
+    # --- 3.7. Excelオッズ注入（特徴量に反映するため特徴量構築前に実施） ---
+    if excel_path and Path(excel_path).exists():
+        try:
+            xl = pd.read_excel(excel_path, header=None, skiprows=2)
+            # カラム: 枠, 馬番, 馬名, 単勝オッズ, 複勝オッズ
+            if xl.shape[1] >= 4:
+                odds_map = {}
+                for _, xrow in xl.iterrows():
+                    try:
+                        hnum = int(xrow.iloc[1])
+                        win_odds = float(xrow.iloc[3])
+                        odds_map[hnum] = win_odds
+                    except (ValueError, TypeError):
+                        continue
+                if odds_map:
+                    entries["単勝オッズ"] = entries["馬番"].map(odds_map)
+                    print(f"\n  ✅ Excelオッズ注入: {len(odds_map)}頭の単勝オッズを特徴量に反映")
+        except Exception as e:
+            print(f"\n  ⚠️ Excelオッズ読込失敗: {e}")
+
     # --- 4. features.csv ロード & 特徴量構築 ---
     print("\n--- 特徴量構築 ---")
     csv_path = DATA_DIR / "features.csv"
@@ -741,16 +761,18 @@ def predict_race(
     print(f"  印: ◎{marks['◎']} ○{marks['○']} ▲{marks['▲']} △{marks['△']} ×{marks['×']}")
 
     # --- オッズ → AI推奨TOP10買い目 ---
-    # 優先順位: --excel > --scrape-odds
+    # 優先順位: --excel > --scrape-odds（Excel失敗時はスクレイピングにフォールバック）
     top_bets_path = races_dir / f"{race_file_id}_top_bets.json"
+    bets_generated = False
     if excel_path:
-        from pathlib import Path as _P
-        if _P(excel_path).exists():
+        ep = Path(excel_path)
+        if ep.exists():
             print(f"\n--- AI推奨買い目生成（Excel） ---")
-            generate_top_bets(excel_path, race_json_path, top_bets_path)
+            result = generate_top_bets(excel_path, race_json_path, top_bets_path)
+            bets_generated = bool(result)
         else:
             print(f"\n  ⚠️ Excelファイルが見つかりません: {excel_path}")
-    elif scrape_odds:
+    if not bets_generated and scrape_odds:
         print(f"\n--- AI推奨買い目生成（スクレイピング） ---")
         generate_top_bets_from_scrape(race_id, race_json_path, top_bets_path)
 
