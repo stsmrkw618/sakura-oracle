@@ -5,7 +5,7 @@
     "course": "阪神 芝1400m",
     "going": "TBD",
     "weather": "TBD",
-    "updated_at": "2026-03-08T12:06:14.587605"
+    "updated_at": "2026-03-08T12:17:57.621920"
   },
   "predictions": [
     {
@@ -15,9 +15,9 @@
       "win_prob": 0.2759,
       "show_prob": 0.5268,
       "ev_win": 4.47,
-      "ev_show": 2.56,
+      "ev_show": 2.58,
       "kelly_win": 0.0571,
-      "kelly_show": 0.1011,
+      "kelly_show": 0.1014,
       "speed_index": 68.0,
       "radar": {
         "speed": 100,
@@ -50,9 +50,9 @@
       "win_prob": 0.1625,
       "show_prob": 0.3496,
       "ev_win": 19.21,
-      "ev_show": 12.4,
+      "ev_show": 7.48,
       "kelly_win": 0.0388,
-      "kelly_show": 0.0827,
+      "kelly_show": 0.0794,
       "speed_index": 65.0,
       "radar": {
         "speed": 94,
@@ -71,7 +71,7 @@
       ],
       "odds": {
         "win": 118.2,
-        "show": 35.5
+        "show": 21.4
       },
       "sire": "不明",
       "jockey": "小沢",
@@ -85,9 +85,9 @@
       "win_prob": 0.1403,
       "show_prob": 0.2227,
       "ev_win": 12.95,
-      "ev_show": 6.17,
+      "ev_show": 4.72,
       "kelly_win": 0.0327,
-      "kelly_show": 0.0484,
+      "kelly_show": 0.0461,
       "speed_index": 53.0,
       "radar": {
         "speed": 72,
@@ -106,7 +106,7 @@
       ],
       "odds": {
         "win": 92.3,
-        "show": 27.7
+        "show": 21.2
       },
       "sire": "ミッキーアイル",
       "jockey": "永島",
@@ -120,9 +120,9 @@
       "win_prob": 0.0975,
       "show_prob": 0.2626,
       "ev_win": 1.9,
-      "ev_show": 1.54,
+      "ev_show": 1.6,
       "kelly_win": 0.0122,
-      "kelly_show": 0.0277,
+      "kelly_show": 0.0295,
       "speed_index": 55.0,
       "radar": {
         "speed": 75,
@@ -141,7 +141,7 @@
       ],
       "odds": {
         "win": 19.5,
-        "show": 5.8
+        "show": 6.1
       },
       "sire": "不明",
       "jockey": "鮫島駿",
@@ -155,7 +155,7 @@
       "win_prob": 0.0953,
       "show_prob": 0.2369,
       "ev_win": 0.66,
-      "ev_show": 0.49,
+      "ev_show": 0.65,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 61.0,
@@ -176,7 +176,7 @@
       ],
       "odds": {
         "win": 6.9,
-        "show": 2.1
+        "show": 2.8
       },
       "sire": "不明",
       "jockey": "西村淳",
@@ -190,9 +190,9 @@
       "win_prob": 0.0607,
       "show_prob": 0.3517,
       "ev_win": 0.53,
-      "ev_show": 0.93,
+      "ev_show": 1.02,
       "kelly_win": 0.0,
-      "kelly_show": 0.0,
+      "kelly_show": 0.0026,
       "speed_index": 60.0,
       "radar": {
         "speed": 85,
@@ -211,7 +211,7 @@
       ],
       "odds": {
         "win": 8.8,
-        "show": 2.6
+        "show": 2.9
       },
       "sire": "不明",
       "jockey": "酒井",
@@ -225,7 +225,7 @@
       "win_prob": 0.0361,
       "show_prob": 0.37,
       "ev_win": 0.19,
-      "ev_show": 0.59,
+      "ev_show": 0.7,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 60.0,
@@ -246,7 +246,7 @@
       ],
       "odds": {
         "win": 5.3,
-        "show": 1.6
+        "show": 1.9
       },
       "sire": "リアルスティール",
       "jockey": "池添",
@@ -260,7 +260,7 @@
       "win_prob": 0.0248,
       "show_prob": 0.2405,
       "ev_win": 0.14,
-      "ev_show": 0.41,
+      "ev_show": 0.51,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 53.0,
@@ -281,47 +281,12 @@
       ],
       "odds": {
         "win": 5.7,
-        "show": 1.7
+        "show": 2.1
       },
       "sire": "不明",
       "jockey": "高杉",
       "frame_number": 3,
       "image": "/images/horses/2023104034.jpg"
-    },
-    {
-      "horse_number": 17,
-      "horse_name": "サンアントワーヌ",
-      "mark": "△",
-      "win_prob": 0.013,
-      "show_prob": 0.0221,
-      "ev_win": 0.07,
-      "ev_show": 0.04,
-      "kelly_win": 0.0,
-      "kelly_show": 0.0,
-      "speed_index": 56.0,
-      "radar": {
-        "speed": 77,
-        "stamina": 0,
-        "instant": 72,
-        "pedigree": 100,
-        "jockey": 0,
-        "course_fit": 0
-      },
-      "comment": "前走5着。上がり34.5秒は平均的。",
-      "risk": "キャリアが浅い。阪神未経験",
-      "last3_results": [
-        "5着",
-        "3着",
-        "2着"
-      ],
-      "odds": {
-        "win": 5.4,
-        "show": 1.6
-      },
-      "sire": "ドレフォン",
-      "jockey": "荻野極",
-      "frame_number": 8,
-      "image": "/images/horses/2023107020.jpg"
     },
     {
       "horse_number": 12,
@@ -330,7 +295,7 @@
       "win_prob": 0.0177,
       "show_prob": 0.0093,
       "ev_win": 0.58,
-      "ev_show": 0.09,
+      "ev_show": 0.06,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 53.0,
@@ -351,7 +316,7 @@
       ],
       "odds": {
         "win": 32.8,
-        "show": 9.8
+        "show": 6.3
       },
       "sire": "リオンディーズ",
       "jockey": "田山",
@@ -365,9 +330,9 @@
       "win_prob": 0.0173,
       "show_prob": 0.1826,
       "ev_win": 0.67,
-      "ev_show": 2.13,
+      "ev_show": 1.86,
       "kelly_win": 0.0,
-      "kelly_show": 0.0265,
+      "kelly_show": 0.0234,
       "speed_index": 53.0,
       "radar": {
         "speed": 72,
@@ -386,7 +351,7 @@
       ],
       "odds": {
         "win": 38.9,
-        "show": 11.7
+        "show": 10.2
       },
       "sire": "不明",
       "jockey": "松山",
@@ -400,7 +365,7 @@
       "win_prob": 0.0161,
       "show_prob": 0.0414,
       "ev_win": 0.93,
-      "ev_show": 0.72,
+      "ev_show": 0.52,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 15.0,
@@ -421,12 +386,47 @@
       ],
       "odds": {
         "win": 57.7,
-        "show": 17.3
+        "show": 12.6
       },
       "sire": "不明",
       "jockey": "吉田隼",
       "frame_number": 3,
       "image": "/images/horses/2023105027.jpg"
+    },
+    {
+      "horse_number": 17,
+      "horse_name": "サンアントワーヌ",
+      "mark": "×",
+      "win_prob": 0.013,
+      "show_prob": 0.0221,
+      "ev_win": 0.07,
+      "ev_show": 0.05,
+      "kelly_win": 0.0,
+      "kelly_show": 0.0,
+      "speed_index": 56.0,
+      "radar": {
+        "speed": 77,
+        "stamina": 0,
+        "instant": 72,
+        "pedigree": 100,
+        "jockey": 0,
+        "course_fit": 0
+      },
+      "comment": "前走5着。上がり34.5秒は平均的。",
+      "risk": "キャリアが浅い。阪神未経験",
+      "last3_results": [
+        "5着",
+        "3着",
+        "2着"
+      ],
+      "odds": {
+        "win": 5.4,
+        "show": 2.1
+      },
+      "sire": "ドレフォン",
+      "jockey": "荻野極",
+      "frame_number": 8,
+      "image": "/images/horses/2023107020.jpg"
     },
     {
       "horse_number": 10,
@@ -456,7 +456,7 @@
       ],
       "odds": {
         "win": 37.8,
-        "show": 11.3
+        "show": 11.5
       },
       "sire": "モズアスコット",
       "jockey": "松本",
@@ -470,7 +470,7 @@
       "win_prob": 0.01,
       "show_prob": 0.018,
       "ev_win": 0.2,
-      "ev_show": 0.11,
+      "ev_show": 0.13,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 52.0,
@@ -491,7 +491,7 @@
       ],
       "odds": {
         "win": 19.9,
-        "show": 6.0
+        "show": 7.2
       },
       "sire": "不明",
       "jockey": "松若",
@@ -505,7 +505,7 @@
       "win_prob": 0.0089,
       "show_prob": 0.0207,
       "ev_win": 0.22,
-      "ev_show": 0.15,
+      "ev_show": 0.16,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 49.0,
@@ -526,7 +526,7 @@
       ],
       "odds": {
         "win": 24.5,
-        "show": 7.3
+        "show": 7.8
       },
       "sire": "エピファネイア",
       "jockey": "西塚",
@@ -540,7 +540,7 @@
       "win_prob": 0.0072,
       "show_prob": 0.0394,
       "ev_win": 0.24,
-      "ev_show": 0.4,
+      "ev_show": 0.31,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 58.0,
@@ -561,7 +561,7 @@
       ],
       "odds": {
         "win": 33.7,
-        "show": 10.1
+        "show": 7.9
       },
       "sire": "シスキン",
       "jockey": "吉村",
@@ -575,7 +575,7 @@
       "win_prob": 0.0028,
       "show_prob": 0.0546,
       "ev_win": 0.05,
-      "ev_show": 0.27,
+      "ev_show": 0.32,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 37.0,
@@ -596,7 +596,7 @@
       ],
       "odds": {
         "win": 16.4,
-        "show": 4.9
+        "show": 5.9
       },
       "sire": "不明",
       "jockey": "富田",
@@ -631,7 +631,7 @@
       ],
       "odds": {
         "win": 28.2,
-        "show": 8.5
+        "show": 8.3
       },
       "sire": "カリフォルニアクローム",
       "jockey": "田口",

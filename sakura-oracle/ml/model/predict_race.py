@@ -412,17 +412,22 @@ def predict_race(
             xl = pd.read_excel(excel_path, header=None, skiprows=2)
             # カラム: 枠, 馬番, 馬名, 単勝オッズ, 複勝オッズ
             if xl.shape[1] >= 4:
-                odds_map = {}
+                win_map = {}
+                show_map = {}
                 for _, xrow in xl.iterrows():
                     try:
                         hnum = int(xrow.iloc[1])
-                        win_odds = float(xrow.iloc[3])
-                        odds_map[hnum] = win_odds
+                        win_map[hnum] = float(xrow.iloc[3])
+                        if xl.shape[1] >= 5 and pd.notna(xrow.iloc[4]):
+                            show_map[hnum] = float(xrow.iloc[4])
                     except (ValueError, TypeError):
                         continue
-                if odds_map:
-                    entries["単勝オッズ"] = entries["馬番"].map(odds_map)
-                    print(f"\n  ✅ Excelオッズ注入: {len(odds_map)}頭の単勝オッズを特徴量に反映")
+                if win_map:
+                    entries["単勝オッズ"] = entries["馬番"].map(win_map)
+                    print(f"\n  ✅ Excelオッズ注入: {len(win_map)}頭の単勝オッズを特徴量に反映")
+                if show_map:
+                    entries["複勝オッズ"] = entries["馬番"].map(show_map)
+                    print(f"  ✅ Excelオッズ注入: {len(show_map)}頭の複勝オッズを反映")
         except Exception as e:
             print(f"\n  ⚠️ Excelオッズ読込失敗: {e}")
 
