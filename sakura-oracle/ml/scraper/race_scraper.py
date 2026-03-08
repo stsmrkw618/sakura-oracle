@@ -83,6 +83,7 @@ def safe_request(url: str, max_retries: int = MAX_RETRIES) -> bytes | None:
 MANUAL_RACE_IDS: dict[str, str] = {
     # 日付検索で見つからないレースのrace_idを手動指定
     "チューリップ賞2026": "202609010411",
+    "フィリーズレビュー2026": "202609010511",
 }
 
 

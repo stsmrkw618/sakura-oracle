@@ -5,19 +5,19 @@
     "course": "阪神 芝1400m",
     "going": "TBD",
     "weather": "TBD",
-    "updated_at": "2026-03-08T12:17:57.621920"
+    "updated_at": "2026-03-08T13:01:15.805445"
   },
   "predictions": [
     {
       "horse_number": 8,
       "horse_name": "ルージュサウダージ",
       "mark": "◎",
-      "win_prob": 0.2759,
-      "show_prob": 0.5268,
-      "ev_win": 4.47,
-      "ev_show": 2.58,
-      "kelly_win": 0.0571,
-      "kelly_show": 0.1014,
+      "win_prob": 0.2422,
+      "show_prob": 0.5276,
+      "ev_win": 3.92,
+      "ev_show": 2.59,
+      "kelly_win": 0.0481,
+      "kelly_show": 0.1016,
       "speed_index": 68.0,
       "radar": {
         "speed": 100,
@@ -44,50 +44,15 @@
       "image": "/images/horses/2023103721.jpg"
     },
     {
-      "horse_number": 9,
-      "horse_name": "タイセイフレッサ",
-      "mark": "○",
-      "win_prob": 0.1625,
-      "show_prob": 0.3496,
-      "ev_win": 19.21,
-      "ev_show": 7.48,
-      "kelly_win": 0.0388,
-      "kelly_show": 0.0794,
-      "speed_index": 65.0,
-      "radar": {
-        "speed": 94,
-        "stamina": 86,
-        "instant": 97,
-        "pedigree": 20,
-        "jockey": 0,
-        "course_fit": 0
-      },
-      "comment": "前走7着。上がり34.4秒は平均的。安定した成績。",
-      "risk": "阪神未経験。前走着順が振るわない",
-      "last3_results": [
-        "7着",
-        "-",
-        "-"
-      ],
-      "odds": {
-        "win": 118.2,
-        "show": 21.4
-      },
-      "sire": "不明",
-      "jockey": "小沢",
-      "frame_number": 5,
-      "image": "/images/horses/2023100914.jpg"
-    },
-    {
       "horse_number": 1,
       "horse_name": "フルールジェンヌ",
       "mark": "○",
-      "win_prob": 0.1403,
-      "show_prob": 0.2227,
-      "ev_win": 12.95,
-      "ev_show": 4.72,
-      "kelly_win": 0.0327,
-      "kelly_show": 0.0461,
+      "win_prob": 0.1382,
+      "show_prob": 0.2181,
+      "ev_win": 12.76,
+      "ev_show": 4.62,
+      "kelly_win": 0.0322,
+      "kelly_show": 0.0449,
       "speed_index": 53.0,
       "radar": {
         "speed": 72,
@@ -114,15 +79,50 @@
       "image": "/images/horses/2023103247.jpg"
     },
     {
+      "horse_number": 9,
+      "horse_name": "タイセイフレッサ",
+      "mark": "○",
+      "win_prob": 0.131,
+      "show_prob": 0.2886,
+      "ev_win": 15.49,
+      "ev_show": 6.18,
+      "kelly_win": 0.0309,
+      "kelly_show": 0.0634,
+      "speed_index": 65.0,
+      "radar": {
+        "speed": 94,
+        "stamina": 86,
+        "instant": 97,
+        "pedigree": 20,
+        "jockey": 0,
+        "course_fit": 0
+      },
+      "comment": "前走7着。上がり34.4秒は平均的。安定した成績。",
+      "risk": "阪神未経験。前走着順が振るわない",
+      "last3_results": [
+        "7着",
+        "-",
+        "-"
+      ],
+      "odds": {
+        "win": 118.2,
+        "show": 21.4
+      },
+      "sire": "不明",
+      "jockey": "小沢",
+      "frame_number": 5,
+      "image": "/images/horses/2023100914.jpg"
+    },
+    {
       "horse_number": 14,
       "horse_name": "コラルリーフ",
       "mark": "▲",
-      "win_prob": 0.0975,
-      "show_prob": 0.2626,
-      "ev_win": 1.9,
-      "ev_show": 1.6,
-      "kelly_win": 0.0122,
-      "kelly_show": 0.0295,
+      "win_prob": 0.0912,
+      "show_prob": 0.2485,
+      "ev_win": 1.78,
+      "ev_show": 1.52,
+      "kelly_win": 0.0105,
+      "kelly_show": 0.0253,
       "speed_index": 55.0,
       "radar": {
         "speed": 75,
@@ -152,10 +152,10 @@
       "horse_number": 7,
       "horse_name": "アイニードユー",
       "mark": "△",
-      "win_prob": 0.0953,
-      "show_prob": 0.2369,
-      "ev_win": 0.66,
-      "ev_show": 0.65,
+      "win_prob": 0.085,
+      "show_prob": 0.2299,
+      "ev_win": 0.59,
+      "ev_show": 0.63,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 61.0,
@@ -187,12 +187,12 @@
       "horse_number": 13,
       "horse_name": "デアヴェローチェ",
       "mark": "△",
-      "win_prob": 0.0607,
-      "show_prob": 0.3517,
-      "ev_win": 0.53,
-      "ev_show": 1.02,
+      "win_prob": 0.0783,
+      "show_prob": 0.3573,
+      "ev_win": 0.69,
+      "ev_show": 1.04,
       "kelly_win": 0.0,
-      "kelly_show": 0.0026,
+      "kelly_show": 0.0048,
       "speed_index": 60.0,
       "radar": {
         "speed": 85,
@@ -222,10 +222,10 @@
       "horse_number": 4,
       "horse_name": "ショウナンカリス",
       "mark": "△",
-      "win_prob": 0.0361,
-      "show_prob": 0.37,
-      "ev_win": 0.19,
-      "ev_show": 0.7,
+      "win_prob": 0.062,
+      "show_prob": 0.4201,
+      "ev_win": 0.33,
+      "ev_show": 0.8,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 60.0,
@@ -257,10 +257,10 @@
       "horse_number": 5,
       "horse_name": "テイエムスティール",
       "mark": "△",
-      "win_prob": 0.0248,
-      "show_prob": 0.2405,
-      "ev_win": 0.14,
-      "ev_show": 0.51,
+      "win_prob": 0.0381,
+      "show_prob": 0.2607,
+      "ev_win": 0.22,
+      "ev_show": 0.55,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 53.0,
@@ -289,118 +289,13 @@
       "image": "/images/horses/2023104034.jpg"
     },
     {
-      "horse_number": 12,
-      "horse_name": "トワニ",
-      "mark": "×",
-      "win_prob": 0.0177,
-      "show_prob": 0.0093,
-      "ev_win": 0.58,
-      "ev_show": 0.06,
-      "kelly_win": 0.0,
-      "kelly_show": 0.0,
-      "speed_index": 53.0,
-      "radar": {
-        "speed": 72,
-        "stamina": 0,
-        "instant": 72,
-        "pedigree": 80,
-        "jockey": 0,
-        "course_fit": 0
-      },
-      "comment": "前走5着。上がり34.5秒は平均的。",
-      "risk": "キャリアが浅い。阪神未経験",
-      "last3_results": [
-        "5着",
-        "3着",
-        "2着"
-      ],
-      "odds": {
-        "win": 32.8,
-        "show": 6.3
-      },
-      "sire": "リオンディーズ",
-      "jockey": "田山",
-      "frame_number": 6,
-      "image": "/images/horses/2023102694.jpg"
-    },
-    {
-      "horse_number": 11,
-      "horse_name": "クリエープキー",
-      "mark": "×",
-      "win_prob": 0.0173,
-      "show_prob": 0.1826,
-      "ev_win": 0.67,
-      "ev_show": 1.86,
-      "kelly_win": 0.0,
-      "kelly_show": 0.0234,
-      "speed_index": 53.0,
-      "radar": {
-        "speed": 72,
-        "stamina": 100,
-        "instant": 72,
-        "pedigree": 20,
-        "jockey": 20,
-        "course_fit": 0
-      },
-      "comment": "前走1着。上がり34.7秒は平均的。",
-      "risk": "阪神未経験",
-      "last3_results": [
-        "1着",
-        "-",
-        "-"
-      ],
-      "odds": {
-        "win": 38.9,
-        "show": 10.2
-      },
-      "sire": "不明",
-      "jockey": "松山",
-      "frame_number": 6,
-      "image": "/images/horses/2023103355.jpg"
-    },
-    {
-      "horse_number": 6,
-      "horse_name": "タイニーワンダー",
-      "mark": "×",
-      "win_prob": 0.0161,
-      "show_prob": 0.0414,
-      "ev_win": 0.93,
-      "ev_show": 0.52,
-      "kelly_win": 0.0,
-      "kelly_show": 0.0,
-      "speed_index": 15.0,
-      "radar": {
-        "speed": 0,
-        "stamina": 29,
-        "instant": 0,
-        "pedigree": 20,
-        "jockey": 100,
-        "course_fit": 50
-      },
-      "comment": "前走1着。阪神1走経験あり。安定した成績。",
-      "risk": "キャリアが浅い",
-      "last3_results": [
-        "1着",
-        "-",
-        "-"
-      ],
-      "odds": {
-        "win": 57.7,
-        "show": 12.6
-      },
-      "sire": "不明",
-      "jockey": "吉田隼",
-      "frame_number": 3,
-      "image": "/images/horses/2023105027.jpg"
-    },
-    {
       "horse_number": 17,
       "horse_name": "サンアントワーヌ",
-      "mark": "×",
-      "win_prob": 0.013,
-      "show_prob": 0.0221,
-      "ev_win": 0.07,
-      "ev_show": 0.05,
+      "mark": "△",
+      "win_prob": 0.0233,
+      "show_prob": 0.0359,
+      "ev_win": 0.13,
+      "ev_show": 0.08,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 56.0,
@@ -429,22 +324,22 @@
       "image": "/images/horses/2023107020.jpg"
     },
     {
-      "horse_number": 10,
-      "horse_name": "ラスティングスノー",
+      "horse_number": 12,
+      "horse_name": "トワニ",
       "mark": "×",
-      "win_prob": 0.0117,
-      "show_prob": 0.0236,
-      "ev_win": 0.44,
-      "ev_show": 0.27,
+      "win_prob": 0.0197,
+      "show_prob": 0.0104,
+      "ev_win": 0.65,
+      "ev_show": 0.07,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
-      "speed_index": 51.0,
+      "speed_index": 53.0,
       "radar": {
-        "speed": 68,
+        "speed": 72,
         "stamina": 0,
         "instant": 72,
-        "pedigree": 0,
-        "jockey": 23,
+        "pedigree": 80,
+        "jockey": 0,
         "course_fit": 0
       },
       "comment": "前走5着。上がり34.5秒は平均的。",
@@ -455,57 +350,92 @@
         "2着"
       ],
       "odds": {
-        "win": 37.8,
-        "show": 11.5
+        "win": 32.8,
+        "show": 6.3
       },
-      "sire": "モズアスコット",
-      "jockey": "松本",
-      "frame_number": 5,
-      "image": "/images/horses/2023103293.jpg"
+      "sire": "リオンディーズ",
+      "jockey": "田山",
+      "frame_number": 6,
+      "image": "/images/horses/2023102694.jpg"
     },
     {
-      "horse_number": 16,
-      "horse_name": "ファニーバニー",
+      "horse_number": 6,
+      "horse_name": "タイニーワンダー",
       "mark": "×",
-      "win_prob": 0.01,
-      "show_prob": 0.018,
-      "ev_win": 0.2,
-      "ev_show": 0.13,
-      "kelly_win": 0.0,
+      "win_prob": 0.0185,
+      "show_prob": 0.0368,
+      "ev_win": 1.07,
+      "ev_show": 0.47,
+      "kelly_win": 0.0003,
       "kelly_show": 0.0,
-      "speed_index": 52.0,
+      "speed_index": 15.0,
       "radar": {
-        "speed": 70,
-        "stamina": 86,
-        "instant": 87,
+        "speed": 0,
+        "stamina": 29,
+        "instant": 0,
         "pedigree": 20,
-        "jockey": 0,
-        "course_fit": 0
+        "jockey": 100,
+        "course_fit": 50
       },
-      "comment": "前走8着。安定した成績。",
-      "risk": "阪神未経験。前走着順が振るわない",
+      "comment": "前走1着。阪神1走経験あり。安定した成績。",
+      "risk": "キャリアが浅い",
       "last3_results": [
-        "8着",
+        "1着",
         "-",
         "-"
       ],
       "odds": {
-        "win": 19.9,
-        "show": 7.2
+        "win": 57.7,
+        "show": 12.6
       },
       "sire": "不明",
-      "jockey": "松若",
-      "frame_number": 8,
-      "image": "/images/horses/2023105277.jpg"
+      "jockey": "吉田隼",
+      "frame_number": 3,
+      "image": "/images/horses/2023105027.jpg"
+    },
+    {
+      "horse_number": 11,
+      "horse_name": "クリエープキー",
+      "mark": "×",
+      "win_prob": 0.0183,
+      "show_prob": 0.1676,
+      "ev_win": 0.71,
+      "ev_show": 1.71,
+      "kelly_win": 0.0,
+      "kelly_show": 0.0193,
+      "speed_index": 53.0,
+      "radar": {
+        "speed": 72,
+        "stamina": 100,
+        "instant": 72,
+        "pedigree": 20,
+        "jockey": 20,
+        "course_fit": 0
+      },
+      "comment": "前走1着。上がり34.7秒は平均的。",
+      "risk": "阪神未経験",
+      "last3_results": [
+        "1着",
+        "-",
+        "-"
+      ],
+      "odds": {
+        "win": 38.9,
+        "show": 10.2
+      },
+      "sire": "不明",
+      "jockey": "松山",
+      "frame_number": 6,
+      "image": "/images/horses/2023103355.jpg"
     },
     {
       "horse_number": 2,
       "horse_name": "ギリーズボール",
       "mark": "×",
-      "win_prob": 0.0089,
-      "show_prob": 0.0207,
-      "ev_win": 0.22,
-      "ev_show": 0.16,
+      "win_prob": 0.014,
+      "show_prob": 0.0225,
+      "ev_win": 0.34,
+      "ev_show": 0.18,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 49.0,
@@ -534,13 +464,83 @@
       "image": "/images/horses/2023107187.jpg"
     },
     {
+      "horse_number": 16,
+      "horse_name": "ファニーバニー",
+      "mark": "×",
+      "win_prob": 0.0123,
+      "show_prob": 0.0205,
+      "ev_win": 0.24,
+      "ev_show": 0.15,
+      "kelly_win": 0.0,
+      "kelly_show": 0.0,
+      "speed_index": 52.0,
+      "radar": {
+        "speed": 70,
+        "stamina": 86,
+        "instant": 87,
+        "pedigree": 20,
+        "jockey": 0,
+        "course_fit": 0
+      },
+      "comment": "前走8着。安定した成績。",
+      "risk": "阪神未経験。前走着順が振るわない",
+      "last3_results": [
+        "8着",
+        "-",
+        "-"
+      ],
+      "odds": {
+        "win": 19.9,
+        "show": 7.2
+      },
+      "sire": "不明",
+      "jockey": "松若",
+      "frame_number": 8,
+      "image": "/images/horses/2023105277.jpg"
+    },
+    {
+      "horse_number": 10,
+      "horse_name": "ラスティングスノー",
+      "mark": "×",
+      "win_prob": 0.0122,
+      "show_prob": 0.0245,
+      "ev_win": 0.46,
+      "ev_show": 0.28,
+      "kelly_win": 0.0,
+      "kelly_show": 0.0,
+      "speed_index": 51.0,
+      "radar": {
+        "speed": 68,
+        "stamina": 0,
+        "instant": 72,
+        "pedigree": 0,
+        "jockey": 23,
+        "course_fit": 0
+      },
+      "comment": "前走5着。上がり34.5秒は平均的。",
+      "risk": "キャリアが浅い。阪神未経験",
+      "last3_results": [
+        "5着",
+        "3着",
+        "2着"
+      ],
+      "odds": {
+        "win": 37.8,
+        "show": 11.5
+      },
+      "sire": "モズアスコット",
+      "jockey": "松本",
+      "frame_number": 5,
+      "image": "/images/horses/2023103293.jpg"
+    },
+    {
       "horse_number": 18,
       "horse_name": "イヌボウノウタゴエ",
       "mark": "×",
-      "win_prob": 0.0072,
-      "show_prob": 0.0394,
-      "ev_win": 0.24,
-      "ev_show": 0.31,
+      "win_prob": 0.0086,
+      "show_prob": 0.0401,
+      "ev_win": 0.29,
+      "ev_show": 0.32,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 58.0,
@@ -572,10 +572,10 @@
       "horse_number": 3,
       "horse_name": "プレセピオ",
       "mark": "×",
-      "win_prob": 0.0028,
-      "show_prob": 0.0546,
-      "ev_win": 0.05,
-      "ev_show": 0.32,
+      "win_prob": 0.0038,
+      "show_prob": 0.062,
+      "ev_win": 0.06,
+      "ev_show": 0.37,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 37.0,
@@ -607,10 +607,10 @@
       "horse_number": 15,
       "horse_name": "ローズカリス",
       "mark": "×",
-      "win_prob": 0.002,
-      "show_prob": 0.0273,
-      "ev_win": 0.06,
-      "ev_show": 0.23,
+      "win_prob": 0.0033,
+      "show_prob": 0.0289,
+      "ev_win": 0.09,
+      "ev_show": 0.24,
       "kelly_win": 0.0,
       "kelly_show": 0.0,
       "speed_index": 55.0,
@@ -645,61 +645,69 @@
       {
         "type": "単勝",
         "targets": "8番 ルージュサウダージ",
-        "amount": 200,
-        "ev": 4.47,
-        "odds": 16.2,
-        "kelly": 0.0571
-      },
-      {
-        "type": "単勝",
-        "targets": "9番 タイセイフレッサ",
         "amount": 100,
-        "ev": 19.21,
-        "odds": 118.2,
-        "kelly": 0.0388
+        "ev": 3.92,
+        "odds": 16.2,
+        "kelly": 0.0481
       },
       {
         "type": "単勝",
         "targets": "1番 フルールジェンヌ",
         "amount": 100,
-        "ev": 12.95,
+        "ev": 12.76,
         "odds": 92.3,
-        "kelly": 0.0327
+        "kelly": 0.0322
+      },
+      {
+        "type": "単勝",
+        "targets": "9番 タイセイフレッサ",
+        "amount": 100,
+        "ev": 15.49,
+        "odds": 118.2,
+        "kelly": 0.0309
       },
       {
         "type": "単勝",
         "targets": "14番 コラルリーフ",
         "amount": 100,
-        "ev": 1.9,
+        "ev": 1.78,
         "odds": 19.5,
-        "kelly": 0.0122
+        "kelly": 0.0105
+      },
+      {
+        "type": "単勝",
+        "targets": "6番 タイニーワンダー",
+        "amount": 100,
+        "ev": 1.07,
+        "odds": 57.7,
+        "kelly": 0.0003
       },
       {
         "type": "馬連BOX",
-        "targets": "8-9-1",
+        "targets": "8-1-9",
         "amount": 100,
-        "ev": 12.21,
+        "ev": 10.72,
         "odds": null,
-        "kelly": 0.0429
+        "kelly": 0.0371
       },
       {
         "type": "三連複BOX",
-        "targets": "8-9-1-14-7",
+        "targets": "8-1-9-14-7",
         "amount": 100,
-        "ev": 7.84,
+        "ev": 6.91,
         "odds": null,
-        "kelly": 0.0282
+        "kelly": 0.0243
       },
       {
         "type": "ワイド",
-        "targets": "8-9",
+        "targets": "8-1",
         "amount": 100,
-        "ev": 11.84,
+        "ev": 8.34,
         "odds": null,
-        "kelly": 0.0479
+        "kelly": 0.0401
       }
     ],
     "total_investment": 800,
-    "expected_return": 7489
+    "expected_return": 6099
   }
 }

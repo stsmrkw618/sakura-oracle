@@ -205,6 +205,7 @@ def _build_prediction_features(
         if hist is not None:
             # 過去データあり → features.csv から引き継ぎ
             row = hist.to_dict()
+            row["_fill_type"] = "features"
         else:
             # features.csv にない → 馬ページから全戦績を取得して特徴量構築
             horse_id = str(entry.get("horse_id", ""))
@@ -219,6 +220,7 @@ def _build_prediction_features(
             if scraped_features is not None:
                 # 馬ページから特徴量構築成功
                 row = scraped_features
+                row["_fill_type"] = "scraped"
                 scraped_horses.append(horse_name)
             else:
                 # スクレイピング失敗 → 中央値フォールバック
@@ -230,6 +232,7 @@ def _build_prediction_features(
                         row[col] = hist_df[col].median()
                     else:
                         row[col] = 0
+                row["_fill_type"] = "median"
 
         # 出馬表から上書き
         row["馬名"] = horse_name
@@ -497,11 +500,37 @@ def predict_race(
 
     pred_a_win = model_a_win.predict_proba(X_pred_all)[:, 1]
     pred_b_win = model_b_win.predict_proba(X_pred_no_odds)[:, 1]
-    pred_df["pred_win"] = BLEND_WEIGHT_A * pred_a_win + BLEND_WEIGHT_B * pred_b_win
+
+    # --- 改善3: ブレンド比率の動的化 ---
+    # Excelオッズ提供時（確定オッズに近い）はModel A（市場連動）の比率を上げる
+    if excel_path and Path(excel_path).exists():
+        blend_a, blend_b = 0.35, 0.65
+        print(f"  ブレンド比率: A={blend_a} / B={blend_b}（Excelオッズあり → 市場連動強化）")
+    else:
+        blend_a, blend_b = BLEND_WEIGHT_A, BLEND_WEIGHT_B
+        print(f"  ブレンド比率: A={blend_a} / B={blend_b}（デフォルト）")
+
+    pred_df["pred_win"] = blend_a * pred_a_win + blend_b * pred_b_win
 
     pred_a_show = model_a_show.predict_proba(X_pred_all)[:, 1]
     pred_b_show = model_b_show.predict_proba(X_pred_no_odds)[:, 1]
-    pred_df["pred_show"] = BLEND_WEIGHT_A * pred_a_show + BLEND_WEIGHT_B * pred_b_show
+    pred_df["pred_show"] = blend_a * pred_a_show + blend_b * pred_b_show
+
+    # --- 改善1: 補完馬ペナルティ（正規化前に適用） ---
+    # features.csvにデータがない馬は特徴量品質が低い → 確率を割引
+    PENALTY_SCRAPED = 0.85   # 馬ページ補完: 15%割引
+    PENALTY_MEDIAN = 0.60    # 中央値補完: 40%割引
+    if "_fill_type" in pred_df.columns:
+        penalty = pred_df["_fill_type"].map({
+            "features": 1.0,
+            "scraped": PENALTY_SCRAPED,
+            "median": PENALTY_MEDIAN,
+        }).fillna(1.0)
+        n_penalized = (penalty < 1.0).sum()
+        if n_penalized > 0:
+            pred_df["pred_win"] *= penalty
+            pred_df["pred_show"] *= penalty
+            print(f"  📉 補完馬ペナルティ適用: {n_penalized}頭（scraped={PENALTY_SCRAPED}, median={PENALTY_MEDIAN}）")
 
     # レース内正規化（predictor.pyと同一ロジック）
     # Isotonic Regressionは小データで階段関数化し分解能が低下するため使用しない
@@ -513,6 +542,30 @@ def predict_race(
     if show_sum > 0:
         pred_df["pred_show"] = pred_df["pred_show"] * (3.0 / show_sum)  # 合計→3.0
     print(f"  ✅ レース内正規化適用済み（win合計=1.0, show合計=3.0）")
+
+    # --- 改善2: 市場下限制約（正規化後に適用 → 再正規化） ---
+    # 市場人気上位馬のAI確率に下限を設け、過小評価を防ぐ
+    MARKET_FLOOR = {1: 0.05, 2: 0.03, 3: 0.02}  # 人気順 → 勝率下限
+    MARKET_FLOOR_SHOW = {1: 0.30, 2: 0.20, 3: 0.15}  # 人気順 → 複勝率下限
+    floor_applied = 0
+    for idx, row in pred_df.iterrows():
+        pop = int(row.get("popularity", 99))
+        win_floor = MARKET_FLOOR.get(pop, 0.0)
+        show_floor = MARKET_FLOOR_SHOW.get(pop, 0.0)
+        if win_floor > 0 and pred_df.loc[idx, "pred_win"] < win_floor:
+            pred_df.loc[idx, "pred_win"] = win_floor
+            floor_applied += 1
+        if show_floor > 0 and pred_df.loc[idx, "pred_show"] < show_floor:
+            pred_df.loc[idx, "pred_show"] = show_floor
+    if floor_applied > 0:
+        # 下限適用後に再正規化
+        win_sum2 = pred_df["pred_win"].sum()
+        show_sum2 = pred_df["pred_show"].sum()
+        if win_sum2 > 0:
+            pred_df["pred_win"] = pred_df["pred_win"] / win_sum2
+        if show_sum2 > 0:
+            pred_df["pred_show"] = pred_df["pred_show"] * (3.0 / show_sum2)
+        print(f"  🛡️ 市場下限制約適用: {floor_applied}頭 → 再正規化済み")
 
     pred_df["pred_b_win"] = pred_b_win
 
