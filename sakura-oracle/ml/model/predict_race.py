@@ -438,7 +438,7 @@ def predict_race(
     y_show = train_df["is_show"].values
 
     # グレード別パラメータ切替（G1=Trial#87 / G2,G3=Trial#53）
-    race_base = meta["race_base"]
+    # race_baseは関数冒頭で取得済み（metaにはrace_baseキーなし）
     grade = GRADE_MAP.get(race_base, "G3")
     spw = SPW_G2G3 if grade == "G2" else SPW_G1
     params_win = _make_params_bin(scale_pos_weight=spw["win"], grade=grade)
@@ -656,8 +656,8 @@ def predict_race(
     date_str = target["date"]  # "20260301"
     formatted_date = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:8]}"
 
-    # グレード表記
-    grade_label = {5: "G1", 3: "G2"}.get(grade, "G3")
+    # グレード表記（GRADE_MAPの正確なグレードを使用）
+    grade_label = GRADE_MAP.get(race_base, "G3")
 
     output = {
         "race_info": {
